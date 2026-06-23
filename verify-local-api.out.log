@@ -1,0 +1,35 @@
+
+> medientry-server@1.0.0 dev:api
+> tsx watch src/server.ts
+
+◇ injected env (22) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+[env] Loaded .env from F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server
+[bootstrap] Default super admin is ready for anik.dgency@gmail.com.
+Medientry API is running on http://0.0.0.0:5000 in development mode.
+[0mGET /api/pages/home [32m200[0m 16.599 ms - -[0m
+[0mGET /api/notices [32m200[0m 8.573 ms - -[0m
+[0mGET /api/success-stories/homepage [32m200[0m 17.471 ms - -[0m
+[0mGET /api/gallery/homepage [32m200[0m 75.541 ms - -[0m
+[0mGET /api/home-reels/homepage [32m200[0m 80.829 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 76.139 ms - 556[0m
+[0mGET /api/study-destinations?status=published [32m200[0m 108.613 ms - -[0m
+[0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 103.421 ms - -[0m
+[0mGET /api/home-sections [32m200[0m 114.562 ms - -[0m
+[0mGET /api/medical-colleges/homepage/featured [32m200[0m 123.852 ms - -[0m
+[0mGET /api/health [32m200[0m 1.959 ms - 184[0m
+[0mGET /api/home-reels/homepage [32m200[0m 4.104 ms - -[0m
+[0mGET /api/notices [32m200[0m 2.960 ms - -[0m
+[0mGET /api/pages/home [32m200[0m 7.231 ms - -[0m
+[0mGET /api/gallery/homepage [32m200[0m 7.955 ms - -[0m
+[0mGET /api/study-destinations?status=published [32m200[0m 9.633 ms - -[0m
+[0mGET /api/success-stories/homepage [32m200[0m 10.286 ms - -[0m
+[0mGET /api/medical-colleges/homepage/featured [32m200[0m 15.276 ms - -[0m
+[0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 13.151 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 54.689 ms - 556[0m
+[0mGET /api/home-sections [32m200[0m 63.641 ms - -[0m
+[0mGET /ap [33m404[0m 5.851 ms - -[0m
+[0mGET /favicon.ico [33m404[0m 0.449 ms - -[0m
+[0mGET /api [33m404[0m 0.487 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 3.014 ms - 556[0m
+[0mGET /api/site-settings [36m304[0m 2.548 ms - -[0m
+[0mGET /api/site-settings [36m304[0m 2.721 ms - -[0m

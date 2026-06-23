@@ -1,0 +1,2 @@
+-- No-op migration kept for migration history compatibility.
+-- PageTemplateType values are now created correctly in the initial migration.

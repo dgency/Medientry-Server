@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 42% 96%;
+    --foreground: 214 33% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 214 33% 15%;
+    --primary: 21 74% 42%;
+    --primary-foreground: 35 100% 98%;
+    --secondary: 34 34% 92%;
+    --secondary-foreground: 213 31% 22%;
+    --muted: 35 26% 93%;
+    --muted-foreground: 215 16% 44%;
+    --accent: 160 36% 36%;
+    --accent-foreground: 40 100% 97%;
+    --destructive: 0 74% 52%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 32 23% 84%;
+    --input: 34 20% 84%;
+    --ring: 21 74% 42%;
+    --radius: 1rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply min-h-screen bg-background bg-hero-grid text-foreground antialiased;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer components {
+  .page-frame {
+    @apply rounded-[1.5rem] border border-border/70 bg-white/80 shadow-soft backdrop-blur;
+  }
+
+  .field-grid {
+    @apply grid grid-cols-1 gap-5 md:grid-cols-2;
+  }
+
+  .login-shell {
+    background:
+      radial-gradient(circle at top left, rgba(103, 232, 249, 0.18), transparent 26%),
+      radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 22%),
+      linear-gradient(180deg, #f6f9fc 0%, #eef4f9 100%);
+  }
+
+  .login-ambient-grid {
+    background-image:
+      linear-gradient(rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+    background-position: center;
+    background-size: 64px 64px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 92%);
+  }
+
+  .login-orb {
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+  }
+
+  .login-orb-cyan {
+    background-color: rgba(103, 232, 249, 0.32);
+    @apply left-[-5rem] top-[-4rem] h-56 w-56;
+  }
+
+  .login-orb-blue {
+    background-color: rgba(14, 165, 233, 0.18);
+    @apply bottom-[-4rem] right-[-2rem] h-64 w-64;
+  }
+
+  .login-orb-navy {
+    background-color: rgba(15, 23, 42, 0.15);
+    @apply right-[18%] top-[14%] h-44 w-44;
+  }
+
+  .login-glass-card {
+    background-color: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(226, 232, 240, 0.75);
+    box-shadow: 0 26px 60px -34px rgba(15, 23, 42, 0.28);
+    @apply overflow-hidden rounded-[1.75rem];
+  }
+
+  .login-brand-badge {
+    border: 1px solid rgba(8, 47, 73, 0.1);
+    background-color: rgba(236, 254, 255, 0.8);
+    color: rgb(8, 47, 73);
+    @apply inline-flex items-center rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.28em];
+  }
+
+  .login-brand-badge-light {
+    border-color: rgba(8, 47, 73, 0.1);
+    background-color: rgba(236, 254, 255, 0.7);
+    color: rgb(8, 47, 73);
+  }
+
+  .login-preview-card {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06)),
+      linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(37, 99, 235, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 40px -24px rgba(8, 47, 73, 0.85);
+    @apply flex min-h-[156px] flex-col justify-between rounded-[1.5rem] p-5 backdrop-blur;
+  }
+
+  .login-input {
+    border-color: rgba(226, 232, 240, 0.85);
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0 10px 24px -20px rgba(15, 23, 42, 0.22);
+    @apply h-[3.2rem] rounded-2xl text-sm transition-all duration-300 placeholder:text-slate-400 focus-visible:border-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-100;
+  }
+
+  .login-submit {
+    background:
+      linear-gradient(135deg, rgba(8, 47, 73, 0.98), rgba(14, 116, 144, 0.96) 52%, rgba(34, 211, 238, 0.9));
+    box-shadow:
+      0 16px 34px -20px rgba(8, 145, 178, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    @apply rounded-2xl text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-22px_rgba(14,116,144,0.5)];
+  }
+}

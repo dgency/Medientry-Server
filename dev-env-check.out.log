@@ -1,0 +1,88 @@
+
+> medientry-server@1.0.0 dev
+> tsx watch src/server.ts
+
+◇ injected env (18) from .env // tip: ⌘ suppress logs { quiet: true }
+[env] Loaded .env from F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server
+Medientry API is running on http://0.0.0.0:5000 in development mode.
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Authentication failed against database server, the provided database credentials for `postgres` are not valid.
+
+Please make sure to provide valid database credentials for the database server at the configured address.
+[0mGET /api/health [31m503[0m 224.858 ms - 210[0m
+prisma:error 
+Invalid `prisma.$queryRaw()` invocation:
+
+
+Authentication failed against database server, the provided database credentials for `postgres` are not valid.
+
+Please make sure to provide valid database credentials for the database server at the configured address.
+[0mGET /api/health [31m503[0m 59.436 ms - 211[0m
+[0mGET /api/blogs?page=1&pageSize=100 [33m400[0m 2.309 ms - -[0m
+prisma:error 
+Invalid `prisma.studyDestination.findMany()` invocation in
+F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server\src\services\study-destination.service.ts:176:34
+
+  173 const resolvedStatus =
+  174   status ?? (includeUnpublished ? undefined : PublicationStatus.PUBLISHED);
+  175 
+→ 176 return prisma.studyDestination.findMany(
+Authentication failed against database server, the provided database credentials for `postgres` are not valid.
+
+Please make sure to provide valid database credentials for the database server at the configured address.
+prisma:error 
+Invalid `prisma.homeSectionSetting.findFirst()` invocation in
+F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server\src\services\medical-college.service.ts:225:62
+
+  222     ? getHomeSectionLookupKeys(FEATURED_MEDICAL_COLLEGES_SECTION_KEY)
+  223     : [sectionKey];
+  224 
+→ 225 const homeSectionSetting = await prisma.homeSectionSetting.findFirst(
+Authentication failed against database server, the provided database credentials for `postgres` are not valid.
+
+Please make sure to provide valid database credentials for the database server at the configured address.
+prisma:error 
+Invalid `prisma.successStory.findMany()` invocation in
+F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server\src\services\success-story.service.ts:81:30
+
+  78 };
+  79 
+  80 export const listSuccessStories = async (includeInactive = false) => {
+→ 81   return prisma.successStory.findMany(
+Authentication failed against database server, the provided database credentials for `postgres` are not valid.
+
+Please make sure to provide valid database credentials for the database server at the configured address.
+prisma:error 
+Invalid `prisma.notice.findMany()` invocation in
+F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server\src\services\notice.service.ts:197:39
+
+  194 };
+  195 
+  196 export const listNotices = async (includeUnpublished = false) => {
+→ 197   const notices = await prisma.notice.findMany(
+Authentication failed against database server, the provided database credentials for `postgres` are not valid.
+
+Please make sure to provide valid database credentials for the database server at the configured address.
+prisma:error 
+Invalid `prisma.homeSectionSetting.findMany()` invocation in
+F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server\src\services\home-section.service.ts:326:52
+
+  323   getHomeSectionLookupKeys(sectionKey),
+  324 );
+  325 
+→ 326 const settings = await prisma.homeSectionSetting.findMany(
+Authentication failed against database server, the provided database credentials for `postgres` are not valid.
+
+Please make sure to provide valid database credentials for the database server at the configured address.
+[0mGET /api/study-destinations [31m500[0m 294.707 ms - -[0m
+[0mGET /api/success-stories [31m500[0m 291.702 ms - -[0m
+[0mGET /api/notices [31m500[0m 287.292 ms - -[0m
+[0mGET /api/medical-colleges?sectionKey=featured_medical_colleges&featuredOnly=true [31m500[0m 294.289 ms - -[0m
+[0mGET /api/home-sections [31m500[0m 287.154 ms - -[0m
+3:55:47 PM [tsx] change in ./src\controllers\auth.controller.ts Restarting...
+c◇ injected env (21) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+[env] Loaded .env from F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server
+Medientry API is running on http://0.0.0.0:5000 in development mode.

@@ -1,0 +1,17 @@
+◇ injected env (22) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (3) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+[env] Loaded .env, .env.local from F:\Custom Coding Project\Medientry\New Stucture\Medientry-Server
+[bootstrap] Default super admin is ready for anik.dgency@gmail.com.
+Medientry API is running on http://0.0.0.0:5001 in production mode.
+127.0.0.1 - - [20/Jun/2026:11:27:45 +0000] "GET /api/health HTTP/1.1" 200 183 "-" "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.19041.6456"
+127.0.0.1 - - [20/Jun/2026:11:31:21 +0000] "GET /api/health HTTP/1.1" 200 184 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:31:28 +0000] "POST /api/consultation-leads HTTP/1.1" 201 630 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:31:32 +0000] "POST /api/college-fee-inquiries HTTP/1.1" 201 643 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:31:50 +0000] "GET /api/health HTTP/1.1" 200 184 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:31:50 +0000] "POST /api/consultation-leads HTTP/1.1" 429 98 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:32:14 +0000] "GET /api/health HTTP/1.1" 200 184 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:32:17 +0000] "POST /api/consultation-leads HTTP/1.1" 201 633 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:32:21 +0000] "POST /api/college-fee-inquiries HTTP/1.1" 201 643 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:32:53 +0000] "GET /api/health HTTP/1.1" 200 183 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:32:57 +0000] "POST /api/consultation-leads HTTP/1.1" 201 633 "-" "node"
+127.0.0.1 - - [20/Jun/2026:11:33:01 +0000] "POST /api/college-fee-inquiries HTTP/1.1" 201 643 "-" "node"
