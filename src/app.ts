@@ -1,3 +1,4 @@
+import path from "path";
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -78,6 +79,24 @@ app.use(
 );
 
 app.use('/api', apiRouter);
+// ==========================================================config for digital ocean
+app.use(
+  express.static(path.join(__dirname, '../admin-dashboard/dist'), {
+    maxAge: env.NODE_ENV === 'production' ? '1y' : 0, // Cache static assets heavily in production
+    index: false // Prevents conflict with the SPA wildcard route below
+  })
+);
+
+// 3. Fallback all other routing to Vite's index.html (Required for React Router SPA)
+app.get('*', (req, res, next) => {
+  // If the request format looks like an API or file route, bypass and pass to 404 handler
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  res.sendFile(path.join(__dirname, '../admin-dashboard/dist/index.html'));
+});
+
+// ==========================================config for digital ocean
 
 app.use(notFoundHandler);
 app.use(errorHandler);
