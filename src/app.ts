@@ -80,20 +80,22 @@ app.use(
 
 app.use('/api', apiRouter);
 // ==========================================================config for digital ocean
-app.use(
-  express.static(path.join(__dirname, '../admin-dashboard/dist'), {
-    maxAge: env.NODE_ENV === 'production' ? '1y' : 0, // Cache static assets heavily in production
-    index: false // Prevents conflict with the SPA wildcard route below
-  })
-);
 
-// 3. Fallback all other routing to Vite's index.html (Required for React Router SPA)
+// Compute paths dynamically to support both raw src and compiled dist execution
+const dashboardPath = path.resolve(process.cwd(), 'admin-dashboard', 'dist');
+
+// 1. Serve the compiled static assets from the Vite dashboard folder
+app.use(express.static(dashboardPath, {
+  maxAge: env.NODE_ENV === 'production' ? '1y' : 0,
+  index: false
+}));
+
+// 2. Direct all remaining non-API browser traffic to your Vite dashboard index.html
 app.get('/*any', (req, res, next) => {
-  // If the request format looks like an API or file route, bypass and pass to 404 handler
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
   }
-  res.sendFile(path.join(__dirname, '../admin-dashboard/dist/index.html'));
+  return res.sendFile(path.join(dashboardPath, 'index.html'));
 });
 
 // ==========================================config for digital ocean
