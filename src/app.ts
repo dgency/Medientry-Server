@@ -88,7 +88,7 @@ app.use(
 );
 
 // 3. Fallback all other routing to Vite's index.html (Required for React Router SPA)
-app.get('*', (req, res, next) => {
+app.get('(.*)', (req, res, next) => {
   // If the request format looks like an API or file route, bypass and pass to 404 handler
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
