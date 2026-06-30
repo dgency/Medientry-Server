@@ -1,8 +1,9 @@
 import { PublicationStatus } from '@prisma/client';
 import { z } from 'zod';
 
-const nullableTrimmedString = z.string().trim().optional();
-const nullableUrlString = z.union([z.string().trim().url(), z.literal('')]).optional();
+import { nullableAbsoluteUrlString, nullableAssetUrlString } from './asset-url.validation';
+
+const nullableTrimmedString = z.string().trim().nullable().optional();
 const nullableUuidString = z.union([z.string().uuid(), z.literal('')]).optional();
 const nullableJsonSchema = z
   .record(z.string(), z.unknown())
@@ -38,7 +39,7 @@ const baseMedicalCollegeBodySchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must contain only lowercase letters, numbers, and hyphens.'),
   country: z.string().trim().min(2, 'Country must be at least 2 characters long.'),
   city: nullableTrimmedString,
-  image: nullableUrlString,
+  image: nullableAssetUrlString,
   shortDescription: nullableTrimmedString,
   tuitionFee: nullableDecimalSchema,
   hostelFee: nullableDecimalSchema,
@@ -53,8 +54,8 @@ const baseMedicalCollegeBodySchema = z.object({
   seoTitle: nullableTrimmedString,
   seoDescription: nullableTrimmedString,
   seoKeywords: seoKeywordsSchema,
-  ogImage: nullableUrlString,
-  canonicalUrl: nullableUrlString,
+  ogImage: nullableAssetUrlString,
+  canonicalUrl: nullableAbsoluteUrlString,
   isFeatured: z.boolean(),
   status: allowedStatusSchema,
 });

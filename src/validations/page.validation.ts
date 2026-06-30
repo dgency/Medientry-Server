@@ -1,8 +1,9 @@
 import { PageTemplateType, PageType, PublicationStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';
 
-const nullableTrimmedString = z.string().trim().optional();
-const nullableUrlString = z.union([z.string().trim().url(), z.literal('')]).optional();
+import { nullableAbsoluteUrlString, nullableAssetUrlString } from './asset-url.validation';
+
+const nullableTrimmedString = z.string().trim().nullable().optional();
 
 const allowedPageStatus = z.enum([
   PublicationStatus.DRAFT,
@@ -28,13 +29,13 @@ const basePageBodySchema = z.object({
   status: allowedPageStatus,
   heroTitle: nullableTrimmedString,
   heroSubtitle: nullableTrimmedString,
-  heroImage: nullableUrlString,
+  heroImage: nullableAssetUrlString,
   content: jsonContentSchema,
   seoTitle: nullableTrimmedString,
   seoDescription: nullableTrimmedString,
   seoKeywords: seoKeywordsSchema,
-  ogImage: nullableUrlString,
-  canonicalUrl: nullableUrlString,
+  ogImage: nullableAssetUrlString,
+  canonicalUrl: nullableAbsoluteUrlString,
 });
 
 export const createPageSchema = z.object({

@@ -72,6 +72,7 @@ app.use(
     setHeaders(res) {
       res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     },
   }),
 );

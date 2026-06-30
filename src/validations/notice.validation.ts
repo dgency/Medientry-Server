@@ -1,8 +1,9 @@
 import { PublicationStatus } from '@prisma/client';
 import { z } from 'zod';
 
-const nullableTrimmedString = z.string().trim().optional();
-const nullableUrlString = z.union([z.string().trim().url(), z.literal('')]).optional();
+import { nullableAbsoluteUrlString, nullableAssetUrlString } from './asset-url.validation';
+
+const nullableTrimmedString = z.string().trim().nullable().optional();
 const nullableDateSchema = z.union([z.coerce.date(), z.null()]).optional();
 
 const seoKeywordsSchema = z.array(z.string().trim().min(1)).default([]);
@@ -21,15 +22,15 @@ const baseNoticeBodySchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must contain only lowercase letters, numbers, and hyphens.'),
   description: nullableTrimmedString,
   content: nullableTrimmedString,
-  fileUrl: nullableUrlString,
+  fileUrl: nullableAssetUrlString,
   isPinned: z.boolean(),
   publishedAt: nullableDateSchema,
   status: allowedStatusSchema,
   seoTitle: nullableTrimmedString,
   seoDescription: nullableTrimmedString,
   seoKeywords: seoKeywordsSchema,
-  ogImage: nullableUrlString,
-  canonicalUrl: nullableUrlString,
+  ogImage: nullableAssetUrlString,
+  canonicalUrl: nullableAbsoluteUrlString,
 });
 
 export const createNoticeSchema = z.object({

@@ -1,8 +1,9 @@
 import { PublicationStatus } from '@prisma/client';
 import { z } from 'zod';
 
-const nullableTrimmedString = z.string().trim().optional();
-const nullableUrlString = z.union([z.string().trim().url(), z.literal('')]).optional();
+import { nullableAbsoluteUrlString, nullableAssetUrlString } from './asset-url.validation';
+
+const nullableTrimmedString = z.string().trim().nullable().optional();
 
 const allowedStatusSchema = z.enum([
   PublicationStatus.DRAFT,
@@ -25,7 +26,7 @@ const baseStudyDestinationBodySchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must contain only lowercase letters, numbers, and hyphens.'),
   country: z.string().trim().min(2, 'Country must be at least 2 characters long.'),
   shortDescription: nullableTrimmedString,
-  featuredImage: nullableUrlString,
+  featuredImage: nullableAssetUrlString,
   content: jsonContentSchema,
   isFeatured: z.boolean(),
   showInMenu: z.boolean(),
@@ -34,8 +35,8 @@ const baseStudyDestinationBodySchema = z.object({
   seoTitle: nullableTrimmedString,
   seoDescription: nullableTrimmedString,
   seoKeywords: seoKeywordsSchema,
-  ogImage: nullableUrlString,
-  canonicalUrl: nullableUrlString,
+  ogImage: nullableAssetUrlString,
+  canonicalUrl: nullableAbsoluteUrlString,
 });
 
 export const createStudyDestinationSchema = z.object({

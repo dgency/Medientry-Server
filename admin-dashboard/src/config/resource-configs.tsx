@@ -646,8 +646,9 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       {
         name: 'heroPrimaryCtaLink',
         label: 'Primary Button URL',
-        type: 'url',
+        type: 'text',
         visible: (values) => isHomePageValues(values),
+        description: 'Supports internal paths like /contact or full external URLs.',
       },
       {
         name: 'heroSecondaryCtaText',
@@ -658,8 +659,9 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       {
         name: 'heroSecondaryCtaLink',
         label: 'Secondary Button URL',
-        type: 'url',
+        type: 'text',
         visible: (values) => isHomePageValues(values),
+        description: 'Supports internal paths like /mbbs-bangladesh or full external URLs.',
       },
       {
         name: 'heroBackgroundImage',
@@ -751,8 +753,9 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       {
         name: 'successStoriesCtaLink',
         label: 'Success Stories CTA URL',
-        type: 'url',
+        type: 'text',
         visible: (values) => isHomePageValues(values),
+        description: 'Supports internal paths like /success-stories or full external URLs.',
       },
       {
         name: 'whyChooseUsEyebrow',

@@ -261,6 +261,7 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                           type={field.type === 'number' ? 'number' : field.type}
                           min={field.min}
                           max={field.max}
+                          step={field.type === 'number' ? 'any' : undefined}
                           placeholder={field.placeholder}
                           className="flex-1"
                           {...register(field.name, {

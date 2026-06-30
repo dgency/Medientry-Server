@@ -1,14 +1,15 @@
 import { GalleryItemType, SimpleStatus } from '@prisma/client';
 import { z } from 'zod';
 
-const nullableTrimmedString = z.string().trim().optional();
-const nullableUrlString = z.union([z.string().trim().url(), z.literal('')]).optional();
+import { assetUrlString, nullableAssetUrlString } from './asset-url.validation';
+
+const nullableTrimmedString = z.string().trim().nullable().optional();
 
 const baseGalleryItemBodySchema = z.object({
   title: z.string().trim().min(2, 'Title must be at least 2 characters long.'),
   type: z.nativeEnum(GalleryItemType),
-  url: z.string().trim().url('URL must be a valid URL.'),
-  thumbnail: nullableUrlString,
+  url: assetUrlString,
+  thumbnail: nullableAssetUrlString,
   category: nullableTrimmedString,
   sortOrder: z.coerce.number().int().min(0),
   status: z.nativeEnum(SimpleStatus),
