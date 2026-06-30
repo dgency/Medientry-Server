@@ -14,9 +14,7 @@
     "declaration": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "types": [
-      "node"
-    ]
+    "types": []
   },
   "include": [
     "src/**/*.ts",
