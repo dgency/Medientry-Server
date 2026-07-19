@@ -18,6 +18,7 @@ import { admissionNotices } from '../../Medientry-Client/src/data/admissionNotic
 import { blogPosts } from '../../Medientry-Client/src/data/blogPosts';
 import { successStories } from '../../Medientry-Client/src/data/successStories';
 import { universities } from '../../Medientry-Client/src/data/universities';
+import { mapCollegeFeeBillingPeriodToPrisma } from '../src/utils/college-fee';
 
 const prisma = new PrismaClient();
 
@@ -56,6 +57,72 @@ const findGeorgiaFeeAmount = (
 ) => {
   const match = feeItems.find((item) => matcher.test(item.item));
   return typeof match?.amountUSD === 'number' ? match.amountUSD : null;
+};
+
+const billingPeriodFromLabel = (label: string) => {
+  const normalized = label.toLowerCase();
+
+  if (normalized.includes('total')) {
+    return 'total' as const;
+  }
+
+  if (normalized.includes('booking')) {
+    return 'one_time' as const;
+  }
+
+  if (normalized.includes('admission')) {
+    return 'admission' as const;
+  }
+
+  if (normalized.includes('remaining') || normalized.includes('installment')) {
+    return 'installment' as const;
+  }
+
+  if (normalized.includes('month')) {
+    return 'monthly' as const;
+  }
+
+  if (normalized.includes('year')) {
+    return 'yearly' as const;
+  }
+
+  return 'custom' as const;
+};
+
+const buildSeedFeeItems = (
+  feeStructure: (typeof universities)[number]['feeStructure'],
+) => {
+  switch (feeStructure.type) {
+    case 'bangladesh':
+      return feeStructure.items.map((item, index) => ({
+        label: item.item,
+        amountUsd: typeof item.amountUSD === 'number' ? item.amountUSD : null,
+        amountInr: null,
+        billingPeriod: mapCollegeFeeBillingPeriodToPrisma(
+          billingPeriodFromLabel(item.item),
+        ),
+        description: null,
+        sortOrder: index + 1,
+        isTotal: item.item.toLowerCase().includes('total'),
+        isActive: true,
+      }));
+    case 'georgia':
+      return feeStructure.items.map((item, index) => ({
+        label: item.item,
+        amountUsd: item.amountUSD,
+        amountInr: item.amountINR,
+        billingPeriod: mapCollegeFeeBillingPeriodToPrisma(
+          billingPeriodFromLabel(item.item),
+        ),
+        description: null,
+        sortOrder: index + 1,
+        isTotal: item.item.toLowerCase().includes('total'),
+        isActive: true,
+      }));
+    case 'standard':
+    default:
+      return [];
+  }
 };
 
 const homePageContent = {
@@ -1064,6 +1131,7 @@ const seedMedicalColleges = async () => {
       university.feeStructure.type === 'bangladesh'
         ? findBangladeshFeeAmount(bangladeshFeeItems, /remaining|tuition/i) ?? totalFee
         : findGeorgiaFeeAmount(georgiaFeeItems, /annual tuition/i) ?? totalFee;
+    const feeItems = buildSeedFeeItems(university.feeStructure);
 
     await prisma.medicalCollege.upsert({
       where: { slug: university.slug },
@@ -1081,6 +1149,9 @@ const seedMedicalColleges = async () => {
         tuitionFee,
         hostelFee,
         totalFee,
+        exchangeRateUsdToInr: 90,
+        showExchangeRateNote: false,
+        feeNote: null,
         ranking: university.highlights[0] ?? null,
         eligibility:
           university.country === 'Bangladesh'
@@ -1115,6 +1186,14 @@ const seedMedicalColleges = async () => {
         seoKeywords: university.seoKeywords ?? uniqueStrings([university.name, university.country, 'MBBS']),
         ogImage: university.ogImage ?? university.featuredImage ?? '/images/medical-college-1.jpg',
         canonicalUrl: university.canonicalUrl ?? absoluteCanonical(`/medical-colleges/${university.slug}`),
+        feeItems: {
+          deleteMany: {},
+          ...(feeItems.length > 0
+            ? {
+                create: feeItems,
+              }
+            : {}),
+        },
       },
       create: {
         slug: university.slug,
@@ -1140,6 +1219,9 @@ const seedMedicalColleges = async () => {
         tuitionFee,
         hostelFee,
         totalFee,
+        exchangeRateUsdToInr: 90,
+        showExchangeRateNote: false,
+        feeNote: null,
         ranking: university.highlights[0] ?? null,
         eligibility:
           university.country === 'Bangladesh'
@@ -1174,6 +1256,12 @@ const seedMedicalColleges = async () => {
         seoKeywords: university.seoKeywords ?? uniqueStrings([university.name, university.country, 'MBBS']),
         ogImage: university.ogImage ?? university.featuredImage ?? '/images/medical-college-1.jpg',
         canonicalUrl: university.canonicalUrl ?? absoluteCanonical(`/medical-colleges/${university.slug}`),
+        feeItems:
+          feeItems.length > 0
+            ? {
+                create: feeItems,
+              }
+            : undefined,
       },
     });
   }

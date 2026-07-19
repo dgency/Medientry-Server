@@ -31,7 +31,8 @@ export type FieldType =
   | 'url'
   | 'datetime-local'
   | 'admission-process-cards'
-  | 'study-abroad-cards';
+  | 'study-abroad-cards'
+  | 'college-fee-structure';
 
 type ResourceFieldCondition = (
   values: Record<string, unknown>,

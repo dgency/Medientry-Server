@@ -130,7 +130,7 @@ export const listBlogs = async ({
   pageSize = 10,
 }: ListBlogsOptions = {}) => {
   const normalizedPage = Math.max(1, page);
-  const normalizedPageSize = Math.min(50, Math.max(1, pageSize));
+  const normalizedPageSize = Math.min(100, Math.max(1, pageSize));
   const normalizedSearch = search?.trim();
   const normalizedCategory = normalizeCategory(category);
 

@@ -1,4 +1,5 @@
 import type { Server } from 'node:http';
+import { networkInterfaces } from 'node:os';
 import process from 'node:process';
 
 import app from './app';
@@ -7,6 +8,34 @@ import { prisma } from './config/prisma';
 import { ensureDefaultSuperAdmin } from './services/bootstrap.service';
 
 let server: Server | null = null;
+
+const getReachableHosts = () => {
+  if (!['0.0.0.0', '::'].includes(env.HOST)) {
+    return [env.HOST];
+  }
+
+  const lanHosts = Object.values(networkInterfaces())
+    .flat()
+    .filter((address): address is NonNullable<typeof address> => Boolean(address))
+    .filter((address) => address.family === 'IPv4' && !address.internal)
+    .map((address) => address.address);
+
+  return [...new Set(['localhost', ...lanHosts])];
+};
+
+const formatHostForUrl = (host: string) => (host.includes(':') ? `[${host}]` : host);
+
+const logReachableUrls = () => {
+  const baseUrls = getReachableHosts().map(
+    (host) => `http://${formatHostForUrl(host)}:${env.PORT}`,
+  );
+
+  console.log(`Medientry API is running in ${env.NODE_ENV} mode.`);
+  baseUrls.forEach((baseUrl) => {
+    console.log(`[server] API base: ${baseUrl}/api`);
+    console.log(`[server] Health: ${baseUrl}/api/health`);
+  });
+};
 
 const startServer = async () => {
   let databaseConnected = false;
@@ -30,9 +59,7 @@ const startServer = async () => {
   }
 
   server = app.listen(env.PORT, env.HOST, () => {
-    console.log(
-      `Medientry API is running on http://${env.HOST}:${env.PORT} in ${env.NODE_ENV} mode.`,
-    );
+    logReachableUrls();
   });
 };
 

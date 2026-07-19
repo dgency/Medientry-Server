@@ -20,6 +20,11 @@ type CreateCollegeFeeInquiryInput = {
 };
 
 type UpdateCollegeFeeInquiryInput = Partial<CreateCollegeFeeInquiryInput>;
+type CollegeFeeInquiryStatusFilter = 'all' | 'read' | 'unread';
+type ListCollegeFeeInquiriesInput = {
+  search?: string;
+  status?: CollegeFeeInquiryStatusFilter;
+};
 
 const collegeFeeInquirySelect = {
   id: true,
@@ -33,6 +38,7 @@ const collegeFeeInquirySelect = {
   message: true,
   source: true,
   sourcePage: true,
+  readAt: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.CollegeFeeInquirySelect;
@@ -64,6 +70,11 @@ const normalizeNullableString = (value?: string | null) => {
 
 const normalizeNullableEmail = (value?: string | null) =>
   normalizeNullableString(value)?.toLowerCase() ?? null;
+
+const normalizeSearch = (value?: string) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+};
 
 const buildCollegeFeeInquiryData = (
   input: CreateCollegeFeeInquiryInput | UpdateCollegeFeeInquiryInput,
@@ -192,6 +203,54 @@ const getCollegeFeeInquiryById = async (id: string) => {
   return inquiry;
 };
 
+const buildCollegeFeeInquiryWhere = (
+  input: ListCollegeFeeInquiriesInput,
+): Prisma.CollegeFeeInquiryWhereInput => {
+  const search = normalizeSearch(input.search);
+  const status = input.status ?? 'all';
+
+  return {
+    ...(status === 'read'
+      ? { readAt: { not: null } }
+      : status === 'unread'
+        ? { readAt: null }
+        : {}),
+    ...(search
+      ? {
+          OR: [
+            { fullName: { contains: search, mode: 'insensitive' } },
+            { phoneNumber: { contains: search, mode: 'insensitive' } },
+            { emailAddress: { contains: search, mode: 'insensitive' } },
+            { country: { contains: search, mode: 'insensitive' } },
+            { preferredStudyDestination: { contains: search, mode: 'insensitive' } },
+            { interestedCollegeName: { contains: search, mode: 'insensitive' } },
+            { source: { contains: search, mode: 'insensitive' } },
+            { sourcePage: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  };
+};
+
+const sortCollegeFeeInquiries = <
+  TInquiry extends {
+    readAt: Date | null;
+    createdAt: Date;
+  },
+>(
+  inquiries: TInquiry[],
+) =>
+  [...inquiries].sort((firstInquiry, secondInquiry) => {
+    const firstIsUnread = firstInquiry.readAt === null;
+    const secondIsUnread = secondInquiry.readAt === null;
+
+    if (firstIsUnread !== secondIsUnread) {
+      return firstIsUnread ? -1 : 1;
+    }
+
+    return secondInquiry.createdAt.getTime() - firstInquiry.createdAt.getTime();
+  });
+
 const getInquiryNotificationSettings = async () => {
   const siteSetting = await prisma.siteSetting.findFirst({
     orderBy: {
@@ -276,12 +335,17 @@ const sendInquiryEmails = async (inquiry: {
   }
 };
 
-export const listCollegeFeeInquiries = async () => {
-  return prisma.collegeFeeInquiry.findMany({
+export const listCollegeFeeInquiries = async (input: ListCollegeFeeInquiriesInput = {}) => {
+  const inquiries = await prisma.collegeFeeInquiry.findMany({
+    where: buildCollegeFeeInquiryWhere(input),
     select: collegeFeeInquirySelect,
     orderBy: [{ createdAt: 'desc' }],
   });
+
+  return sortCollegeFeeInquiries(inquiries);
 };
+
+export const getAdminCollegeFeeInquiryById = async (id: string) => getCollegeFeeInquiryById(id);
 
 export const createCollegeFeeInquiry = async (input: CreateCollegeFeeInquiryInput) => {
   await assertNoSpamIndicators(input);
@@ -316,5 +380,37 @@ export const deleteCollegeFeeInquiry = async (id: string) => {
 
   await prisma.collegeFeeInquiry.delete({
     where: { id },
+  });
+};
+
+export const markCollegeFeeInquiryAsRead = async (id: string) => {
+  const inquiry = await getCollegeFeeInquiryById(id);
+
+  if (inquiry.readAt) {
+    return inquiry;
+  }
+
+  return prisma.collegeFeeInquiry.update({
+    where: { id },
+    data: {
+      readAt: new Date(),
+    },
+    select: collegeFeeInquirySelect,
+  });
+};
+
+export const markCollegeFeeInquiryAsUnread = async (id: string) => {
+  const inquiry = await getCollegeFeeInquiryById(id);
+
+  if (!inquiry.readAt) {
+    return inquiry;
+  }
+
+  return prisma.collegeFeeInquiry.update({
+    where: { id },
+    data: {
+      readAt: null,
+    },
+    select: collegeFeeInquirySelect,
   });
 };

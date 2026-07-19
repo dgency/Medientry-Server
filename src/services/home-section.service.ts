@@ -247,7 +247,11 @@ const resolveFeaturedMedicalCollegeItems = async (
   return applyItemLimit(
     applySelectedOrder(medicalColleges, selectedItemIds),
     itemLimit,
-  ).map(mapMedicalCollegeToApi);
+  ).map((medicalCollege) =>
+    mapMedicalCollegeToApi(medicalCollege, {
+      includeInactiveFeeItems: includeUnpublished,
+    }),
+  );
 };
 
 const resolveSuccessStoryItems = async (

@@ -47,11 +47,18 @@ const baseConsultationLeadBodySchema = z.object({
   message: normalizeOptionalString,
   sourcePage: normalizeOptionalString,
   submissionDate: z.coerce.date().optional(),
+  submissionSource: z.enum(['consultation', 'contact']).optional(),
 });
 
 export const createConsultationLeadSchema = z.object({
   body: baseConsultationLeadBodySchema.extend({
     website: normalizeOptionalString,
+  }),
+});
+
+export const verifyThankYouTokenSchema = z.object({
+  body: z.object({
+    token: z.string().trim().min(1, 'Token is required.'),
   }),
 });
 

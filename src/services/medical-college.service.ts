@@ -3,6 +3,11 @@ import { Prisma, PublicationStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import {
+  type CollegeFeeItemInput,
+  type CollegeFeeSettingsInput,
+} from '../utils/college-fee';
+import { normalizeFeeItemsForWrite } from '../utils/college-fee-persistence';
+import {
   FEATURED_MEDICAL_COLLEGES_SECTION_KEY,
   getHomeSectionLookupKeys,
 } from '../utils/home-section';
@@ -22,6 +27,8 @@ type CreateMedicalCollegeInput = {
   tuitionFee?: number | null;
   hostelFee?: number | null;
   totalFee?: number | null;
+  feeStructure?: CollegeFeeItemInput[];
+  feeSettings?: CollegeFeeSettingsInput;
   ranking?: string;
   eligibility?: string;
   admissionProcess?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
@@ -144,6 +151,14 @@ const buildMedicalCollegeData = (
 
   if ('totalFee' in input) {
     data.totalFee = normalizeNullableDecimal(input.totalFee);
+  }
+
+  if ('feeSettings' in input && input.feeSettings !== undefined) {
+    data.exchangeRateUsdToInr = normalizeNullableDecimal(
+      input.feeSettings?.exchangeRateUsdToInr,
+    );
+    data.showExchangeRateNote = input.feeSettings?.showExchangeRateNote ?? false;
+    data.feeNote = normalizeNullableString(input.feeSettings?.feeNote);
   }
 
   if ('ranking' in input) {
@@ -294,7 +309,11 @@ export const listMedicalColleges = async ({
       ? orderedMedicalColleges.slice(0, resolvedLimit)
       : orderedMedicalColleges;
 
-  return slicedMedicalColleges.map(mapMedicalCollegeToApi);
+  return slicedMedicalColleges.map((medicalCollege) =>
+    mapMedicalCollegeToApi(medicalCollege, {
+      includeInactiveFeeItems: includeUnpublished,
+    }),
+  );
 };
 
 export const getFeaturedMedicalCollegesForHomepage = async () =>
@@ -319,19 +338,43 @@ export const getMedicalCollegeBySlug = async (
     throw new ApiError(404, 'Medical college not found.');
   }
 
-  return mapMedicalCollegeToApi(medicalCollege);
+  return mapMedicalCollegeToApi(medicalCollege, {
+    includeInactiveFeeItems: includeUnpublished,
+  });
 };
 
 export const createMedicalCollege = async (input: CreateMedicalCollegeInput) => {
   await ensureSlugAvailable(input.slug);
   await ensureStudyDestinationExists(input.studyDestinationId);
 
-  const medicalCollege = await prisma.medicalCollege.create({
-    data: buildMedicalCollegeData(input) as Prisma.MedicalCollegeUncheckedCreateInput,
-    select: publicMedicalCollegeSelect,
+  const medicalCollege = await prisma.$transaction(async (tx) => {
+    const createdMedicalCollege = await tx.medicalCollege.create({
+      data: buildMedicalCollegeData(input) as Prisma.MedicalCollegeUncheckedCreateInput,
+      select: { id: true },
+    });
+
+    if (input.feeStructure) {
+      const feeItems = normalizeFeeItemsForWrite(input.feeStructure);
+
+      if (feeItems.length > 0) {
+        await tx.collegeFeeItem.createMany({
+          data: feeItems.map((item) => ({
+            ...item,
+            medicalCollegeId: createdMedicalCollege.id,
+          })),
+        });
+      }
+    }
+
+    return tx.medicalCollege.findUniqueOrThrow({
+      where: { id: createdMedicalCollege.id },
+      select: publicMedicalCollegeSelect,
+    });
   });
 
-  return mapMedicalCollegeToApi(medicalCollege);
+  return mapMedicalCollegeToApi(medicalCollege, {
+    includeInactiveFeeItems: true,
+  });
 };
 
 export const updateMedicalCollege = async (
@@ -353,13 +396,39 @@ export const updateMedicalCollege = async (
 
   await ensureStudyDestinationExists(input.studyDestinationId);
 
-  const medicalCollege = await prisma.medicalCollege.update({
-    where: { id },
-    data: buildMedicalCollegeData(input) as Prisma.MedicalCollegeUncheckedUpdateInput,
-    select: publicMedicalCollegeSelect,
+  const medicalCollege = await prisma.$transaction(async (tx) => {
+    await tx.medicalCollege.update({
+      where: { id },
+      data: buildMedicalCollegeData(input) as Prisma.MedicalCollegeUncheckedUpdateInput,
+      select: { id: true },
+    });
+
+    if (input.feeStructure) {
+      const feeItems = normalizeFeeItemsForWrite(input.feeStructure);
+
+      await tx.collegeFeeItem.deleteMany({
+        where: { medicalCollegeId: id },
+      });
+
+      if (feeItems.length > 0) {
+        await tx.collegeFeeItem.createMany({
+          data: feeItems.map((item) => ({
+            ...item,
+            medicalCollegeId: id,
+          })),
+        });
+      }
+    }
+
+    return tx.medicalCollege.findUniqueOrThrow({
+      where: { id },
+      select: publicMedicalCollegeSelect,
+    });
   });
 
-  return mapMedicalCollegeToApi(medicalCollege);
+  return mapMedicalCollegeToApi(medicalCollege, {
+    includeInactiveFeeItems: true,
+  });
 };
 
 export const deleteMedicalCollege = async (id: string) => {

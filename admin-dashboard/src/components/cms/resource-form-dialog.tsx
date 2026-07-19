@@ -14,6 +14,7 @@ import { FileUploadField } from './file-upload-field';
 import { JsonEditorField } from './json-editor-field';
 import { AdmissionProcessCardsField } from './admission-process-cards-field';
 import { StudyAbroadCardsField } from './study-abroad-cards-field';
+import { CollegeFeeStructureField } from './college-fee-structure-field';
 
 type ResourceFormDialogProps<TItem extends { id: string }> = {
   config: ResourceConfig<TItem>;
@@ -189,6 +190,21 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                             onChange={controllerField.onChange}
                             rows={field.rows ?? 5}
                             placeholder={field.placeholder}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'college-fee-structure' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <CollegeFeeStructureField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
                           />
                         )}
                       />

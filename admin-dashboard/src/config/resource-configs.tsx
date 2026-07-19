@@ -12,6 +12,106 @@ import type { ResourceConfig } from '../types/app';
 type ResourceItem = { id: string; [key: string]: unknown };
 const siteBaseUrl = getSiteBaseUrl();
 
+const defaultCollegeFeeManagementValue = () => ({
+  feeStructure: [
+    {
+      label: 'Total Tuition Fees (Including 1-Year Internship)',
+      amountUsd: null,
+      amountInr: null,
+      billingPeriod: 'total',
+      description: null,
+      sortOrder: 1,
+      isTotal: true,
+      isActive: true,
+    },
+    {
+      label: 'Seat Booking Amount',
+      amountUsd: null,
+      amountInr: null,
+      billingPeriod: 'one_time',
+      description: null,
+      sortOrder: 2,
+      isTotal: false,
+      isActive: true,
+    },
+    {
+      label: 'Pay During Admission',
+      amountUsd: null,
+      amountInr: null,
+      billingPeriod: 'admission',
+      description: null,
+      sortOrder: 3,
+      isTotal: false,
+      isActive: true,
+    },
+    {
+      label: 'Remaining Amount (Pay in 5 Years)',
+      amountUsd: null,
+      amountInr: null,
+      billingPeriod: 'installment',
+      description: null,
+      sortOrder: 4,
+      isTotal: false,
+      isActive: true,
+    },
+    {
+      label: 'AC Hostel + Food (Per Month)',
+      amountUsd: null,
+      amountInr: null,
+      billingPeriod: 'monthly',
+      description: null,
+      sortOrder: 5,
+      isTotal: false,
+      isActive: true,
+    },
+  ],
+  feeSettings: {
+    exchangeRateUsdToInr: null,
+    showExchangeRateNote: false,
+    feeNote: null,
+  },
+});
+
+const formatNullableUsd = (value: unknown) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return '-';
+  }
+
+  return `$${value.toLocaleString('en-US')}`;
+};
+
+const getMedicalCollegeFeeSummary = (item: ResourceItem) => {
+  const feeStructure = Array.isArray(item.feeStructure) ? item.feeStructure : [];
+  const totalRow =
+    feeStructure.find(
+      (feeItem) =>
+        feeItem &&
+        typeof feeItem === 'object' &&
+        (feeItem as Record<string, unknown>).isTotal === true,
+    ) ??
+    feeStructure.find(
+      (feeItem) =>
+        feeItem &&
+        typeof feeItem === 'object' &&
+        typeof (feeItem as Record<string, unknown>).label === 'string' &&
+        String((feeItem as Record<string, unknown>).label).toLowerCase().includes('total'),
+    );
+
+  if (totalRow && typeof totalRow === 'object') {
+    return formatNullableUsd((totalRow as Record<string, unknown>).amountUsd);
+  }
+
+  if (typeof item.totalFee === 'number') {
+    return formatNullableUsd(item.totalFee);
+  }
+
+  if (typeof item.tuitionFee === 'number') {
+    return formatNullableUsd(item.tuitionFee);
+  }
+
+  return '-';
+};
+
 const homeHeroFallbackContent = {
   badgeText: 'TRUSTED MBBS CONSULTANCY SINCE 2018',
   headingText: 'Your Gateway\nto MBBS\nAbroad',
@@ -1607,9 +1707,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       image: '',
       establishedYear: '',
       shortDescription: '',
-      tuitionFee: '',
-      hostelFee: '',
-      totalFee: '',
+      feeManagement: defaultCollegeFeeManagementValue(),
       sortOrder: 0,
       eligibility: '',
       admissionProcess: '',
@@ -1634,9 +1732,12 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { name: 'establishedYear', label: 'Established Year', type: 'text' },
       { name: 'sortOrder', label: 'Display Order', type: 'number', required: true, min: 0 },
       { name: 'shortDescription', label: 'Description', type: 'textarea', rows: 4, colSpan: 2 },
-      { name: 'tuitionFee', label: 'Indicative Fee', type: 'number', min: 0 },
-      { name: 'hostelFee', label: 'Hostel Fee', type: 'number', min: 0 },
-      { name: 'totalFee', label: 'Total Fee', type: 'number', min: 0 },
+      {
+        name: 'feeManagement',
+        label: 'Fee Structure',
+        type: 'college-fee-structure',
+        colSpan: 2,
+      },
       { name: 'eligibility', label: 'Eligibility', type: 'textarea', rows: 3, colSpan: 2 },
       { name: 'status', label: 'Status', type: 'select', required: true, options: publicationStatusOptions },
       { name: 'isFeatured', label: 'Featured / Homepage Visible', type: 'switch' },
@@ -1649,7 +1750,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     columns: [
       { key: 'name', label: 'College', render: (item) => <div className="font-semibold">{String(item.name ?? '-')}</div> },
       { key: 'location', label: 'Location', render: (item) => [String(item.city ?? '').trim(), String(item.country ?? '').trim()].filter(Boolean).join(', ') || '-' },
-      { key: 'fee', label: 'Indicative Fee', render: (item) => item.tuitionFee != null ? `$${Number(item.tuitionFee).toLocaleString('en-US')}` : '-' },
+      { key: 'fee', label: 'Main Total', render: (item) => getMedicalCollegeFeeSummary(item) },
       { key: 'featured', label: 'Homepage', render: (item) => <Badge variant={item.isFeatured ? 'success' : 'outline'}>{item.isFeatured ? 'Visible' : 'Hidden'}</Badge> },
       { key: 'sortOrder', label: 'Order', render: (item) => String(item.sortOrder ?? 0) },
       { key: 'status', label: 'Status', render: (item) => badgeForStatus(item.status) },
@@ -1660,6 +1761,16 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       studyDestinationId: String(item.studyDestinationId ?? ''),
       image: String(item.image ?? item.featuredImage ?? ''),
       establishedYear: String(((item.contentBlocks as Record<string, unknown> | null)?.established) ?? ''),
+      feeManagement: {
+        feeStructure:
+          Array.isArray(item.feeStructure) && item.feeStructure.length > 0
+            ? item.feeStructure
+            : defaultCollegeFeeManagementValue().feeStructure,
+        feeSettings:
+          item.feeSettings && typeof item.feeSettings === 'object'
+            ? item.feeSettings
+            : defaultCollegeFeeManagementValue().feeSettings,
+      },
       admissionProcess: toJsonTextareaValue(item.admissionProcess),
       facilities: toKeywordsValue(item.facilities),
       gallery: toJsonTextareaValue(item.gallery),
@@ -1667,6 +1778,15 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       seoKeywords: toKeywordsValue(item.seoKeywords),
     }),
     buildPayload: (values) => {
+      const feeManagement =
+        values.feeManagement &&
+        typeof values.feeManagement === 'object' &&
+        !Array.isArray(values.feeManagement)
+          ? (values.feeManagement as {
+              feeStructure?: unknown;
+              feeSettings?: unknown;
+            })
+          : null;
       const existingContentBlocks =
         values.contentBlocks && typeof values.contentBlocks === 'object' && !Array.isArray(values.contentBlocks)
           ? { ...(values.contentBlocks as Record<string, unknown>) }
@@ -1682,8 +1802,20 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         ...(establishedYear ? { established: establishedYear } : {}),
       };
 
+      const restValues = { ...values };
+      delete restValues.feeManagement;
+
       return {
-        ...values,
+        ...restValues,
+        feeStructure: Array.isArray(feeManagement?.feeStructure)
+          ? feeManagement?.feeStructure
+          : [],
+        feeSettings:
+          feeManagement?.feeSettings &&
+          typeof feeManagement.feeSettings === 'object' &&
+          !Array.isArray(feeManagement.feeSettings)
+            ? feeManagement.feeSettings
+            : defaultCollegeFeeManagementValue().feeSettings,
         facilities: badgeFeatures,
         contentBlocks,
       };

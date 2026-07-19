@@ -1,0 +1,54 @@
+
+> medientry-server@1.0.0 dev:api
+> tsx watch src/server.ts
+
+◇ injected env (22) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+[env] Loaded .env from F:\Custom Coding Project\Medientry LiveSite\Medientry-Server
+[bootstrap] Default super admin is ready for anik.dgency@gmail.com.
+Medientry API is running in development mode.
+[server] API base: http://localhost:5000/api
+[server] Health: http://localhost:5000/api/health
+[server] API base: http://192.168.0.125:5000/api
+[server] Health: http://192.168.0.125:5000/api/health
+[0mGET /api/health [32m200[0m 5.580 ms - 184[0m
+[0mGET /api/pages/home [32m200[0m 21.922 ms - -[0m
+[0mGET /api/notices [32m200[0m 10.811 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 172.437 ms - 517[0m
+[0mGET /api/study-destinations?status=published [32m200[0m 197.699 ms - -[0m
+[0mGET /api/gallery/homepage [32m200[0m 193.105 ms - -[0m
+[0mGET /api/home-reels/homepage [32m200[0m 257.246 ms - -[0m
+[0mGET /api/medical-colleges/homepage/featured [32m200[0m 259.968 ms - -[0m
+[0mGET /api/success-stories/homepage [32m200[0m 259.236 ms - -[0m
+[0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 242.813 ms - -[0m
+[0mGET /api/home-sections [32m200[0m 257.911 ms - -[0m
+[0mGET /api/study-destinations?showInMenu=true&status=published [32m200[0m 6.141 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 10.434 ms - 517[0m
+[0mGET /api/medical-colleges [32m200[0m 58.899 ms - -[0m
+[0mGET /api/notices [32m200[0m 81.824 ms - -[0m
+[0mGET /api/medical-colleges [32m200[0m 15.886 ms - -[0m
+[0mGET /api/study-destinations?status=published [32m200[0m 15.354 ms - -[0m
+[0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 109.797 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 150.362 ms - 517[0m
+[0mGET /api/gallery/homepage [32m200[0m 164.038 ms - -[0m
+[0mGET /api/notices [32m200[0m 163.554 ms - -[0m
+[0mGET /api/medical-colleges/homepage/featured [32m200[0m 188.286 ms - -[0m
+[0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 163.287 ms - -[0m
+[0mGET /api/home-sections [32m200[0m 182.439 ms - -[0m
+[0mGET /api/home-reels/homepage [32m200[0m 210.296 ms - -[0m
+[0mGET /api/success-stories/homepage [32m200[0m 210.365 ms - -[0m
+[0mGET /api/study-destinations?status=published [32m200[0m 253.216 ms - -[0m
+[0mGET /api/pages/home [32m200[0m 255.835 ms - -[0m
+[0mGET /api/pages/home [32m200[0m 2.276 ms - -[0m
+[0mGET /api/home-reels/homepage [32m200[0m 4.027 ms - -[0m
+[0mGET /api/study-destinations?status=published [32m200[0m 6.396 ms - -[0m
+[0mGET /api/gallery/homepage [32m200[0m 4.369 ms - -[0m
+[0mGET /api/success-stories/homepage [32m200[0m 5.695 ms - -[0m
+[0mGET /api/medical-colleges/homepage/featured [32m200[0m 11.756 ms - -[0m
+[0mGET /api/notices [32m200[0m 10.848 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 2.778 ms - 517[0m
+[0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 12.548 ms - -[0m
+[0mGET /api/home-sections [32m200[0m 19.286 ms - -[0m
+[0mGET /api/pages/about [32m200[0m 1.718 ms - -[0m
+[0mGET /api/site-settings [32m200[0m 1.808 ms - 517[0m
+[0mGET /api/site-settings [32m200[0m 1.637 ms - 517[0m
+[0mGET /api/study-destinations?showInMenu=true&status=published [32m200[0m 4.821 ms - -[0m

@@ -24,5 +24,15 @@ export const validateRequest =
       req.params = parsed.params as Request['params'];
     }
 
+    if (parsed.query !== undefined) {
+      const currentQuery = req.query as Record<string, unknown>;
+
+      for (const key of Object.keys(currentQuery)) {
+        delete currentQuery[key];
+      }
+
+      Object.assign(currentQuery, parsed.query as Record<string, unknown>);
+    }
+
     next();
   };

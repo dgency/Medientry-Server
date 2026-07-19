@@ -39,6 +39,14 @@ const normalizeOptionalUuid = z
   .optional()
   .transform((value) => (typeof value === 'string' && value.trim() ? value.trim() : undefined));
 
+const normalizeOptionalQueryString = z.preprocess((value) => {
+  if (Array.isArray(value)) {
+    return typeof value[0] === 'string' ? value[0] : undefined;
+  }
+
+  return typeof value === 'string' ? value : undefined;
+}, z.string().trim().optional().transform((value) => (value ? value : undefined)));
+
 const baseCollegeFeeInquiryBodySchema = z.object({
   fullName: z.string().trim().min(2, 'Full name must be at least 2 characters long.'),
   phoneNumber: phoneNumberSchema,
@@ -58,6 +66,21 @@ const baseCollegeFeeInquiryBodySchema = z.object({
 export const createCollegeFeeInquirySchema = z.object({
   body: baseCollegeFeeInquiryBodySchema.extend({
     website: normalizeOptionalString,
+  }),
+});
+
+export const listCollegeFeeInquiryQuerySchema = z.object({
+  query: z.object({
+    search: normalizeOptionalQueryString,
+    status: z
+      .preprocess((value) => {
+        if (Array.isArray(value)) {
+          return typeof value[0] === 'string' ? value[0] : undefined;
+        }
+
+        return typeof value === 'string' ? value : undefined;
+      }, z.enum(['all', 'read', 'unread']).optional())
+      .transform((value) => value ?? 'all'),
   }),
 });
 

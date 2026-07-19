@@ -121,6 +121,36 @@ MAIL_FROM_NAME=Medientry
 MAIL_FROM_EMAIL=no-reply@example.com
 ```
 
+## Local API Contract
+
+For local development and LAN/mobile testing, keep `CLIENT_URL` and `ADMIN_URL` as single primary origins and put every extra browser origin in `CORS_ORIGINS`.
+
+Recommended backend `.env` shape:
+
+```env
+HOST="0.0.0.0"
+PORT="5000"
+CLIENT_URL="http://localhost:3000"
+ADMIN_URL="http://localhost:5173"
+CORS_ORIGINS="http://127.0.0.1:3000,http://YOUR_COMPUTER_LOCAL_IP:3000,http://127.0.0.1:5173,http://YOUR_COMPUTER_LOCAL_IP:5173"
+```
+
+Recommended local run commands:
+
+```bash
+# API only
+npm run dev:api
+
+# API + admin dashboard
+npm run dev
+```
+
+If `http://localhost:5000/api/health` works but `http://YOUR_COMPUTER_LOCAL_IP:5000/api/health` times out from a phone or another laptop:
+
+- confirm `ipconfig` still shows the same IPv4 address you put in `NEXT_PUBLIC_API_URL`
+- confirm the API is listening on `0.0.0.0:5000`
+- allow Node.js on Private networks in Windows Firewall, or open inbound TCP port `5000`
+
 ## Main API Routes
 
 - `GET /api/health`
