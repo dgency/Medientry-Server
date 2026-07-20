@@ -15,6 +15,7 @@ import { JsonEditorField } from './json-editor-field';
 import { AdmissionProcessCardsField } from './admission-process-cards-field';
 import { StudyAbroadCardsField } from './study-abroad-cards-field';
 import { CollegeFeeStructureField } from './college-fee-structure-field';
+import { YouTubeVideoField } from './youtube-video-field';
 
 type ResourceFormDialogProps<TItem extends { id: string }> = {
   config: ResourceConfig<TItem>;
@@ -225,6 +226,23 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                             placeholder={field.placeholder}
                             previewable={field.previewable}
                             previewLabel={field.previewLabel}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'youtube-video' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <YouTubeVideoField
+                            value={String(controllerField.value ?? '')}
+                            onChange={controllerField.onChange}
+                            placeholder={field.placeholder}
+                            thumbnailValue={String(watchedValues[field.linkedFieldName ?? 'thumbnail'] ?? '')}
                           />
                         )}
                       />

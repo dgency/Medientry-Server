@@ -31,6 +31,7 @@ type InquiryStatusFilter = 'all' | 'read' | 'unread';
 
 type CollegeFeeInquiry = {
   id: string;
+  trackingId: string;
   medicalCollegeId: string | null;
   fullName: string;
   phoneNumber: string;
@@ -365,25 +366,34 @@ export function CollegeFeeInquiriesPage() {
             <CardDescription>{collegeFeeInquiryConfig.description}</CardDescription>
           </div>
 
-          <div className="flex w-full flex-col gap-3 xl:w-auto xl:flex-row xl:items-center">
-            <div className="relative w-full xl:min-w-[280px]">
+          <div className="flex w-full flex-col gap-3 xl:flex-row xl:flex-wrap xl:items-center xl:justify-end 2xl:flex-nowrap">
+            <div className="relative w-full xl:min-w-[320px] xl:max-w-[420px] xl:flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="pl-10"
-                placeholder="Search college fee inquiries..."
+                placeholder="Search by inquiry ID, name, phone, email, college, or source..."
                 aria-label="Search college fee inquiries"
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2" aria-label="Filter inquiries by status">
+            <div
+              className="flex w-full items-center gap-1 overflow-x-auto rounded-xl border border-border bg-muted/30 p-1 shadow-sm sm:w-auto"
+              aria-label="Filter inquiries by status"
+            >
               {statusFilters.map((filterOption) => (
                 <Button
                   key={filterOption.value}
                   type="button"
                   variant={status === filterOption.value ? 'default' : 'outline'}
                   size="sm"
+                  className={cn(
+                    'min-w-[72px] rounded-lg px-4 shadow-none',
+                    status === filterOption.value
+                      ? 'border-primary'
+                      : 'border-transparent bg-transparent hover:bg-white',
+                  )}
                   aria-pressed={status === filterOption.value}
                   onClick={() => setStatus(filterOption.value)}
                 >
@@ -438,6 +448,13 @@ export function CollegeFeeInquiriesPage() {
                     </div>
 
                     <div className="space-y-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Inquiry ID</p>
+                        <div className="mt-1">
+                          <Badge variant="success">{item.trackingId}</Badge>
+                        </div>
+                      </div>
+
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Name</p>
                         <p className={cn('mt-1 text-sm text-foreground', item.readAt ? '' : 'font-semibold')}>
@@ -495,7 +512,7 @@ export function CollegeFeeInquiriesPage() {
                       Status
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Name
+                      Inquiry
                     </th>
                     <th className="w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Phone
@@ -525,7 +542,10 @@ export function CollegeFeeInquiriesPage() {
                         <StatusBadge readAt={item.readAt} />
                       </td>
                       <td className={cn('max-w-0 px-4 py-4 text-sm text-foreground [overflow-wrap:anywhere]', item.readAt ? '' : 'font-semibold')}>
-                        {item.fullName}
+                        <div className="space-y-2">
+                          <Badge variant="success">{item.trackingId}</Badge>
+                          <p className="text-sm text-foreground">{item.fullName}</p>
+                        </div>
                       </td>
                       <td className={cn('px-4 py-4 text-sm text-foreground', item.readAt ? '' : 'font-medium')}>
                         {item.phoneNumber}
@@ -740,6 +760,7 @@ export function CollegeFeeInquiryDetailsPage() {
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-3">
                 <CardTitle className="text-2xl">{inquiry.fullName}</CardTitle>
+                <Badge variant="success">{inquiry.trackingId}</Badge>
                 <StatusBadge readAt={inquiry.readAt} />
                 {markReadMutation.isPending ? (
                   <Badge variant="info" className="gap-1.5">
@@ -782,6 +803,7 @@ export function CollegeFeeInquiryDetailsPage() {
           </CardHeader>
           <CardContent>
             <dl className="grid gap-5 sm:grid-cols-2">
+              <DetailField label="Inquiry ID" value={inquiry.trackingId} />
               <DetailField label="Full Name" value={inquiry.fullName} />
               <DetailField label="Phone Number" value={inquiry.phoneNumber} />
               <DetailField

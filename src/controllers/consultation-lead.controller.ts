@@ -7,6 +7,7 @@ import { signThankYouToken, verifyThankYouToken } from '../utils/thank-you-token
 import {
   createConsultationLead,
   deleteConsultationLead,
+  getAdminConsultationLeadById,
   listConsultationLeads,
 } from '../services/consultation-lead.service';
 
@@ -36,6 +37,16 @@ export const createPublicConsultationLead = asyncHandler(async (req, res: Respon
       lead,
       thankYouToken,
     },
+  });
+});
+
+export const getAdminConsultationLead = asyncHandler(async (req, res: Response) => {
+  const lead = await getAdminConsultationLeadById(String(req.params.id));
+
+  sendResponse(res, 200, {
+    success: true,
+    message: 'Consultation lead retrieved successfully.',
+    data: lead,
   });
 });
 

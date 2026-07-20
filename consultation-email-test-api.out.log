@@ -1,0 +1,7 @@
+◇ injected env (35) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+[env] Loaded .env from F:\Custom Coding Project\Medientry LiveSite\Medientry-Server
+Medientry API is running in development mode.
+[server] API base: http://localhost:5000/api
+[server] Health: http://localhost:5000/api/health
+[server] API base: http://192.168.0.125:5000/api
+[server] Health: http://192.168.0.125:5000/api/health

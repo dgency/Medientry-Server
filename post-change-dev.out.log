@@ -1,0 +1,70 @@
+
+> medientry-server@1.0.0 predev
+> npm run prisma:generate && prisma migrate deploy
+
+
+> medientry-server@1.0.0 prisma:generate
+> prisma generate
+
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to .\node_modules\@prisma\client in 160ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "medientry_cms", schema "public" at "localhost:5432"
+
+15 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+> medientry-server@1.0.0 dev
+> concurrently -k -n api,admin -c green,magenta "npm run dev:api" "npm run dev:admin"
+
+[api] 
+[api] > medientry-server@1.0.0 dev:api
+[api] > tsx watch src/server.ts
+[api] 
+[admin] 
+[admin] > medientry-server@1.0.0 dev:admin
+[admin] > npm --prefix admin-dashboard run dev
+[admin] 
+[admin] 
+[admin] > admin-dashboard@0.0.0 dev
+[admin] > vite --host 0.0.0.0 --port 5173
+[admin] 
+[admin] [2m3:08:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because vite config has changed
+[api] ◇ injected env (35) from .env // tip: ⌘ suppress logs { quiet: true }
+[api] [env] Loaded .env from F:\Custom Coding Project\Medientry LiveSite\Medientry-Server
+[admin] 
+[admin]   [32m[1mVITE[22m v8.0.16[39m  [2mready in [0m[1m929[22m[2m[0m ms[22m
+[admin] 
+[admin]   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[admin]   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.0.125:[1m5173[22m/[39m
+[api] [bootstrap] Default super admin already exists for anik.dgency@gmail.com. Skipping password reset.
+[api] Medientry API is running in development mode.
+[api] [server] API base: http://localhost:5000/api
+[api] [server] Health: http://localhost:5000/api/health
+[api] [server] API base: http://192.168.0.125:5000/api
+[api] [server] Health: http://192.168.0.125:5000/api/health
+[api] [0mGET /api/health [32m200[0m 4.962 ms - 183[0m
+[api] [0mPOST /api/consultation-leads [32m201[0m 6593.893 ms - 947[0m
+[api] [0mPOST /api/consultation-leads [32m201[0m 4226.334 ms - 945[0m
+[api] [0mPOST /api/consultation-leads [32m201[0m 4112.820 ms - 960[0m
+[api] [0mPOST /api/consultation-leads [32m201[0m 4404.568 ms - 982[0m
+[api] [0mGET /api/home-reels/homepage [32m200[0m 7.764 ms - 82[0m
+[api] [0mGET /api/pages/home [32m200[0m 12.877 ms - -[0m
+[api] [0mGET /api/notices [32m200[0m 7.505 ms - -[0m
+[api] [0mGET /api/success-stories/homepage [32m200[0m 67.365 ms - -[0m
+[api] [0mGET /api/study-destinations?status=published [32m200[0m 73.753 ms - -[0m
+[api] [0mGET /api/gallery/homepage [32m200[0m 76.382 ms - -[0m
+[api] [0mGET /api/site-settings [32m200[0m 82.651 ms - 517[0m
+[api] [0mGET /api/medical-colleges/homepage/featured [32m200[0m 86.686 ms - -[0m
+[api] [0mGET /api/home-sections [32m200[0m 85.520 ms - -[0m
+[api] [0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 8.868 ms - -[0m
+[api] [0mGET /api/site-settings [32m200[0m 6.122 ms - 517[0m
+[api] [0mGET /api/study-destinations?showInMenu=true&status=published [32m200[0m 12.675 ms - -[0m

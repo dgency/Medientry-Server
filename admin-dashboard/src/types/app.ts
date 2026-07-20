@@ -30,6 +30,7 @@ export type FieldType =
   | 'keywords'
   | 'url'
   | 'datetime-local'
+  | 'youtube-video'
   | 'admission-process-cards'
   | 'study-abroad-cards'
   | 'college-fee-structure';
@@ -57,6 +58,7 @@ export type ResourceField = {
   accept?: string;
   previewable?: boolean;
   previewLabel?: string;
+  linkedFieldName?: string;
   visible?: ResourceFieldCondition;
   requiredWhen?: ResourceFieldCondition;
   validate?: (

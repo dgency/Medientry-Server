@@ -3,12 +3,12 @@ import { Prisma, SimpleStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import { publicHomeReelSelect } from '../utils/home-reel-response';
+import { getYouTubeVideoDetails } from '../utils/youtube';
 
 type CreateHomeReelInput = {
   title: string;
+  videoUrl: string;
   thumbnail?: string;
-  wistiaVideoId?: string;
-  wistiaEmbedCode?: string;
   sortOrder: number;
   status: SimpleStatus;
 };
@@ -43,12 +43,15 @@ const buildHomeReelData = (
     data.thumbnail = normalizeNullableString(input.thumbnail);
   }
 
-  if ('wistiaVideoId' in input) {
-    data.wistiaVideoId = normalizeNullableString(input.wistiaVideoId);
-  }
+  if ('videoUrl' in input && input.videoUrl !== undefined) {
+    const videoDetails = getYouTubeVideoDetails(input.videoUrl);
 
-  if ('wistiaEmbedCode' in input) {
-    data.wistiaEmbedCode = normalizeNullableString(input.wistiaEmbedCode);
+    if (!videoDetails) {
+      throw new ApiError(400, 'Please enter a valid YouTube video or YouTube Shorts URL.');
+    }
+
+    data.videoUrl = videoDetails.normalizedUrl;
+    data.youtubeVideoId = videoDetails.videoId;
   }
 
   if ('sortOrder' in input && input.sortOrder !== undefined) {
@@ -72,7 +75,11 @@ export const listHomeReels = async (includeInactive = false) => {
 
 export const listHomepageHomeReels = async () => {
   return prisma.homeReel.findMany({
-    where: { status: SimpleStatus.ACTIVE },
+    where: {
+      status: SimpleStatus.ACTIVE,
+      videoUrl: { not: null },
+      youtubeVideoId: { not: null },
+    },
     select: publicHomeReelSelect,
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
   });

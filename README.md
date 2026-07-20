@@ -26,6 +26,7 @@ Update `.env` with your real values:
 - `DATABASE_URL`
 - `JWT_SECRET`
 - `SEED_SUPER_ADMIN_PASSWORD`
+- `MAIL_PASS` when enabling SMTP delivery
 - optionally `SEED_SUPER_ADMIN_EMAIL`
 - optionally `SEED_SUPER_ADMIN_NAME`
 
@@ -43,6 +44,12 @@ Generate Prisma client, run migrations, and seed:
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:seed
+```
+
+Optional backend-only SMTP verification:
+
+```bash
+npm run mail:test
 ```
 
 Start the API:
@@ -109,17 +116,30 @@ npm run start
 - `HOST` defaults to `0.0.0.0` so the backend can be reached from localhost or LAN when desired.
 - `CORS_ORIGINS` accepts a comma-separated allowlist in addition to `CLIENT_URL` and `ADMIN_URL`.
 - `MAIL_ENABLED=false` by default so the API can boot without SMTP credentials.
+- Public-form email notifications are centralized in the backend and use one shared SMTP transporter.
+- Administrative notifications are sent to every address listed in `ADMIN_NOTIFICATION_EMAILS`.
+- Customer confirmations keep the Medientry sender identity and are only sent for workflows that already support them.
 - To enable Gmail SMTP, set:
 
 ```env
 MAIL_ENABLED=true
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USER=your-gmail-address@gmail.com
-MAIL_PASS=your-gmail-app-password
+MAIL_USER=medientry@gmail.com
+MAIL_PASS=ADD_THE_NEW_GMAIL_APP_PASSWORD_LOCALLY
 MAIL_FROM_NAME=Medientry
-MAIL_FROM_EMAIL=no-reply@example.com
+MAIL_FROM_EMAIL=medientry@gmail.com
+MAIL_REPLY_TO_EMAIL=medientry@gmail.com
+ADMIN_NOTIFICATION_EMAILS=medientry@gmail.com,info@medientrybd.com,anik.dgency@gmail.com
 ```
+
+Safe deliverability checklist:
+
+- configure Google Two-Step Verification for `medientry@gmail.com`
+- generate a fresh Gmail App Password
+- store that App Password only in backend runtime env as `MAIL_PASS`
+- keep `ADMIN_URL` accurate if you want dashboard links in admin emails
+- review [docs/email-deliverability-setup.md](docs/email-deliverability-setup.md)
 
 ## Local API Contract
 
@@ -237,5 +257,6 @@ These checks passed locally in this workspace:
 ## Notes
 
 - Live Prisma migration, seed, login, CRUD, and upload verification require a real PostgreSQL database with valid credentials.
+- Runtime bootstrap only creates the default super admin when it is missing and no longer resets an existing admin password on each server start.
 - Blog preview links in the dashboard use the Next.js `/blog/[slug]` route.
 - Study destination dashboard previews respect the existing fixed frontend routes for Bangladesh and Georgia, while other destinations use `/study-destinations/[slug]`.

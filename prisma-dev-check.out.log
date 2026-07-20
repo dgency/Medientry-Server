@@ -1,0 +1,62 @@
+
+> medientry-server@1.0.0 dev
+> concurrently -k -n api,admin -c green,magenta "npm run dev:api" "npm run dev:admin"
+
+[api] 
+[api] > medientry-server@1.0.0 dev:api
+[api] > tsx watch src/server.ts
+[api] 
+[admin] 
+[admin] > medientry-server@1.0.0 dev:admin
+[admin] > npm --prefix admin-dashboard run dev
+[admin] 
+[admin] 
+[admin] > admin-dashboard@0.0.0 dev
+[admin] > vite --host 0.0.0.0 --port 5173
+[admin] 
+[api] ◇ injected env (35) from .env // tip: ⌘ enable debugging { debug: true }
+[api] [env] Loaded .env from F:\Custom Coding Project\Medientry LiveSite\Medientry-Server
+[admin] 
+[admin]   [32m[1mVITE[22m v8.0.16[39m  [2mready in [0m[1m476[22m[2m[0m ms[22m
+[admin] 
+[admin]   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[admin]   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.0.125:[1m5173[22m/[39m
+[api] [bootstrap] Default super admin already exists for anik.dgency@gmail.com. Skipping password reset.
+[api] Medientry API is running in development mode.
+[api] [server] API base: http://localhost:5000/api
+[api] [server] Health: http://localhost:5000/api/health
+[api] [server] API base: http://192.168.0.125:5000/api
+[api] [server] Health: http://192.168.0.125:5000/api/health
+[api] [0mGET /api/health [32m200[0m 13.719 ms - 184[0m
+[api] [0mGET /api/pages/home [32m200[0m 21.332 ms - -[0m
+[api] [0mGET /api/notices [32m200[0m 10.186 ms - -[0m
+[api] [0mGET /api/study-destinations?status=published [32m200[0m 73.278 ms - -[0m
+[api] [0mGET /api/home-reels/homepage [32m200[0m 114.408 ms - 82[0m
+[api] [0mGET /api/site-settings [32m200[0m 113.358 ms - 517[0m
+[api] [0mGET /api/gallery/homepage [32m200[0m 116.801 ms - -[0m
+[api] [0mGET /api/success-stories/homepage [32m200[0m 125.868 ms - -[0m
+[api] [0mGET /api/medical-colleges/homepage/featured [32m200[0m 131.692 ms - -[0m
+[api] [0mGET /api/home-sections [32m200[0m 162.129 ms - -[0m
+[api] [0mGET /api/blogs?page=1&pageSize=100 [32m200[0m 9.032 ms - -[0m
+[api] [0mGET /api/site-settings [32m200[0m 2.784 ms - 517[0m
+[api] [0mGET /api/study-destinations?showInMenu=true&status=published [32m200[0m 5.624 ms - -[0m
+[api] 3:27:35 PM [tsx] change in ./src\services\college-fee-inquiry.service.ts Restarting...
+[api] c◇ injected env (35) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+[api] [env] Loaded .env from F:\Custom Coding Project\Medientry LiveSite\Medientry-Server
+[api] [bootstrap] Default super admin already exists for anik.dgency@gmail.com. Skipping password reset.
+[api] Medientry API is running in development mode.
+[api] [server] API base: http://localhost:5000/api
+[api] [server] Health: http://localhost:5000/api/health
+[api] [server] API base: http://192.168.0.125:5000/api
+[api] [server] Health: http://192.168.0.125:5000/api/health
+[api] 3:27:39 PM [tsx] change in ./src\utils\mailer.ts Restarting...
+[api] c◇ injected env (35) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+[api] [env] Loaded .env from F:\Custom Coding Project\Medientry LiveSite\Medientry-Server
+[api] [bootstrap] Default super admin already exists for anik.dgency@gmail.com. Skipping password reset.
+[api] Medientry API is running in development mode.
+[api] [server] API base: http://localhost:5000/api
+[api] [server] Health: http://localhost:5000/api/health
+[api] [server] API base: http://192.168.0.125:5000/api
+[api] [server] Health: http://192.168.0.125:5000/api/health
+[admin] [2m3:27:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/college-fee-inquiries-page.tsx[22m
+[admin] [2m3:27:58 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/college-fee-inquiries-page.tsx, /src/pages/resource-screen-page.tsx[22m

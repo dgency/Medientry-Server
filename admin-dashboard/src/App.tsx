@@ -2,6 +2,10 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { ProtectedRoute } from './components/auth/protected-route';
 import { DashboardLayout } from './components/layout/dashboard-layout';
+import {
+  ConsultationLeadDetailsPage,
+  ConsultationLeadsPage,
+} from './pages/consultation-leads-page';
 import { DashboardPage } from './pages/dashboard-page';
 import { CollegeFeeInquiriesPage, CollegeFeeInquiryDetailsPage } from './pages/college-fee-inquiries-page';
 import { HomeSectionsPage } from './pages/home-sections-page';
@@ -18,6 +22,8 @@ export function App() {
           <Route index element={<DashboardPage />} />
           <Route path="/site-settings" element={<SiteSettingsPage />} />
           <Route path="/home-sections" element={<HomeSectionsPage />} />
+          <Route path="/consultation-leads" element={<ConsultationLeadsPage />} />
+          <Route path="/consultation-leads/:leadId" element={<ConsultationLeadDetailsPage />} />
           <Route path="/college-fee-inquiries" element={<CollegeFeeInquiriesPage />} />
           <Route path="/college-fee-inquiries/:inquiryId" element={<CollegeFeeInquiryDetailsPage />} />
           <Route path="/:resourceKey" element={<ResourceScreenPage />} />

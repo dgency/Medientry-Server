@@ -7,6 +7,7 @@ import {
   toJsonTextareaValue,
   toKeywordsValue,
 } from '../lib/utils';
+import { extractYouTubeVideoId } from '../lib/youtube';
 import type { ResourceConfig } from '../types/app';
 
 type ResourceItem = { id: string; [key: string]: unknown };
@@ -1866,7 +1867,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     key: 'home-reels',
     title: 'Reels Videos',
     singular: 'Reel Video',
-    description: 'Manage homepage reel cards with thumbnails, future Wistia fields, status, and display order.',
+    description: 'Manage homepage reel cards with YouTube URLs, optional custom thumbnails, status, and display order.',
     endpoint: '/home-reels',
     statusToggle: {
       fieldName: 'status',
@@ -1878,27 +1879,41 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     emptyDescription: 'Add reel cards to populate the homepage video stories slider.',
     defaultValues: {
       title: '',
+      videoUrl: '',
       thumbnail: '',
-      wistiaVideoId: '',
-      wistiaEmbedCode: '',
       sortOrder: 0,
       status: 'ACTIVE',
     },
     fields: [
       { name: 'title', label: 'Title', type: 'text', required: true },
       {
-        name: 'thumbnail',
-        label: 'Thumbnail Image',
-        type: 'url',
+        name: 'videoUrl',
+        label: 'YouTube Video URL',
+        type: 'youtube-video',
+        required: true,
         colSpan: 2,
-        uploadKind: 'image',
-        previewLabel: 'Preview thumbnail',
+        linkedFieldName: 'thumbnail',
+        placeholder: 'https://www.youtube.com/watch?v=VIDEO_ID',
+        validate: (value) => {
+          const normalizedValue = String(value ?? '').trim();
+
+          if (!normalizedValue) {
+            return 'YouTube Video URL is required.';
+          }
+
+          return extractYouTubeVideoId(normalizedValue)
+            ? undefined
+            : 'Please enter a valid YouTube video or YouTube Shorts URL.';
+        },
       },
       {
-        name: 'wistiaVideoId',
-        label: 'Wistia Video ID',
-        type: 'text',
-        description: 'Optional for now. Example: ab12cd34ef',
+        name: 'thumbnail',
+        label: 'Video Thumbnail',
+        type: 'url',
+        colSpan: 2,
+        uploadKind: 'videoThumbnail',
+        previewLabel: 'Preview thumbnail',
+        description: 'Upload a custom thumbnail or select one from the Media Library. Leave this blank to use the YouTube thumbnail automatically.',
       },
       {
         name: 'status',
@@ -1906,14 +1921,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         type: 'select',
         required: true,
         options: simpleStatusOptions,
-      },
-      {
-        name: 'wistiaEmbedCode',
-        label: 'Wistia Embed Code',
-        type: 'textarea',
-        rows: 5,
-        colSpan: 2,
-        description: 'Optional for now. Paste the full Wistia embed snippet when ready.',
       },
       { name: 'sortOrder', label: 'Display Order', type: 'number', required: true, min: 0 },
     ],
@@ -1925,18 +1932,18 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         render: (item) => (String(item.thumbnail ?? '').trim() ? 'Uploaded' : 'Not set'),
       },
       {
-        key: 'wistia',
-        label: 'Wistia',
+        key: 'video',
+        label: 'Video',
         render: (item) =>
-          String(item.wistiaVideoId ?? '').trim() || String(item.wistiaEmbedCode ?? '').trim()
+          String(item.videoUrl ?? '').trim()
             ? 'Ready'
-            : 'Placeholder',
+            : 'Missing URL',
       },
       { key: 'status', label: 'Status', render: (item) => badgeForStatus(item.status) },
       { key: 'sortOrder', label: 'Order', render: (item) => String(item.sortOrder ?? 0) },
     ],
     getSearchText: (item) =>
-      `${String(item.title ?? '')} ${String(item.wistiaVideoId ?? '')} ${String(item.wistiaEmbedCode ?? '')}`,
+      `${String(item.title ?? '')} ${String(item.videoUrl ?? '')} ${String(item.youtubeVideoId ?? '')}`,
   },
   blogs: {
     key: 'blogs',
@@ -2097,6 +2104,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { name: 'sourcePage', label: 'Source Page', type: 'text', colSpan: 2 },
     ],
     columns: [
+      { key: 'trackingId', label: 'Inquiry ID', render: (item) => <Badge variant="success">{String(item.trackingId ?? '-')}</Badge> },
       { key: 'fullName', label: 'Name', render: (item) => <div className="font-semibold">{String(item.fullName ?? '-')}</div> },
       { key: 'phoneNumber', label: 'Phone', render: (item) => String(item.phoneNumber ?? '-') },
       { key: 'emailAddress', label: 'Email', render: (item) => String(item.emailAddress ?? '-') },
@@ -2106,7 +2114,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { key: 'createdAt', label: 'Submitted', render: (item) => formatDateTime(String(item.createdAt ?? '')) },
     ],
     getSearchText: (item) =>
-      `${String(item.fullName ?? '')} ${String(item.phoneNumber ?? '')} ${String(item.emailAddress ?? '')} ${String(item.country ?? '')} ${String(item.preferredStudyDestination ?? '')} ${String(item.interestedCollegeName ?? '')} ${String(item.sourcePage ?? '')}`,
+      `${String(item.trackingId ?? '')} ${String(item.fullName ?? '')} ${String(item.phoneNumber ?? '')} ${String(item.emailAddress ?? '')} ${String(item.country ?? '')} ${String(item.preferredStudyDestination ?? '')} ${String(item.interestedCollegeName ?? '')} ${String(item.sourcePage ?? '')}`,
   },
   'success-stories': {
     key: 'success-stories',

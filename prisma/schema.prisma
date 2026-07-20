@@ -231,6 +231,8 @@ model CollegeFeeItem {
 
 model CollegeFeeInquiry {
   id                        String         @id @default(uuid()) @db.Uuid
+  trackingNumber            Int            @unique @default(autoincrement())
+  trackingId                String         @unique
   medicalCollegeId          String?        @db.Uuid
   fullName                  String
   phoneNumber               String
@@ -254,6 +256,8 @@ model CollegeFeeInquiry {
 
 model ConsultationLead {
   id               String   @id @default(uuid()) @db.Uuid
+  trackingNumber   Int      @unique @default(autoincrement())
+  trackingId       String   @unique
   fullName         String
   userRole         String
   whatsappNumber   String
@@ -292,15 +296,15 @@ model GalleryItem {
 }
 
 model HomeReel {
-  id              String       @id @default(uuid()) @db.Uuid
-  title           String
-  thumbnail       String?
-  wistiaVideoId   String?
-  wistiaEmbedCode String?
-  sortOrder       Int          @default(0)
-  status          SimpleStatus @default(ACTIVE)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String       @id @default(uuid()) @db.Uuid
+  title          String
+  videoUrl       String?
+  youtubeVideoId String?
+  thumbnail      String?
+  sortOrder      Int          @default(0)
+  status         SimpleStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@index([status, sortOrder])
   @@map("home_reels")

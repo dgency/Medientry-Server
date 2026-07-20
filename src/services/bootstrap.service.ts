@@ -13,19 +13,24 @@ export const ensureDefaultSuperAdmin = async () => {
   }
 
   const email = env.SEED_SUPER_ADMIN_EMAIL.trim().toLowerCase();
-  const password = await hashPassword(env.SEED_SUPER_ADMIN_PASSWORD);
-
-  await prisma.user.upsert({
+  const existingUser = await prisma.user.findUnique({
     where: {
       email,
     },
-    update: {
-      name: env.SEED_SUPER_ADMIN_NAME.trim(),
-      password,
-      role: UserRole.SUPER_ADMIN,
-      status: UserStatus.ACTIVE,
+    select: {
+      id: true,
     },
-    create: {
+  });
+
+  if (existingUser) {
+    console.log(`[bootstrap] Default super admin already exists for ${email}. Skipping password reset.`);
+    return;
+  }
+
+  const password = await hashPassword(env.SEED_SUPER_ADMIN_PASSWORD);
+
+  await prisma.user.create({
+    data: {
       name: env.SEED_SUPER_ADMIN_NAME.trim(),
       email,
       password,
@@ -34,5 +39,5 @@ export const ensureDefaultSuperAdmin = async () => {
     },
   });
 
-  console.log(`[bootstrap] Default super admin is ready for ${email}.`);
+  console.log(`[bootstrap] Default super admin was created for ${email}.`);
 };

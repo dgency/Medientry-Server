@@ -1463,9 +1463,9 @@ const seedHomeReels = async () => {
 
     const data = {
       title: reel.title,
+      videoUrl: null,
+      youtubeVideoId: null,
       thumbnail: reel.thumbnail,
-      wistiaVideoId: null,
-      wistiaEmbedCode: null,
       sortOrder: reel.sortOrder,
       status: SimpleStatus.ACTIVE,
     };

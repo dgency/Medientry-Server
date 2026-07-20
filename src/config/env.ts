@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import dotenv from 'dotenv';
 
+import { buildMailRuntimeConfig } from '../utils/mail-config';
 import { envSchema } from '../validations/env.validation';
 
 const resolveProjectRoot = () => {
@@ -45,4 +46,10 @@ if (!parsedEnv.success) {
   throw new Error(`Invalid environment variables: ${issues}`);
 }
 
-export const env = parsedEnv.data;
+const runtimeMailConfig = buildMailRuntimeConfig(parsedEnv.data);
+
+export const env = {
+  ...parsedEnv.data,
+  MAIL_REPLY_TO_EMAIL: runtimeMailConfig.replyToEmail,
+  ADMIN_NOTIFICATION_EMAILS_LIST: runtimeMailConfig.adminNotificationEmails,
+};

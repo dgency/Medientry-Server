@@ -33,6 +33,7 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Reels Videos', href: '/home-reels', icon: GalleryVerticalEnd },
   { label: 'Knowledge Hub / Blogs', href: '/blogs', icon: BookOpenText },
   { label: 'Notices & Downloads', href: '/notices', icon: Newspaper },
+  { label: 'Consultation Leads', href: '/consultation-leads', icon: FileText },
   { label: 'College Fee Inquiries', href: '/college-fee-inquiries', icon: FileText },
   { label: 'Success Stories', href: '/success-stories', icon: MapPinned },
   { label: 'Home Sections', href: '/home-sections', icon: Home },

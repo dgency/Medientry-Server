@@ -16,6 +16,19 @@ const DEFAULT_SUPER_ADMIN = {
 
 const main = async () => {
   const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS ?? '10');
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email: DEFAULT_SUPER_ADMIN.email,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (existingUser) {
+    console.log(`Default super admin already exists: ${DEFAULT_SUPER_ADMIN.email}. Skipping password reset.`);
+    return;
+  }
 
   if (!DEFAULT_SUPER_ADMIN.password) {
     throw new Error(
@@ -29,17 +42,8 @@ const main = async () => {
 
   const password = await bcrypt.hash(DEFAULT_SUPER_ADMIN.password, saltRounds);
 
-  await prisma.user.upsert({
-    where: {
-      email: DEFAULT_SUPER_ADMIN.email,
-    },
-    update: {
-      name: DEFAULT_SUPER_ADMIN.name,
-      password,
-      role: DEFAULT_SUPER_ADMIN.role,
-      status: DEFAULT_SUPER_ADMIN.status,
-    },
-    create: {
+  await prisma.user.create({
+    data: {
       name: DEFAULT_SUPER_ADMIN.name,
       email: DEFAULT_SUPER_ADMIN.email,
       password,

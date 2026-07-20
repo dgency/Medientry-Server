@@ -4,9 +4,9 @@ export const publicHomeReelSelect =
   Prisma.validator<Prisma.HomeReelSelect>()({
     id: true,
     title: true,
+    videoUrl: true,
+    youtubeVideoId: true,
     thumbnail: true,
-    wistiaVideoId: true,
-    wistiaEmbedCode: true,
     sortOrder: true,
     status: true,
     createdAt: true,

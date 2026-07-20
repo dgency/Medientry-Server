@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   createPublicConsultationLead,
   deleteAdminConsultationLead,
+  getAdminConsultationLead,
   getConsultationLeads,
   verifyPublicThankYouToken,
 } from '../controllers/consultation-lead.controller';
@@ -27,6 +28,7 @@ router.post(
 router.use(requireAuth, requireRole(cmsEditorRoles));
 
 router.get('/', getConsultationLeads);
+router.get('/:id', validateRequest(consultationLeadIdParamSchema), getAdminConsultationLead);
 router.delete('/:id', validateRequest(consultationLeadIdParamSchema), deleteAdminConsultationLead);
 
 export const consultationLeadRouter = router;

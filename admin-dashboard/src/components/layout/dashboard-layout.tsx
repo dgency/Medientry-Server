@@ -106,7 +106,7 @@ export function DashboardLayout() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
-        <aside className="hidden w-72 border-r border-border/70 bg-white/85 backdrop-blur xl:block">
+        <aside className="hidden h-screen w-72 self-start border-r border-border/70 bg-white/85 backdrop-blur xl:sticky xl:top-0 xl:block">
           <SidebarContent />
         </aside>
 

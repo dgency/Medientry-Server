@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+import {
+  parseAdminNotificationEmails,
+  resolveReplyToEmail,
+} from '../utils/mail-config';
+
 const booleanString = () =>
   z
     .string()
@@ -17,6 +22,7 @@ export const envSchema = z.object({
   AUTH_COOKIE_NAME: z.string().min(1).default('medientry_access_token'),
   CLIENT_URL: z.url('CLIENT_URL must be a valid URL.'),
   ADMIN_URL: z.url('ADMIN_URL must be a valid URL.'),
+  EMAIL_PUBLIC_SITE_URL: z.url('EMAIL_PUBLIC_SITE_URL must be a valid URL.').optional(),
   CORS_ORIGINS: z.string().optional(),
   PUBLIC_BASE_URL: z.url('PUBLIC_BASE_URL must be a valid URL.').optional(),
   MAIL_ENABLED: booleanString(),
@@ -28,7 +34,14 @@ export const envSchema = z.object({
   MAIL_PASS: z.string().optional(),
   MAIL_FROM_NAME: z.string().default('Medientry'),
   MAIL_FROM_EMAIL: z.string().email('MAIL_FROM_EMAIL must be a valid email address.').optional(),
+  MAIL_REPLY_TO_EMAIL: z
+    .string()
+    .email('MAIL_REPLY_TO_EMAIL must be a valid email address.')
+    .optional(),
   MAIL_REPLY_TO: z.string().email('MAIL_REPLY_TO must be a valid email address.').optional(),
+  ADMIN_NOTIFICATION_EMAILS: z.string().optional(),
+  WHATSAPP_NUMBER: z.string().optional(),
+  WHATSAPP_DISPLAY_NUMBER: z.string().optional(),
   MAIL_CONNECTION_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
   MAIL_GREETING_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
   MAIL_SOCKET_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
@@ -69,6 +82,37 @@ export const envSchema = z.object({
         code: 'custom',
         path: ['MAIL_FROM_EMAIL'],
         message: 'MAIL_FROM_EMAIL is required when MAIL_ENABLED=true.',
+      });
+    }
+
+    if (!resolveReplyToEmail(value.MAIL_REPLY_TO_EMAIL, value.MAIL_REPLY_TO)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['MAIL_REPLY_TO_EMAIL'],
+        message:
+          'MAIL_REPLY_TO_EMAIL is required when MAIL_ENABLED=true. MAIL_REPLY_TO remains supported as a legacy fallback.',
+      });
+    }
+
+    try {
+      const recipients = parseAdminNotificationEmails(value.ADMIN_NOTIFICATION_EMAILS);
+
+      if (recipients.length === 0) {
+        context.addIssue({
+          code: 'custom',
+          path: ['ADMIN_NOTIFICATION_EMAILS'],
+          message:
+            'ADMIN_NOTIFICATION_EMAILS must include at least one valid email address when MAIL_ENABLED=true.',
+        });
+      }
+    } catch (error) {
+      context.addIssue({
+        code: 'custom',
+        path: ['ADMIN_NOTIFICATION_EMAILS'],
+        message:
+          error instanceof Error
+            ? error.message
+            : 'ADMIN_NOTIFICATION_EMAILS contains an invalid email address.',
       });
     }
   });
