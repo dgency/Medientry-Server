@@ -117,11 +117,11 @@ export const buildPublicMediaUrl = (
   }
 
   if (frontendPublicPrefixes.some((prefix) => normalizedValue.startsWith(prefix))) {
-    return buildAbsoluteUrl(backendBaseUrl || frontendBaseUrl, normalizedValue);
+    return buildAbsoluteUrl(frontendBaseUrl || backendBaseUrl, normalizedValue);
   }
 
   if (normalizedValue.startsWith('/')) {
-    return buildAbsoluteUrl(backendBaseUrl || frontendBaseUrl, normalizedValue);
+    return buildAbsoluteUrl(frontendBaseUrl || backendBaseUrl, normalizedValue);
   }
 
   return buildAbsoluteUrl(backendBaseUrl, normalizedValue);

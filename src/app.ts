@@ -6,10 +6,11 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import type { Request, Response } from 'express';
 
 import { corsOptions } from './config/cors';
 import { env } from './config/env';
-import { uploadsRootDirectory } from './config/upload';
+import { serverRootDirectory, uploadsRootDirectory } from './config/upload';
 import { errorHandler } from './middlewares/error-handler';
 import { notFoundHandler } from './middlewares/not-found-handler';
 import { requestLogger } from './middlewares/request-logger';
@@ -17,7 +18,19 @@ import { apiRouter } from './routes';
 
 const app = express();
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
-const clientPublicPath = path.resolve(process.cwd(), '..', 'Medientry-Client', 'public');
+const clientPublicPath = path.resolve(serverRootDirectory, '..', 'Medientry-Client', 'public');
+const dashboardPath = path.resolve(serverRootDirectory, 'admin-dashboard', 'dist');
+const publicMediaPrefixes = ['/uploads', '/images', '/home-page-icons'];
+const staticAssetMaxAge = env.NODE_ENV === 'production' ? '7d' : 0;
+
+const buildAllowedPublicMediaOrigins = () =>
+  [
+    env.CLIENT_URL,
+    env.ADMIN_URL,
+    ...(env.CORS_ORIGINS
+      ? env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+      : []),
+  ].filter(Boolean);
 
 const normalizeHost = (value: string) => {
   const trimmedValue = value.trim().toLowerCase();
@@ -48,6 +61,7 @@ const isLocalHost = (value?: string) => {
 };
 
 const hstsMiddleware = helmet.hsts();
+const allowedPublicMediaOrigins = new Set(buildAllowedPublicMediaOrigins());
 
 app.disable('x-powered-by');
 app.set('trust proxy', true);
@@ -69,60 +83,63 @@ if (env.NODE_ENV !== 'production') {
 app.use(requestLogger);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  '/uploads',
-  express.static(uploadsRootDirectory, {
-    fallthrough: false,
-    index: false,
-    immutable: env.NODE_ENV === 'production',
-    maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
-    setHeaders(res) {
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Disposition', 'inline');
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    },
-  }),
-);
 
-if (fs.existsSync(path.join(clientPublicPath, 'images'))) {
+const setPublicMediaHeaders = (req: Request, res: Response) => {
+  const requestOrigin = req.headers.origin?.trim();
+  const allowOrigin =
+    requestOrigin && allowedPublicMediaOrigins.has(requestOrigin)
+      ? requestOrigin
+      : env.CLIENT_URL || env.ADMIN_URL || null;
+
+  if (allowOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+    res.append('Vary', 'Origin');
+  }
+
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Disposition', 'inline');
+};
+
+const mountPublicStaticRoute = (routePath: string, absolutePath: string) => {
   app.use(
-    '/images',
-    express.static(path.join(clientPublicPath, 'images'), {
-      fallthrough: false,
+    routePath,
+    (req, res, next) => {
+      setPublicMediaHeaders(req, res);
+      next();
+    },
+    express.static(absolutePath, {
+      fallthrough: true,
       index: false,
       immutable: env.NODE_ENV === 'production',
-      maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
+      maxAge: staticAssetMaxAge,
       setHeaders(res) {
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Content-Disposition', 'inline');
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       },
     }),
+    (req, res) => {
+      setPublicMediaHeaders(req, res);
+      res.status(404).type('text/plain').send('Media file not found.');
+    },
   );
+};
+
+mountPublicStaticRoute('/uploads', uploadsRootDirectory);
+
+if (fs.existsSync(path.join(clientPublicPath, 'images'))) {
+  mountPublicStaticRoute('/images', path.join(clientPublicPath, 'images'));
 }
 
 if (fs.existsSync(path.join(clientPublicPath, 'home-page-icons'))) {
-  app.use(
+  mountPublicStaticRoute(
     '/home-page-icons',
-    express.static(path.join(clientPublicPath, 'home-page-icons'), {
-      fallthrough: false,
-      index: false,
-      immutable: env.NODE_ENV === 'production',
-      maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
-      setHeaders(res) {
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        res.setHeader('Content-Disposition', 'inline');
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      },
-    }),
+    path.join(clientPublicPath, 'home-page-icons'),
   );
 }
 
 app.use('/api', apiRouter);
-// ==========================================================config for digital ocean
-
-// Compute paths dynamically to support both raw src and compiled dist execution
-const dashboardPath = path.resolve(process.cwd(), 'admin-dashboard', 'dist');
 
 // 1. Serve the compiled static assets from the Vite dashboard folder
 app.use(express.static(dashboardPath, {
@@ -132,13 +149,15 @@ app.use(express.static(dashboardPath, {
 
 // 2. Direct all remaining non-API browser traffic to your Vite dashboard index.html
 app.get('/*any', (req, res, next) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+  if (
+    req.path.startsWith('/api')
+    || publicMediaPrefixes.some((prefix) => req.path.startsWith(prefix))
+    || path.extname(req.path).length > 0
+  ) {
     return next();
   }
   return res.sendFile(path.join(dashboardPath, 'index.html'));
 });
-
-// ==========================================config for digital ocean
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -1,6 +1,8 @@
 import path from 'node:path';
 
-export const uploadsRootDirectory = path.resolve(process.cwd(), 'uploads');
+export const serverRootDirectory = path.resolve(__dirname, '..', '..');
+
+export const uploadsRootDirectory = path.resolve(serverRootDirectory, 'uploads');
 
 export const uploadKinds = ['image', 'document', 'video', 'videoThumbnail'] as const;
 

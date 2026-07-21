@@ -193,6 +193,7 @@ export function resolveCmsAssetUrl(value?: string | null): string {
   }
 
   const mediaBase = getMediaBaseUrl();
+  const siteBase = getSiteBaseUrl();
   if (normalizedValue.startsWith('/uploads/')) {
     if (!mediaBase) {
       warnInDevelopment('[media] Missing media base URL for upload asset.', { value });
@@ -203,17 +204,15 @@ export function resolveCmsAssetUrl(value?: string | null): string {
   }
 
   if (frontendPublicPrefixes.some((prefix) => normalizedValue.startsWith(prefix)) || normalizedValue.startsWith('/')) {
+    if (siteBase) {
+      return buildAbsoluteUrl(siteBase, normalizedValue);
+    }
+
     if (mediaBase) {
       return `${mediaBase}${normalizedValue}`;
     }
 
-    const siteBase = getSiteBaseUrl();
-
-    if (!siteBase) {
-      return normalizedValue;
-    }
-
-    return buildAbsoluteUrl(siteBase, normalizedValue);
+    return normalizedValue;
   }
 
   if (normalizedValue.startsWith('uploads/')) {
