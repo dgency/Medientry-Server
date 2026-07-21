@@ -6,6 +6,7 @@ import app from './app';
 import { env } from './config/env';
 import { prisma } from './config/prisma';
 import { ensureDefaultSuperAdmin } from './services/bootstrap.service';
+import { mapPrismaErrorToHttp } from './utils/prisma-error';
 
 let server: Server | null = null;
 
@@ -37,25 +38,37 @@ const logReachableUrls = () => {
   });
 };
 
-const startServer = async () => {
-  let databaseConnected = false;
+const verifyDatabaseConnection = async () => {
+  await prisma.$connect();
+  await prisma.$queryRaw`SELECT 1`;
+};
 
+const logStartupDatabaseFailure = (error: unknown) => {
+  const prismaError = mapPrismaErrorToHttp(error);
+
+  console.error('[startup-db-check]', {
+    safeMessage: prismaError?.message ?? 'Database connection check failed.',
+    prismaErrorCode: prismaError?.code ?? null,
+    diagnostics: prismaError?.diagnostics,
+    errorMessage: error instanceof Error ? error.message : String(error),
+    stack: env.NODE_ENV !== 'production' && error instanceof Error ? error.stack : undefined,
+  });
+};
+
+const startServer = async () => {
   try {
-    await prisma.$connect();
-    databaseConnected = true;
+    await verifyDatabaseConnection();
   } catch (error) {
-    const reason = error instanceof Error ? error.message : 'Unknown database connection error.';
-    console.warn(
-      `Database connection unavailable at startup. Continuing in degraded API mode (${reason}).`,
-    );
+    logStartupDatabaseFailure(error);
+    throw new Error('Database startup check failed. Server startup aborted.', {
+      cause: error instanceof Error ? error : undefined,
+    });
   }
 
-  if (databaseConnected) {
-    try {
-      await ensureDefaultSuperAdmin();
-    } catch (error) {
-      console.error('Failed to ensure the default super admin account:', error);
-    }
+  try {
+    await ensureDefaultSuperAdmin();
+  } catch (error) {
+    console.error('Failed to ensure the default super admin account:', error);
   }
 
   server = app.listen(env.PORT, env.HOST, () => {

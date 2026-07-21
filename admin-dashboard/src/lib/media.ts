@@ -1,6 +1,29 @@
 const DEFAULT_API_PORT = '5000';
 const DEFAULT_API_PATH = '/api';
 
+const normalizeApiBaseUrl = (value: string) => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return '';
+  }
+
+  try {
+    const url = new URL(trimmed);
+    const normalizedPathname = url.pathname
+      .replace(/\/+$/, '')
+      .replace(/(?:\/api)+$/i, '');
+
+    url.pathname = `${normalizedPathname || ''}${DEFAULT_API_PATH}`;
+    url.search = '';
+    url.hash = '';
+
+    return url.toString().replace(/\/+$/, '');
+  } catch {
+    return trimmed.replace(/\/+$/, '');
+  }
+};
+
 const getBrowserFallbackApiUrl = () => {
   if (typeof window === 'undefined') {
     return null;
@@ -16,12 +39,12 @@ const getBrowserFallbackApiUrl = () => {
 };
 
 export const getApiBaseUrl = () =>
-  (
+  normalizeApiBaseUrl(
     import.meta.env.VITE_API_URL?.trim() ||
     import.meta.env.VITE_API_BASE_URL?.trim() ||
     getBrowserFallbackApiUrl() ||
-    ''
-  ).replace(/\/+$/, '');
+    '',
+  );
 
 export const getMediaBaseUrl = () => getApiBaseUrl().replace(/\/api\/?$/, '');
 

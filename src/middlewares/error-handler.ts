@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import multer from 'multer';
 import { ZodError } from 'zod';
 
 import { ApiError } from '../utils/api-error';
+import { mapPrismaErrorToHttp } from '../utils/prisma-error';
 
 type ErrorResponse = {
   success: false;
@@ -48,39 +48,33 @@ export const errorHandler = (
         : 'Validation failed.';
     errors = error.flatten();
     code = 'VALIDATION_FAILED';
-  } else if (error instanceof PrismaClientKnownRequestError) {
-    if (error.code === 'P2002') {
-      statusCode = 409;
-      message = 'A record with this value already exists.';
-      errors = error.meta;
-      code = error.code;
-    } else {
+  } else {
+    const prismaError = mapPrismaErrorToHttp(error);
+
+    if (prismaError) {
+      statusCode = prismaError.statusCode;
+      message = prismaError.message;
+      errors = prismaError.diagnostics;
+      code = prismaError.code;
+    } else if (error instanceof TokenExpiredError) {
+      statusCode = 401;
+      message = 'Authentication token has expired.';
+      code = 'TOKEN_EXPIRED';
+    } else if (error instanceof JsonWebTokenError) {
+      statusCode = 401;
+      message = 'Invalid authentication token.';
+      code = 'INVALID_TOKEN';
+    } else if (error instanceof multer.MulterError) {
       statusCode = 400;
-      message = 'Database request failed.';
-      errors = {
-        code: error.code,
-        meta: error.meta,
-      };
+      message =
+        error.code === 'LIMIT_FILE_SIZE'
+          ? 'Uploaded file exceeds the allowed size.'
+          : error.message;
       code = error.code;
+    } else if (error instanceof Error) {
+      message = error.message;
+      code = errorWithCode?.code ?? error.name;
     }
-  } else if (error instanceof TokenExpiredError) {
-    statusCode = 401;
-    message = 'Authentication token has expired.';
-    code = 'TOKEN_EXPIRED';
-  } else if (error instanceof JsonWebTokenError) {
-    statusCode = 401;
-    message = 'Invalid authentication token.';
-    code = 'INVALID_TOKEN';
-  } else if (error instanceof multer.MulterError) {
-    statusCode = 400;
-    message =
-      error.code === 'LIMIT_FILE_SIZE'
-        ? 'Uploaded file exceeds the allowed size.'
-        : error.message;
-    code = error.code;
-  } else if (error instanceof Error) {
-    message = error.message;
-    code = errorWithCode?.code ?? error.name;
   }
 
   const isBlogListRequest = req.method === 'GET' && req.path === '/api/blogs';
@@ -97,11 +91,16 @@ export const errorHandler = (
   const safeLogPayload = {
     method: req.method,
     path: req.originalUrl || req.path,
-    query: req.query,
-    statusCode,
+    responseStatus: statusCode,
     errorName: error instanceof Error ? error.name : typeof error,
+    safeMessage: message,
     errorMessage: error instanceof Error ? error.message : String(error),
+    prismaErrorCode: code?.startsWith('P') ? code : null,
     errorCode: code ?? null,
+    details:
+      errors && typeof errors === 'object'
+        ? errors
+        : undefined,
     stack: process.env.NODE_ENV !== 'production' && error instanceof Error ? error.stack : undefined,
   };
 

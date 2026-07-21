@@ -65,6 +65,28 @@ npm run build
 npm run start
 ```
 
+DigitalOcean-safe production commands:
+
+```bash
+# Build command
+npm install && npm run build:production
+
+# Run command
+npm run start:production
+```
+
+Production migration command:
+
+```bash
+npm run prisma:migrate
+```
+
+Important production notes:
+
+- use `prisma migrate deploy` in production, never `prisma migrate dev`
+- include `?sslmode=require` in `DATABASE_URL` when your managed PostgreSQL provider requires TLS
+- keep `NEXT_PUBLIC_API_URL` and `VITE_API_BASE_URL` pointed at a single API origin with only one `/api` suffix
+
 ## 2. Admin Dashboard Setup
 
 From `New Stucture/Medientry-Server/admin-dashboard`:

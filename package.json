@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "concurrently -k -n api,admin -c green,magenta \"npm run dev:api\" \"npm run dev:admin\"",
     "dev:setup": "npm run prisma:generate && npm run prisma:migrate",
-    "dev:api": "tsx watch src/server.ts",
+    "dev:api": "npm run prisma:generate && tsx watch src/server.ts",
     "dev:admin": "npm --prefix admin-dashboard run dev",
-    "build": "tsc",
+    "build": "npm run prisma:generate && tsc",
+    "build:production": "npm run prisma:generate && npm run dashboard:build && npm run build",
     "typecheck": "tsc --noEmit",
     "start": "node dist/server.js",
+    "start:production": "npm run prisma:migrate && npm run start",
     "test": "node --import tsx --test tests/**/*.test.ts",
     "dashboard:dev": "npm --prefix admin-dashboard run dev",
     "dashboard:build": "npm --prefix admin-dashboard run build",
@@ -19,6 +21,7 @@
     "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
     "prisma:seed": "prisma db seed",
     "seed": "tsx prisma/seed.ts",
     "seed:content": "tsx prisma/seedExistingContent.ts"
