@@ -18,6 +18,7 @@
     "dashboard:build": "npm --prefix admin-dashboard run build",
     "dashboard:preview": "npm --prefix admin-dashboard run preview",
     "mail:test": "tsx src/scripts/mail-test.ts",
+    "media:audit": "tsx src/scripts/media-audit.ts",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:generate": "prisma generate",

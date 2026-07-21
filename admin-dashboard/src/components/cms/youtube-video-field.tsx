@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AlertCircle, Play } from 'lucide-react';
 
-import { resolveCmsAssetUrl } from '../../lib/media';
 import {
   getYouTubeThumbnailCandidates,
   getYouTubeVideoDetails,
@@ -12,7 +11,6 @@ import { Input } from '../ui/input';
 type YouTubeVideoFieldProps = {
   value: string;
   onChange: (value: string) => void;
-  thumbnailValue?: string;
   placeholder?: string;
 };
 
@@ -59,25 +57,16 @@ function PreviewImage({
 export function YouTubeVideoField({
   value,
   onChange,
-  thumbnailValue,
   placeholder,
 }: YouTubeVideoFieldProps) {
   const details = useMemo(() => getYouTubeVideoDetails(value), [value]);
-  const normalizedThumbnailValue = thumbnailValue?.trim() ?? '';
   const previewCandidates = useMemo(() => {
-    if (normalizedThumbnailValue) {
-      const resolvedCustomThumbnail =
-        resolveCmsAssetUrl(normalizedThumbnailValue) || normalizedThumbnailValue;
-
-      return [resolvedCustomThumbnail, fallbackPreviewImage];
-    }
-
     if (!details) {
       return [fallbackPreviewImage];
     }
 
     return [...getYouTubeThumbnailCandidates(details.videoId), fallbackPreviewImage];
-  }, [details, normalizedThumbnailValue]);
+  }, [details]);
   const hasTypedValue = value.trim().length > 0;
   const hasValidVideo = Boolean(details);
 
@@ -110,9 +99,7 @@ export function YouTubeVideoField({
           {details ? (
             <Badge variant="info">{details.isShort ? 'YouTube Short' : 'YouTube Video'}</Badge>
           ) : null}
-          {normalizedThumbnailValue ? (
-            <Badge variant="outline">Custom thumbnail active</Badge>
-          ) : details ? (
+          {details ? (
             <Badge variant="outline">YouTube thumbnail fallback</Badge>
           ) : null}
         </div>

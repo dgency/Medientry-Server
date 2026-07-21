@@ -2,7 +2,7 @@ import path from 'node:path';
 
 export const uploadsRootDirectory = path.resolve(process.cwd(), 'uploads');
 
-export const uploadKinds = ['image', 'document', 'videoThumbnail'] as const;
+export const uploadKinds = ['image', 'document', 'video', 'videoThumbnail'] as const;
 
 export type UploadKind = (typeof uploadKinds)[number];
 
@@ -29,6 +29,11 @@ export const uploadRules: Record<UploadKind, UploadRule> = {
     allowedMimeTypes: ['application/pdf'],
     maxFileSizeInBytes: 10 * 1024 * 1024,
     targetFolder: 'documents',
+  },
+  video: {
+    allowedMimeTypes: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
+    maxFileSizeInBytes: 150 * 1024 * 1024,
+    targetFolder: 'videos',
   },
   videoThumbnail: {
     allowedMimeTypes: [

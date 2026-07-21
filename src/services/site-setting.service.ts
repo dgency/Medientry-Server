@@ -1,4 +1,8 @@
 import { prisma } from '../config/prisma';
+import {
+  type ExchangeRateSettings,
+  getDefaultExchangeRateSettings,
+} from '../utils/exchange-rate';
 
 export type SiteSettingApiShape = {
   logoLight: string | null;
@@ -15,6 +19,10 @@ export type SiteSettingApiShape = {
   instagram: string | null;
   linkedin: string | null;
   youtube: string | null;
+  exchangeRateUsdToInr: number | null;
+  showExchangeRateNote: boolean;
+  customExchangeRateNote: string | null;
+  exchangeRateUpdatedAt: string | null;
 };
 
 type UpdateSiteSettingInput = Partial<SiteSettingApiShape>;
@@ -24,6 +32,24 @@ type SocialLinksShape = {
   instagram?: string | null;
   linkedin?: string | null;
   youtube?: string | null;
+};
+
+type SiteSettingRecord = {
+  logoLight: string | null;
+  logoDark: string | null;
+  favicon: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  textColor: string | null;
+  phone: string | null;
+  contactEmail: string | null;
+  address: string | null;
+  socialLinks: unknown;
+  exchangeRateUsdToInr: { toString(): string } | null;
+  showExchangeRateNote: boolean;
+  customExchangeRateNote: string | null;
+  exchangeRateUpdatedAt: Date | null;
 };
 
 const normalizeNullableString = (value?: string | null) => {
@@ -60,6 +86,18 @@ const resolveUpdatedValue = (
   return nextValue;
 };
 
+const resolveOptionalValue = <T>(nextValue: T | undefined, currentValue: T) =>
+  nextValue === undefined ? currentValue : nextValue;
+
+const decimalToNumber = (value: { toString(): string } | null | undefined) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value.toString());
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 export const getDefaultSiteSetting = (): SiteSettingApiShape => ({
   logoLight: null,
   logoDark: null,
@@ -75,21 +113,10 @@ export const getDefaultSiteSetting = (): SiteSettingApiShape => ({
   instagram: null,
   linkedin: null,
   youtube: null,
+  ...getDefaultExchangeRateSettings(),
 });
 
-const mapSiteSettingToApi = (siteSetting: {
-  logoLight: string | null;
-  logoDark: string | null;
-  favicon: string | null;
-  primaryColor: string | null;
-  secondaryColor: string | null;
-  accentColor: string | null;
-  textColor: string | null;
-  phone: string | null;
-  contactEmail: string | null;
-  address: string | null;
-  socialLinks: unknown;
-} | null): SiteSettingApiShape => {
+const mapSiteSettingToApi = (siteSetting: SiteSettingRecord | null): SiteSettingApiShape => {
   const socialLinks =
     typeof siteSetting?.socialLinks === 'object' && siteSetting.socialLinks !== null
       ? (siteSetting.socialLinks as SocialLinksShape)
@@ -111,7 +138,43 @@ const mapSiteSettingToApi = (siteSetting: {
     instagram: normalizeNullableSocialLink(socialLinks.instagram),
     linkedin: normalizeNullableSocialLink(socialLinks.linkedin),
     youtube: normalizeNullableSocialLink(socialLinks.youtube),
+    exchangeRateUsdToInr: decimalToNumber(siteSetting?.exchangeRateUsdToInr),
+    showExchangeRateNote: siteSetting?.showExchangeRateNote ?? false,
+    customExchangeRateNote: siteSetting?.customExchangeRateNote ?? null,
+    exchangeRateUpdatedAt: siteSetting?.exchangeRateUpdatedAt?.toISOString() ?? null,
   };
+};
+
+const mapSiteSettingToExchangeRateSettings = (
+  siteSetting: Pick<
+    SiteSettingRecord,
+    | 'exchangeRateUsdToInr'
+    | 'showExchangeRateNote'
+    | 'customExchangeRateNote'
+    | 'exchangeRateUpdatedAt'
+  > | null,
+): ExchangeRateSettings => ({
+  ...getDefaultExchangeRateSettings(),
+  exchangeRateUsdToInr: decimalToNumber(siteSetting?.exchangeRateUsdToInr),
+  showExchangeRateNote: siteSetting?.showExchangeRateNote ?? false,
+  customExchangeRateNote: siteSetting?.customExchangeRateNote ?? null,
+  exchangeRateUpdatedAt: siteSetting?.exchangeRateUpdatedAt?.toISOString() ?? null,
+});
+
+export const getSiteExchangeRateSettings = async (): Promise<ExchangeRateSettings> => {
+  const siteSetting = await prisma.siteSetting.findFirst({
+    orderBy: {
+      createdAt: 'asc',
+    },
+    select: {
+      exchangeRateUsdToInr: true,
+      showExchangeRateNote: true,
+      customExchangeRateNote: true,
+      exchangeRateUpdatedAt: true,
+    },
+  });
+
+  return mapSiteSettingToExchangeRateSettings(siteSetting);
 };
 
 export const getSiteSetting = async () => {
@@ -153,6 +216,24 @@ export const updateSiteSetting = async (input: UpdateSiteSettingInput) => {
     ),
   };
 
+  const normalizedExchangeRate =
+    input.exchangeRateUsdToInr === undefined ? undefined : input.exchangeRateUsdToInr;
+  const normalizedShowExchangeRateNote =
+    input.showExchangeRateNote === undefined ? undefined : input.showExchangeRateNote === true;
+  const normalizedCustomExchangeRateNote = normalizeNullableString(
+    input.customExchangeRateNote,
+  );
+  const currentExchangeRate = decimalToNumber(existing?.exchangeRateUsdToInr);
+  const currentShowExchangeRateNote = existing?.showExchangeRateNote ?? false;
+  const currentCustomExchangeRateNote = existing?.customExchangeRateNote ?? null;
+  const exchangeRateSettingsChanged =
+    (normalizedExchangeRate !== undefined
+      && normalizedExchangeRate !== currentExchangeRate)
+    || (normalizedShowExchangeRateNote !== undefined
+      && normalizedShowExchangeRateNote !== currentShowExchangeRateNote)
+    || (normalizedCustomExchangeRateNote !== undefined
+      && normalizedCustomExchangeRateNote !== currentCustomExchangeRateNote);
+
   const data = {
     logoLight: normalizeNullableString(input.logoLight),
     logoDark: normalizeNullableString(input.logoDark),
@@ -170,6 +251,18 @@ export const updateSiteSetting = async (input: UpdateSiteSettingInput) => {
           : normalizedEmail.toLowerCase(),
     address: normalizeNullableString(input.address),
     socialLinks: nextSocialLinks,
+    exchangeRateUsdToInr: normalizedExchangeRate,
+    showExchangeRateNote: resolveOptionalValue(
+      normalizedShowExchangeRateNote,
+      currentShowExchangeRateNote,
+    ),
+    customExchangeRateNote: resolveOptionalValue(
+      normalizedCustomExchangeRateNote,
+      currentCustomExchangeRateNote,
+    ),
+    exchangeRateUpdatedAt: exchangeRateSettingsChanged
+      ? new Date()
+      : existing?.exchangeRateUpdatedAt ?? null,
   };
 
   const siteSetting = existing

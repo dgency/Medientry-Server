@@ -25,12 +25,6 @@ export type CollegeFeeItemInput = {
   isActive: boolean;
 };
 
-export type CollegeFeeSettingsInput = {
-  exchangeRateUsdToInr?: number | null;
-  showExchangeRateNote?: boolean;
-  feeNote?: string | null;
-};
-
 export const buildDefaultCollegeFeeItems = (): CollegeFeeItemInput[] => [
   {
     label: 'Total Tuition Fees (Including 1-Year Internship)',

@@ -51,14 +51,14 @@ test('getYouTubeVideoDetails normalizes watch URLs and preserves shorts layout d
 
 test('getYouTubeThumbnailUrls returns maxres and hq fallbacks', () => {
   assert.deepEqual(getYouTubeThumbnailUrls(regularVideoId), [
-    `https://img.youtube.com/vi/${regularVideoId}/maxresdefault.jpg`,
-    `https://img.youtube.com/vi/${regularVideoId}/hqdefault.jpg`,
+    `https://i.ytimg.com/vi/${regularVideoId}/maxresdefault.jpg`,
+    `https://i.ytimg.com/vi/${regularVideoId}/hqdefault.jpg`,
   ]);
 });
 
 test('getYouTubeEmbedUrl builds the privacy-enhanced autoplay URL', () => {
   assert.equal(
     getYouTubeEmbedUrl(regularVideoId, true),
-    `https://www.youtube-nocookie.com/embed/${regularVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`,
+    `https://www.youtube-nocookie.com/embed/${regularVideoId}?autoplay=1&cc_load_policy=0&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1`,
   );
 });

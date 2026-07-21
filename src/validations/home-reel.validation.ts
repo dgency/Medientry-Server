@@ -1,7 +1,6 @@
 import { SimpleStatus } from '@prisma/client';
 import { z } from 'zod';
 
-import { nullableAssetUrlString } from './asset-url.validation';
 import { extractYouTubeVideoId } from '../utils/youtube';
 
 const youtubeVideoUrlSchema = z
@@ -15,7 +14,6 @@ const youtubeVideoUrlSchema = z
 const baseHomeReelBodySchema = z.object({
   title: z.string().trim().min(2, 'Title must be at least 2 characters long.'),
   videoUrl: youtubeVideoUrlSchema,
-  thumbnail: nullableAssetUrlString,
   sortOrder: z.coerce.number().int().min(0),
   status: z.nativeEnum(SimpleStatus),
 });

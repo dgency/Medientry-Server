@@ -1,11 +1,9 @@
 import { Prisma, PublicationStatus } from '@prisma/client';
 
 import { prisma } from '../config/prisma';
+import { getSiteExchangeRateSettings } from './site-setting.service';
 import { ApiError } from '../utils/api-error';
-import {
-  type CollegeFeeItemInput,
-  type CollegeFeeSettingsInput,
-} from '../utils/college-fee';
+import { type CollegeFeeItemInput } from '../utils/college-fee';
 import { normalizeFeeItemsForWrite } from '../utils/college-fee-persistence';
 import {
   FEATURED_MEDICAL_COLLEGES_SECTION_KEY,
@@ -28,7 +26,6 @@ type CreateMedicalCollegeInput = {
   hostelFee?: number | null;
   totalFee?: number | null;
   feeStructure?: CollegeFeeItemInput[];
-  feeSettings?: CollegeFeeSettingsInput;
   ranking?: string;
   eligibility?: string;
   admissionProcess?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
@@ -151,14 +148,6 @@ const buildMedicalCollegeData = (
 
   if ('totalFee' in input) {
     data.totalFee = normalizeNullableDecimal(input.totalFee);
-  }
-
-  if ('feeSettings' in input && input.feeSettings !== undefined) {
-    data.exchangeRateUsdToInr = normalizeNullableDecimal(
-      input.feeSettings?.exchangeRateUsdToInr,
-    );
-    data.showExchangeRateNote = input.feeSettings?.showExchangeRateNote ?? false;
-    data.feeNote = normalizeNullableString(input.feeSettings?.feeNote);
   }
 
   if ('ranking' in input) {
@@ -296,6 +285,7 @@ export const listMedicalColleges = async ({
     select: publicMedicalCollegeSelect,
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   });
+  const globalExchangeRateSettings = await getSiteExchangeRateSettings();
 
   const orderedMedicalColleges = applySelectedOrder(rawMedicalColleges, selectedItemIds);
 
@@ -311,6 +301,7 @@ export const listMedicalColleges = async ({
 
   return slicedMedicalColleges.map((medicalCollege) =>
     mapMedicalCollegeToApi(medicalCollege, {
+      globalExchangeRateSettings,
       includeInactiveFeeItems: includeUnpublished,
     }),
   );
@@ -338,7 +329,10 @@ export const getMedicalCollegeBySlug = async (
     throw new ApiError(404, 'Medical college not found.');
   }
 
+  const globalExchangeRateSettings = await getSiteExchangeRateSettings();
+
   return mapMedicalCollegeToApi(medicalCollege, {
+    globalExchangeRateSettings,
     includeInactiveFeeItems: includeUnpublished,
   });
 };
@@ -372,7 +366,10 @@ export const createMedicalCollege = async (input: CreateMedicalCollegeInput) => 
     });
   });
 
+  const globalExchangeRateSettings = await getSiteExchangeRateSettings();
+
   return mapMedicalCollegeToApi(medicalCollege, {
+    globalExchangeRateSettings,
     includeInactiveFeeItems: true,
   });
 };
@@ -426,7 +423,10 @@ export const updateMedicalCollege = async (
     });
   });
 
+  const globalExchangeRateSettings = await getSiteExchangeRateSettings();
+
   return mapMedicalCollegeToApi(medicalCollege, {
+    globalExchangeRateSettings,
     includeInactiveFeeItems: true,
   });
 };

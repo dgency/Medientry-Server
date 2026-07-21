@@ -1,28 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
-import { ImagePlus, Link2, LoaderCircle, Trash2, UploadCloud } from 'lucide-react';
+import { useRef, useState } from 'react';
+import {
+  FileText,
+  Film,
+  ImagePlus,
+  LoaderCircle,
+  Trash2,
+  UploadCloud,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiClient, extractApiData, getApiErrorMessage } from '../../lib/api-client';
-import { resolveCmsAssetUrl } from '../../lib/media';
+import { detectMediaKind, resolveCmsAssetUrl, type MediaKind, type MediaSelection } from '../../lib/media';
 import { cn } from '../../lib/utils';
 import type { UploadKind } from '../../types/app';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { MediaLibraryBrowser } from './media-library-browser';
 
 type UploadedFile = {
+  id: string;
   url: string;
+  storedValue: string;
   fullUrl: string;
   filename: string;
-};
-
-type GalleryImageItem = {
-  id: string;
-  title: string;
-  type: 'IMAGE' | 'VIDEO';
-  url: string;
-  thumbnail: string | null;
-  status: string;
+  originalName?: string | null;
+  mimeType: string | null;
+  kind: MediaKind;
+  title?: string | null;
 };
 
 type FileUploadFieldProps = {
@@ -36,11 +41,29 @@ type FileUploadFieldProps = {
 };
 
 const defaultAcceptByKind: Record<UploadKind, string> = {
-  image:
-    'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.svg',
+  image: 'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.svg',
   document: 'application/pdf',
-  videoThumbnail:
-    'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.svg',
+  video: 'video/mp4,video/webm,video/ogg,video/quicktime',
+  videoThumbnail: 'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.svg',
+};
+
+const allowedKindsByUploadKind: Record<UploadKind, MediaKind[]> = {
+  image: ['image', 'svg'],
+  document: ['document'],
+  video: ['video'],
+  videoThumbnail: ['image', 'svg'],
+};
+
+const inferUploadKindFromFile = (file: File): UploadKind => {
+  if (file.type === 'application/pdf') {
+    return 'document';
+  }
+
+  if (file.type.startsWith('video/')) {
+    return 'video';
+  }
+
+  return 'image';
 };
 
 export function FileUploadField({
@@ -56,57 +79,16 @@ export function FileUploadField({
   const [isUploading, setIsUploading] = useState(false);
   const [previewErrorUrl, setPreviewErrorUrl] = useState<string | null>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
-  const [libraryItems, setLibraryItems] = useState<GalleryImageItem[]>([]);
-  const [libraryError, setLibraryError] = useState<string | null>(null);
 
-  const canUseLibrary = uploadKind === 'image' || uploadKind === 'videoThumbnail';
-
-  useEffect(() => {
-    if (!isLibraryOpen || !canUseLibrary) {
-      return;
-    }
-
-    let isActive = true;
-
-    const loadLibraryItems = async () => {
-      setIsLoadingLibrary(true);
-      setLibraryError(null);
-
-      try {
-        const response = await apiClient.get('/gallery');
-        const payload = extractApiData<GalleryImageItem[]>(response);
-
-        if (!isActive) {
-          return;
-        }
-
-        setLibraryItems(
-          payload.filter((item) => item.type === 'IMAGE' && typeof item.url === 'string' && item.url.trim().length > 0),
-        );
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setLibraryError(getApiErrorMessage(error));
-      } finally {
-        if (isActive) {
-          setIsLoadingLibrary(false);
-        }
-      }
-    };
-
-    void loadLibraryItems();
-
-    return () => {
-      isActive = false;
-    };
-  }, [canUseLibrary, isLibraryOpen]);
+  const canUseLibrary = true;
+  const previewUrl = resolveCmsAssetUrl(value);
+  const previewKind = detectMediaKind(undefined, value);
+  const hasPreviewError = Boolean(previewUrl) && previewErrorUrl === previewUrl;
+  const isPreviewUnavailable = !previewUrl || hasPreviewError;
 
   const handleFileUpload = async (file: File) => {
     const formData = new FormData();
-    formData.append('kind', uploadKind);
+    formData.append('kind', uploadKind === 'videoThumbnail' ? 'image' : (uploadKind === 'video' ? 'video' : inferUploadKindFromFile(file)));
     formData.append('file', file);
 
     setIsUploading(true);
@@ -119,7 +101,8 @@ export function FileUploadField({
       });
 
       const payload = extractApiData<UploadedFile>(response);
-      onChange(payload.url);
+      onChange(payload.storedValue || payload.url);
+      setPreviewErrorUrl(null);
       toast.success('File uploaded successfully.');
     } catch (error) {
       toast.error(getApiErrorMessage(error));
@@ -132,13 +115,71 @@ export function FileUploadField({
     }
   };
 
-  const isImagePreview =
-    previewable &&
-    uploadKind !== 'document' &&
-    Boolean(resolveCmsAssetUrl(value)) &&
-    /\.(jpg|jpeg|png|webp|gif|svg|ico)$/i.test(value);
-  const previewUrl = resolveCmsAssetUrl(value);
-  const hasPreviewError = Boolean(previewUrl) && previewErrorUrl === previewUrl;
+  const handleMediaSelect = (selection: MediaSelection | MediaSelection[]) => {
+    const nextSelection = Array.isArray(selection) ? selection[0] : selection;
+
+    if (!nextSelection) {
+      return;
+    }
+
+    onChange(nextSelection.storedValue ?? nextSelection.url);
+    setPreviewErrorUrl(null);
+    setIsLibraryOpen(false);
+    toast.success('Media selected successfully.');
+  };
+
+  const renderPreview = () => {
+    if (!previewable || !previewUrl) {
+      return null;
+    }
+
+    return (
+      <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className={cn('inline-flex items-center gap-2 text-sm font-medium text-primary transition hover:text-primary/80')}
+          >
+            {previewKind === 'video' ? <Film className="h-4 w-4" /> : previewKind === 'document' ? <FileText className="h-4 w-4" /> : <ImagePlus className="h-4 w-4" />}
+            {previewLabel}
+          </a>
+        </div>
+
+        {!isPreviewUnavailable ? (
+          <div className="mt-3 overflow-hidden rounded-2xl border border-border/70 bg-white p-2">
+            {previewKind === 'video' ? (
+              <video
+                src={previewUrl}
+                controls
+                playsInline
+                preload="metadata"
+                className="h-48 w-full rounded-xl bg-black object-contain"
+                onError={() => setPreviewErrorUrl(previewUrl)}
+              />
+            ) : previewKind === 'document' ? (
+              <div className="flex min-h-24 items-center gap-3 rounded-xl bg-muted/20 px-4 py-5 text-sm text-muted-foreground">
+                <FileText className="h-6 w-6" />
+                <span>Document preview opens in a new tab.</span>
+              </div>
+            ) : (
+              <img
+                src={previewUrl}
+                alt={previewLabel}
+                className="h-36 w-full rounded-xl object-contain"
+                onError={() => setPreviewErrorUrl(previewUrl)}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="mt-3 rounded-2xl border border-dashed border-border/70 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
+            This media file could not be previewed. The stored value remains selectable, but the current preview URL failed to load.
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-3">
@@ -162,13 +203,7 @@ export function FileUploadField({
             }
           }}
         />
-        <Button
-          type="button"
-          variant="outline"
-          className="sm:w-auto"
-          onClick={() => inputRef.current?.click()}
-          disabled={isUploading}
-        >
+        <Button type="button" variant="outline" className="sm:w-auto" onClick={() => inputRef.current?.click()} disabled={isUploading}>
           {isUploading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
           {isUploading ? 'Uploading...' : 'Upload'}
         </Button>
@@ -186,101 +221,26 @@ export function FileUploadField({
         ) : null}
       </div>
 
-      {previewable && previewUrl ? (
-        <div className="rounded-2xl border border-border/70 bg-muted/20 p-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={previewUrl}
-              target="_blank"
-              rel="noreferrer"
-              className={cn(
-                'inline-flex items-center gap-2 text-sm font-medium text-primary transition hover:text-primary/80',
-              )}
-            >
-              {isImagePreview ? <ImagePlus className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-              {previewLabel}
-            </a>
-          </div>
-
-          {isImagePreview && !hasPreviewError ? (
-            <div className="mt-3 overflow-hidden rounded-2xl border border-border/70 bg-white p-2">
-              <img
-                src={previewUrl}
-                alt={previewLabel}
-                className="h-36 w-full rounded-xl object-contain"
-                onError={() => {
-                  setPreviewErrorUrl(previewUrl);
-                }}
-              />
-            </div>
-          ) : null}
-
-          {isImagePreview && hasPreviewError ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-border/70 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
-              Image preview unavailable. The saved file path is kept, but this image could not be displayed here.
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {renderPreview()}
 
       <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="w-[calc(100vw-24px)] max-w-[calc(100vw-24px)] md:w-[92vw] md:max-w-[92vw] lg:w-[80vw] lg:max-w-[1440px]">
           <DialogHeader>
             <DialogTitle>Select from Media Library</DialogTitle>
-            <DialogDescription>Choose an existing image from the Gallery module.</DialogDescription>
+            <DialogDescription>
+              Browse uploaded media, legacy gallery assets, and supported previews without leaving the form.
+            </DialogDescription>
           </DialogHeader>
 
-          {isLoadingLibrary ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
-              <LoaderCircle className="h-4 w-4 animate-spin" />
-              Loading media library...
-            </div>
-          ) : libraryError ? (
-            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-6 text-sm text-destructive">
-              {libraryError}
-            </div>
-          ) : libraryItems.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-sm text-muted-foreground">
-              No image items are available in the media library yet.
-            </div>
-          ) : (
-            <div className="grid max-h-[60vh] gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
-              {libraryItems.map((item) => {
-                const itemUrl = resolveCmsAssetUrl(item.url);
-                const isSelected = value.trim() === item.url.trim();
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      onChange(item.url);
-                      setIsLibraryOpen(false);
-                      toast.success('Image selected from media library.');
-                    }}
-                    className={cn(
-                      'overflow-hidden rounded-2xl border bg-white text-left transition hover:border-primary/40 hover:shadow-soft',
-                      isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border/70',
-                    )}
-                  >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-muted/20">
-                      {itemUrl ? (
-                        <img src={itemUrl} alt={item.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                          Preview unavailable
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-1 px-4 py-3">
-                      <p className="line-clamp-2 text-sm font-semibold text-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.status}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div className="min-h-[65vh] max-h-[88vh] overflow-hidden">
+            <MediaLibraryBrowser
+              allowedKinds={allowedKindsByUploadKind[uploadKind]}
+              uploadKind={uploadKind}
+              selectedValue={value}
+              onSelect={handleMediaSelect}
+              onClose={() => setIsLibraryOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

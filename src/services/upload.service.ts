@@ -1,8 +1,11 @@
 import path from 'node:path';
 import type { Request } from 'express';
+import { SimpleStatus } from '@prisma/client';
 
 import { type UploadKind, uploadRules } from '../config/upload';
 import { ApiError } from '../utils/api-error';
+import { detectMediaKind } from '../utils/media';
+import { createMediaAssetRecord, buildUploadedMediaTitle } from './media.service';
 import { storageAdapter } from './storage.service';
 
 type UploadFileInput = {
@@ -19,11 +22,16 @@ const mimeTypeToExtensionMap: Record<string, string> = {
   'image/svg+xml': '.svg',
   'image/x-icon': '.ico',
   'image/vnd.microsoft.icon': '.ico',
+  'video/mp4': '.mp4',
+  'video/ogg': '.ogg',
+  'video/quicktime': '.mov',
+  'video/webm': '.webm',
 };
 
 const allowedExtensionsByKind: Record<UploadKind, string[]> = {
   image: ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.ico'],
   document: ['.pdf'],
+  video: ['.mp4', '.webm', '.ogg', '.mov', '.m4v'],
   videoThumbnail: ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.ico'],
 };
 
@@ -38,6 +46,10 @@ const resolveUploadKind = (value: string | undefined, file: Express.Multer.File)
 
   if (file.mimetype === 'application/pdf') {
     return 'document' satisfies UploadKind;
+  }
+
+  if (file.mimetype.startsWith('video/')) {
+    return 'video' satisfies UploadKind;
   }
 
   return 'image' satisfies UploadKind;
@@ -93,9 +105,30 @@ export const uploadFile = async ({ file, kind, request }: UploadFileInput) => {
     extension,
   });
 
-  return {
+  const mediaAsset = await createMediaAssetRecord({
+    title: buildUploadedMediaTitle(file.originalname),
+    filename: storedFile.filename,
+    originalName: file.originalname,
+    path: storedFile.relativePath,
     url: storedFile.publicPath,
+    publicUrl: storedFile.publicPath,
+    storageKey: storedFile.relativePath,
+    mimeType: file.mimetype,
+    extension: extension.replace(/^\./, ''),
+    fileType: detectMediaKind(file.mimetype, extension),
+    size: file.size,
+    status: SimpleStatus.ACTIVE,
+  });
+
+  return {
+    id: mediaAsset.id,
+    url: buildPublicFileUrl(request, storedFile.publicPath),
+    storedValue: storedFile.publicPath,
     fullUrl: buildPublicFileUrl(request, storedFile.publicPath),
     filename: storedFile.filename,
+    originalName: file.originalname,
+    mimeType: file.mimetype,
+    kind: mediaAsset.fileType.toLowerCase(),
+    title: mediaAsset.title,
   };
 };

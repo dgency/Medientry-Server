@@ -15,7 +15,7 @@ export type SelectOption = {
   value: string;
 };
 
-export type UploadKind = 'image' | 'document' | 'videoThumbnail';
+export type UploadKind = 'image' | 'document' | 'video' | 'videoThumbnail';
 export type ResourceFormMode = 'create' | 'edit';
 
 export type FieldType =

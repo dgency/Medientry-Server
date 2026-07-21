@@ -1,4 +1,9 @@
 import { CollegeFeeBillingPeriod, Prisma } from '@prisma/client';
+import {
+  convertUsdToInr,
+  type ExchangeRateSettings,
+  getDefaultExchangeRateSettings,
+} from './exchange-rate';
 
 const billingPeriodToApiValue: Record<
   CollegeFeeBillingPeriod,
@@ -54,7 +59,8 @@ export type PublicCollegeFeeItem = {
 export type PublicMedicalCollegeFeeSettings = {
   exchangeRateUsdToInr: number | null;
   showExchangeRateNote: boolean;
-  feeNote: string | null;
+  customExchangeRateNote: string | null;
+  exchangeRateUpdatedAt: string | null;
 };
 
 export const publicMedicalCollegeSelect =
@@ -71,9 +77,6 @@ export const publicMedicalCollegeSelect =
     tuitionFee: true,
     hostelFee: true,
     totalFee: true,
-    exchangeRateUsdToInr: true,
-    showExchangeRateNote: true,
-    feeNote: true,
     ranking: true,
     eligibility: true,
     admissionProcess: true,
@@ -116,9 +119,6 @@ export type PublicMedicalCollege = Omit<
   | 'tuitionFee'
   | 'hostelFee'
   | 'totalFee'
-  | 'exchangeRateUsdToInr'
-  | 'showExchangeRateNote'
-  | 'feeNote'
   | 'feeItems'
 > & {
   image: string | null;
@@ -174,6 +174,7 @@ const billingPeriodFromLabel = (
 const mapSavedFeeItems = (
   feeItems: RawMedicalCollege['feeItems'],
   includeInactiveFeeItems: boolean,
+  globalExchangeRateSettings: ExchangeRateSettings,
 ): PublicCollegeFeeItem[] =>
   feeItems
     .filter((item) => includeInactiveFeeItems || item.isActive)
@@ -181,7 +182,11 @@ const mapSavedFeeItems = (
       id: item.id,
       label: item.label,
       amountUsd: decimalToNumber(item.amountUsd),
-      amountInr: decimalToNumber(item.amountInr),
+      amountInr:
+        convertUsdToInr(
+          decimalToNumber(item.amountUsd),
+          globalExchangeRateSettings.exchangeRateUsdToInr,
+        ) ?? decimalToNumber(item.amountInr),
       billingPeriod: billingPeriodToApiValue[item.billingPeriod],
       description: item.description,
       sortOrder: item.sortOrder,
@@ -194,6 +199,7 @@ const buildLegacyFeeItemId = (medicalCollegeId: string, suffix: string) =>
 
 const deriveFeeItemsFromLegacyContent = (
   medicalCollege: RawMedicalCollege,
+  globalExchangeRateSettings: ExchangeRateSettings,
 ): PublicCollegeFeeItem[] => {
   if (!isRecord(medicalCollege.content) || !isRecord(medicalCollege.content.feeStructure)) {
     return [];
@@ -227,14 +233,18 @@ const deriveFeeItemsFromLegacyContent = (
         amountUsdSource === 'Included' ? null : readNumber(amountUsdSource);
 
       const amountInrSource = rawItem.amountInr ?? rawItem.amountINR ?? rawItem.inr;
-      const amountInr =
+      const savedAmountInr =
         amountInrSource === 'Included' ? null : readNumber(amountInrSource);
 
       return {
         id: buildLegacyFeeItemId(medicalCollege.id, `content-${index + 1}`),
         label,
         amountUsd,
-        amountInr,
+        amountInr:
+          convertUsdToInr(
+            amountUsd,
+            globalExchangeRateSettings.exchangeRateUsdToInr,
+          ) ?? savedAmountInr,
         billingPeriod: billingPeriodFromLabel(label),
         description: readString(rawItem.note) ?? readString(rawItem.description),
         sortOrder: index + 1,
@@ -247,6 +257,7 @@ const deriveFeeItemsFromLegacyContent = (
 
 const deriveFeeItemsFromLegacyColumns = (
   medicalCollege: RawMedicalCollege,
+  globalExchangeRateSettings: ExchangeRateSettings,
 ): PublicCollegeFeeItem[] => {
   const items: PublicCollegeFeeItem[] = [];
   const totalFee = decimalToNumber(medicalCollege.totalFee);
@@ -258,7 +269,10 @@ const deriveFeeItemsFromLegacyColumns = (
       id: buildLegacyFeeItemId(medicalCollege.id, 'legacy-total'),
       label: 'Total Tuition Fees (Including 1-Year Internship)',
       amountUsd: totalFee,
-      amountInr: null,
+      amountInr: convertUsdToInr(
+        totalFee,
+        globalExchangeRateSettings.exchangeRateUsdToInr,
+      ),
       billingPeriod: 'total',
       description: null,
       sortOrder: items.length + 1,
@@ -275,7 +289,10 @@ const deriveFeeItemsFromLegacyColumns = (
           ? 'Total Tuition Fees (Including 1-Year Internship)'
           : 'Legacy Tuition Fee',
       amountUsd: tuitionFee,
-      amountInr: null,
+      amountInr: convertUsdToInr(
+        tuitionFee,
+        globalExchangeRateSettings.exchangeRateUsdToInr,
+      ),
       billingPeriod: totalFee == null ? 'total' : 'custom',
       description: null,
       sortOrder: items.length + 1,
@@ -289,7 +306,10 @@ const deriveFeeItemsFromLegacyColumns = (
       id: buildLegacyFeeItemId(medicalCollege.id, 'legacy-hostel'),
       label: 'Legacy Hostel Fee',
       amountUsd: hostelFee,
-      amountInr: null,
+      amountInr: convertUsdToInr(
+        hostelFee,
+        globalExchangeRateSettings.exchangeRateUsdToInr,
+      ),
       billingPeriod: 'custom',
       description: null,
       sortOrder: items.length + 1,
@@ -305,6 +325,7 @@ export const mapMedicalCollegeToApi = (
   medicalCollege: RawMedicalCollege,
   options: {
     includeInactiveFeeItems?: boolean;
+    globalExchangeRateSettings?: ExchangeRateSettings;
   } = {},
 ): PublicMedicalCollege => {
   const {
@@ -313,24 +334,30 @@ export const mapMedicalCollegeToApi = (
     tuitionFee,
     hostelFee,
     totalFee,
-    exchangeRateUsdToInr,
-    showExchangeRateNote,
-    feeNote,
     feeItems: _feeItems,
     ...restMedicalCollege
   } = medicalCollege;
   const includeInactiveFeeItems = options.includeInactiveFeeItems === true;
+  const globalExchangeRateSettings =
+    options.globalExchangeRateSettings ?? getDefaultExchangeRateSettings();
   const savedFeeItems = mapSavedFeeItems(
     medicalCollege.feeItems,
     includeInactiveFeeItems,
+    globalExchangeRateSettings,
   );
-  const legacyContentFeeItems = deriveFeeItemsFromLegacyContent(medicalCollege);
+  const legacyContentFeeItems = deriveFeeItemsFromLegacyContent(
+    medicalCollege,
+    globalExchangeRateSettings,
+  );
   const derivedFeeItems =
     savedFeeItems.length > 0
       ? savedFeeItems
       : legacyContentFeeItems.length > 0
         ? legacyContentFeeItems
-        : deriveFeeItemsFromLegacyColumns(medicalCollege);
+        : deriveFeeItemsFromLegacyColumns(
+            medicalCollege,
+            globalExchangeRateSettings,
+          );
 
   return {
     ...restMedicalCollege,
@@ -340,11 +367,7 @@ export const mapMedicalCollegeToApi = (
     hostelFee: decimalToNumber(hostelFee),
     totalFee: decimalToNumber(totalFee),
     feeStructure: derivedFeeItems,
-    feeSettings: {
-      exchangeRateUsdToInr: decimalToNumber(exchangeRateUsdToInr),
-      showExchangeRateNote,
-      feeNote,
-    },
+    feeSettings: { ...globalExchangeRateSettings },
     contentBlocks: content,
   };
 };

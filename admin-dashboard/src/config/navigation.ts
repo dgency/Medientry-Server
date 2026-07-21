@@ -29,6 +29,7 @@ export const navigationItems: NavigationItem[] = [
   { label: 'Pages', href: '/pages', icon: FileText },
   { label: 'Study Destinations', href: '/study-destinations', icon: Globe2 },
   { label: 'Medical Colleges', href: '/medical-colleges', icon: GraduationCap },
+  { label: 'Media Library', href: '/media', icon: ImageIcon },
   { label: 'Gallery', href: '/gallery', icon: ImageIcon },
   { label: 'Reels Videos', href: '/home-reels', icon: GalleryVerticalEnd },
   { label: 'Knowledge Hub / Blogs', href: '/blogs', icon: BookOpenText },

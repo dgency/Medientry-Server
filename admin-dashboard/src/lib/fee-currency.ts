@@ -59,6 +59,11 @@ export const multiplyDecimalValues = (
   return Number(roundedProduct) / Number(hundred);
 };
 
+export const convertUsdToInr = (
+  usdAmount: number | string | null | undefined,
+  exchangeRate: number | string | null | undefined,
+) => multiplyDecimalValues(usdAmount, exchangeRate);
+
 export const formatFeeCurrency = (
   amount: number | null | undefined,
   currency: FeeCurrencyCode,

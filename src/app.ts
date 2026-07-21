@@ -1,4 +1,5 @@
 import path from "path";
+import fs from 'node:fs';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -16,6 +17,7 @@ import { apiRouter } from './routes';
 
 const app = express();
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
+const clientPublicPath = path.resolve(process.cwd(), '..', 'Medientry-Client', 'public');
 
 const normalizeHost = (value: string) => {
   const trimmedValue = value.trim().toLowerCase();
@@ -81,6 +83,40 @@ app.use(
     },
   }),
 );
+
+if (fs.existsSync(path.join(clientPublicPath, 'images'))) {
+  app.use(
+    '/images',
+    express.static(path.join(clientPublicPath, 'images'), {
+      fallthrough: false,
+      index: false,
+      immutable: env.NODE_ENV === 'production',
+      maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
+      setHeaders(res) {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      },
+    }),
+  );
+}
+
+if (fs.existsSync(path.join(clientPublicPath, 'home-page-icons'))) {
+  app.use(
+    '/home-page-icons',
+    express.static(path.join(clientPublicPath, 'home-page-icons'), {
+      fallthrough: false,
+      index: false,
+      immutable: env.NODE_ENV === 'production',
+      maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
+      setHeaders(res) {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      },
+    }),
+  );
+}
 
 app.use('/api', apiRouter);
 // ==========================================================config for digital ocean

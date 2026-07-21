@@ -121,7 +121,7 @@ export const getYouTubeThumbnailCandidates = (videoId: string) => {
   }
 
   return [
-    `https://img.youtube.com/vi/${normalizedVideoId}/maxresdefault.jpg`,
-    `https://img.youtube.com/vi/${normalizedVideoId}/hqdefault.jpg`,
+    `https://i.ytimg.com/vi/${normalizedVideoId}/maxresdefault.jpg`,
+    `https://i.ytimg.com/vi/${normalizedVideoId}/hqdefault.jpg`,
   ];
 };

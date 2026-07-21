@@ -23,17 +23,6 @@ const nullableDecimalSchema = z
   })
   .optional();
 
-const nullablePositiveDecimalSchema = z
-  .union([z.coerce.number().positive(), z.literal(''), z.null()])
-  .transform((value) => {
-    if (value === '' || value === null) {
-      return null;
-    }
-
-    return value;
-  })
-  .optional();
-
 const collegeFeeItemSchema = z.object({
   label: z.string().trim().min(1, 'Fee component label is required.'),
   amountUsd: nullableDecimalSchema,
@@ -43,12 +32,6 @@ const collegeFeeItemSchema = z.object({
   sortOrder: z.coerce.number().int('Sort order must be an integer.'),
   isTotal: z.boolean(),
   isActive: z.boolean(),
-});
-
-const feeSettingsSchema = z.object({
-  exchangeRateUsdToInr: nullablePositiveDecimalSchema,
-  showExchangeRateNote: z.boolean().optional().default(false),
-  feeNote: nullableTrimmedString,
 });
 
 const seoKeywordsSchema = z.array(z.string().trim().min(1)).default([]);
@@ -74,7 +57,6 @@ const baseMedicalCollegeBodySchema = z.object({
   hostelFee: nullableDecimalSchema,
   totalFee: nullableDecimalSchema,
   feeStructure: z.array(collegeFeeItemSchema).optional(),
-  feeSettings: feeSettingsSchema.optional(),
   ranking: nullableTrimmedString,
   eligibility: nullableTrimmedString,
   admissionProcess: nullableJsonSchema,

@@ -6,7 +6,6 @@ export const publicHomeReelSelect =
     title: true,
     videoUrl: true,
     youtubeVideoId: true,
-    thumbnail: true,
     sortOrder: true,
     status: true,
     createdAt: true,

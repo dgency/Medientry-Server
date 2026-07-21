@@ -242,7 +242,6 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                             value={String(controllerField.value ?? '')}
                             onChange={controllerField.onChange}
                             placeholder={field.placeholder}
-                            thumbnailValue={String(watchedValues[field.linkedFieldName ?? 'thumbnail'] ?? '')}
                           />
                         )}
                       />

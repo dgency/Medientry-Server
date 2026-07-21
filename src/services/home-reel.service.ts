@@ -8,25 +8,11 @@ import { getYouTubeVideoDetails } from '../utils/youtube';
 type CreateHomeReelInput = {
   title: string;
   videoUrl: string;
-  thumbnail?: string;
   sortOrder: number;
   status: SimpleStatus;
 };
 
 type UpdateHomeReelInput = Partial<CreateHomeReelInput>;
-
-const normalizeNullableString = (value?: string | null) => {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (value === null) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  return trimmed === '' ? null : trimmed;
-};
 
 const buildHomeReelData = (
   input: CreateHomeReelInput | UpdateHomeReelInput,
@@ -37,10 +23,6 @@ const buildHomeReelData = (
 
   if ('title' in input && input.title !== undefined) {
     data.title = input.title.trim();
-  }
-
-  if ('thumbnail' in input) {
-    data.thumbnail = normalizeNullableString(input.thumbnail);
   }
 
   if ('videoUrl' in input && input.videoUrl !== undefined) {

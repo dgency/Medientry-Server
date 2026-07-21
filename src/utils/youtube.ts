@@ -121,8 +121,8 @@ export const getYouTubeThumbnailUrls = (videoId: string) => {
   }
 
   return [
-    `https://img.youtube.com/vi/${normalizedVideoId}/maxresdefault.jpg`,
-    `https://img.youtube.com/vi/${normalizedVideoId}/hqdefault.jpg`,
+    `https://i.ytimg.com/vi/${normalizedVideoId}/maxresdefault.jpg`,
+    `https://i.ytimg.com/vi/${normalizedVideoId}/hqdefault.jpg`,
   ];
 };
 
@@ -135,8 +135,13 @@ export const getYouTubeEmbedUrl = (videoId: string, autoplay = false) => {
 
   const searchParams = new URLSearchParams({
     autoplay: autoplay ? '1' : '0',
-    rel: '0',
+    cc_load_policy: '0',
+    controls: '0',
+    disablekb: '1',
+    fs: '0',
+    iv_load_policy: '3',
     modestbranding: '1',
+    rel: '0',
     playsinline: '1',
   });
 

@@ -65,6 +65,56 @@ const nullableEmailString = z
 
     return value.trim() === '' ? null : value.trim().toLowerCase();
   });
+const nullablePositiveFiniteNumber = z
+  .union([z.coerce.number(), z.literal(''), z.null()])
+  .optional()
+  .transform((value) => {
+    if (value === '' || value === null) {
+      return null;
+    }
+
+    return value;
+  })
+  .refine(
+    (value) =>
+      value === undefined
+      || value === null
+      || (Number.isFinite(value) && value > 0),
+    {
+      message: 'Exchange rate must be a positive number.',
+    },
+  );
+const normalizedBoolean = z
+  .union([z.boolean(), z.literal('true'), z.literal('false')])
+  .optional()
+  .transform((value) => {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    return value === 'true';
+  });
+const nullableCustomExchangeRateNote = z
+  .union([z.string(), z.null()])
+  .optional()
+  .transform((value) => {
+    if (typeof value !== 'string') {
+      return value ?? undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed === '' ? null : trimmed;
+  })
+  .refine(
+    (value) => value === undefined || value === null || value.length <= 1000,
+    {
+      message: 'Custom fee note must be 1000 characters or fewer.',
+    },
+  );
 
 const siteSettingBodySchema = z.preprocess(
   (input) => {
@@ -99,7 +149,20 @@ const siteSettingBodySchema = z.preprocess(
       instagram: nullableUrlString,
       linkedin: nullableUrlString,
       youtube: nullableUrlString,
+      exchangeRateUsdToInr: nullablePositiveFiniteNumber,
+      showExchangeRateNote: normalizedBoolean,
+      customExchangeRateNote: nullableCustomExchangeRateNote,
     })
+    .refine(
+      (value) =>
+        value.showExchangeRateNote !== true
+        || (typeof value.exchangeRateUsdToInr === 'number'
+          && value.exchangeRateUsdToInr > 0),
+      {
+        path: ['exchangeRateUsdToInr'],
+        message: 'Add a valid USD-to-INR exchange rate to enable the exchange-rate note.',
+      },
+    )
     .refine((value) => Object.keys(value).length > 0, {
       message: 'At least one site setting field is required.',
     }),

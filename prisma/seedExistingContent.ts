@@ -1149,9 +1149,6 @@ const seedMedicalColleges = async () => {
         tuitionFee,
         hostelFee,
         totalFee,
-        exchangeRateUsdToInr: 90,
-        showExchangeRateNote: false,
-        feeNote: null,
         ranking: university.highlights[0] ?? null,
         eligibility:
           university.country === 'Bangladesh'
@@ -1219,9 +1216,6 @@ const seedMedicalColleges = async () => {
         tuitionFee,
         hostelFee,
         totalFee,
-        exchangeRateUsdToInr: 90,
-        showExchangeRateNote: false,
-        feeNote: null,
         ranking: university.highlights[0] ?? null,
         eligibility:
           university.country === 'Bangladesh'

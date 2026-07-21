@@ -1,10 +1,11 @@
 import { useEffect, type ChangeEvent } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Controller, useForm } from 'react-hook-form';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { ExchangeRateNoteSettingsCard } from '../components/cms/exchange-rate-note-settings-card';
 import { FileUploadField } from '../components/cms/file-upload-field';
 import { EmptyState } from '../components/ui/empty-state';
 import { Input } from '../components/ui/input';
@@ -28,6 +29,15 @@ type SiteSettingsFormValues = {
   instagram: string;
   linkedin: string;
   youtube: string;
+  exchangeRateUsdToInr: string;
+  showExchangeRateNote: boolean;
+  customExchangeRateNote: string;
+};
+
+type SiteSettingsApiPayload = Omit<SiteSettingsFormValues, 'exchangeRateUsdToInr' | 'customExchangeRateNote'> & {
+  exchangeRateUsdToInr: number | null;
+  customExchangeRateNote: string | null;
+  exchangeRateUpdatedAt: string | null;
 };
 
 const fallbackColorValues = {
@@ -57,6 +67,9 @@ const defaultValues: SiteSettingsFormValues = {
   instagram: '',
   linkedin: '',
   youtube: '',
+  exchangeRateUsdToInr: '',
+  showExchangeRateNote: false,
+  customExchangeRateNote: '',
 };
 
 const isSixDigitHexColor = (value: string) => /^#[0-9a-fA-F]{6}$/.test(value.trim());
@@ -157,7 +170,9 @@ const toStringValue = (value: unknown) => {
   return String(value);
 };
 
-const normalizeSiteSettingsValues = (value?: Partial<SiteSettingsFormValues> | null) => ({
+const normalizeSiteSettingsValues = (
+  value?: Partial<SiteSettingsApiPayload | SiteSettingsFormValues> | null,
+) => ({
   ...defaultValues,
   logoLight: toStringValue(value?.logoLight).trim(),
   logoDark: toStringValue(value?.logoDark).trim(),
@@ -182,6 +197,9 @@ const normalizeSiteSettingsValues = (value?: Partial<SiteSettingsFormValues> | n
   instagram: toStringValue(value?.instagram),
   linkedin: toStringValue(value?.linkedin),
   youtube: toStringValue(value?.youtube),
+  exchangeRateUsdToInr: toStringValue(value?.exchangeRateUsdToInr).trim(),
+  showExchangeRateNote: value?.showExchangeRateNote === true,
+  customExchangeRateNote: toStringValue(value?.customExchangeRateNote),
 });
 
 const sanitizeSiteSettingsPayload = (values: SiteSettingsFormValues) => {
@@ -202,25 +220,34 @@ const sanitizeSiteSettingsPayload = (values: SiteSettingsFormValues) => {
     instagram: normalizedValues.instagram.trim(),
     linkedin: normalizedValues.linkedin.trim(),
     youtube: normalizedValues.youtube.trim(),
+    exchangeRateUsdToInr: normalizedValues.exchangeRateUsdToInr.trim(),
+    showExchangeRateNote: normalizedValues.showExchangeRateNote,
+    customExchangeRateNote: normalizedValues.customExchangeRateNote.trim(),
   };
 };
 
 export function SiteSettingsPage() {
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     control,
     formState: { isSubmitting },
   } = useForm<SiteSettingsFormValues>({
     defaultValues,
+  });
+  const [exchangeRateInputValue, showExchangeRateNote, customExchangeRateNote] = useWatch({
+    control,
+    name: ['exchangeRateUsdToInr', 'showExchangeRateNote', 'customExchangeRateNote'],
   });
 
   const settingsQuery = useQuery({
     queryKey: ['site-settings'],
     queryFn: async () => {
       const response = await apiClient.get('/site-settings');
-      return extractApiData<Partial<SiteSettingsFormValues>>(response);
+      return extractApiData<SiteSettingsApiPayload>(response);
     },
   });
 
@@ -241,9 +268,13 @@ export function SiteSettingsPage() {
           },
         },
       );
-      return extractApiData(response);
+      return extractApiData<SiteSettingsApiPayload>(response);
     },
-    onSuccess: () => {
+    onSuccess: (updatedSettings) => {
+      queryClient.setQueryData(['site-settings'], updatedSettings);
+      void queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      void queryClient.invalidateQueries({ queryKey: ['site-settings', 'branding'] });
+      reset(normalizeSiteSettingsValues(updatedSettings));
       toast.success('Site settings updated successfully.');
     },
     onError: (error) => {
@@ -260,6 +291,17 @@ export function SiteSettingsPage() {
     (event: ChangeEvent<HTMLInputElement>) => {
       onChange(normalizeColorValue(event.target.value, fallbackColorValues[fieldName]));
     };
+  const parsedExchangeRateValue =
+    exchangeRateInputValue.trim().length > 0
+      ? Number(exchangeRateInputValue)
+      : null;
+  const hasValidExchangeRate =
+    parsedExchangeRateValue != null
+    && Number.isFinite(parsedExchangeRateValue)
+    && parsedExchangeRateValue > 0;
+  const exchangeRateWarningMessage = hasValidExchangeRate
+    ? null
+    : 'Add a valid USD-to-INR exchange rate to enable INR calculations.';
 
   if (settingsQuery.isLoading) {
     return (
@@ -390,6 +432,23 @@ export function SiteSettingsPage() {
                 </div>
               </div>
             </div>
+
+            <ExchangeRateNoteSettingsCard
+              exchangeRateUsdToInr={exchangeRateInputValue}
+              showExchangeRateNote={showExchangeRateNote}
+              customExchangeRateNote={customExchangeRateNote}
+              exchangeRateUpdatedAt={settingsQuery.data?.exchangeRateUpdatedAt ?? null}
+              warningMessage={exchangeRateWarningMessage}
+              onExchangeRateChange={(nextValue) =>
+                setValue('exchangeRateUsdToInr', nextValue, { shouldDirty: true })
+              }
+              onShowExchangeRateNoteChange={(nextValue) =>
+                setValue('showExchangeRateNote', nextValue, { shouldDirty: true })
+              }
+              onCustomExchangeRateNoteChange={(nextValue) =>
+                setValue('customExchangeRateNote', nextValue, { shouldDirty: true })
+              }
+            />
 
             <div className="flex justify-end">
               <Button

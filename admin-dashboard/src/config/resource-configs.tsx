@@ -66,11 +66,6 @@ const defaultCollegeFeeManagementValue = () => ({
       isActive: true,
     },
   ],
-  feeSettings: {
-    exchangeRateUsdToInr: null,
-    showExchangeRateNote: false,
-    feeNote: null,
-  },
 });
 
 const formatNullableUsd = (value: unknown) => {
@@ -1789,10 +1784,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           Array.isArray(item.feeStructure) && item.feeStructure.length > 0
             ? item.feeStructure
             : defaultCollegeFeeManagementValue().feeStructure,
-        feeSettings:
-          item.feeSettings && typeof item.feeSettings === 'object'
-            ? item.feeSettings
-            : defaultCollegeFeeManagementValue().feeSettings,
       },
       admissionProcess: toJsonTextareaValue(item.admissionProcess),
       facilities: toKeywordsValue(item.facilities),
@@ -1807,7 +1798,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         !Array.isArray(values.feeManagement)
           ? (values.feeManagement as {
               feeStructure?: unknown;
-              feeSettings?: unknown;
             })
           : null;
       const existingContentBlocks =
@@ -1831,12 +1821,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       return {
         ...restValues,
         feeStructure: sanitizeMedicalCollegeFeeStructure(feeManagement?.feeStructure),
-        feeSettings:
-          feeManagement?.feeSettings &&
-          typeof feeManagement.feeSettings === 'object' &&
-          !Array.isArray(feeManagement.feeSettings)
-            ? feeManagement.feeSettings
-            : defaultCollegeFeeManagementValue().feeSettings,
         facilities: badgeFeatures,
         contentBlocks,
       };
@@ -1887,7 +1871,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     key: 'home-reels',
     title: 'Reels Videos',
     singular: 'Reel Video',
-    description: 'Manage homepage reel cards with YouTube URLs, optional custom thumbnails, status, and display order.',
+    description: 'Manage homepage reel cards with YouTube URLs, status, and display order.',
     endpoint: '/home-reels',
     statusToggle: {
       fieldName: 'status',
@@ -1900,7 +1884,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     defaultValues: {
       title: '',
       videoUrl: '',
-      thumbnail: '',
       sortOrder: 0,
       status: 'ACTIVE',
     },
@@ -1912,7 +1895,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         type: 'youtube-video',
         required: true,
         colSpan: 2,
-        linkedFieldName: 'thumbnail',
         placeholder: 'https://www.youtube.com/watch?v=VIDEO_ID',
         validate: (value) => {
           const normalizedValue = String(value ?? '').trim();
@@ -1927,15 +1909,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         },
       },
       {
-        name: 'thumbnail',
-        label: 'Video Thumbnail',
-        type: 'url',
-        colSpan: 2,
-        uploadKind: 'videoThumbnail',
-        previewLabel: 'Preview thumbnail',
-        description: 'Upload a custom thumbnail or select one from the Media Library. Leave this blank to use the YouTube thumbnail automatically.',
-      },
-      {
         name: 'status',
         label: 'Status',
         type: 'select',
@@ -1946,11 +1919,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     ],
     columns: [
       { key: 'title', label: 'Title', render: (item) => <div className="font-semibold">{String(item.title ?? '-')}</div> },
-      {
-        key: 'thumbnail',
-        label: 'Thumbnail',
-        render: (item) => (String(item.thumbnail ?? '').trim() ? 'Uploaded' : 'Not set'),
-      },
       {
         key: 'video',
         label: 'Video',
