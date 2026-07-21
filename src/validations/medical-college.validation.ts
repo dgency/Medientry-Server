@@ -35,7 +35,6 @@ const nullablePositiveDecimalSchema = z
   .optional();
 
 const collegeFeeItemSchema = z.object({
-  id: z.string().uuid().nullable().optional(),
   label: z.string().trim().min(1, 'Fee component label is required.'),
   amountUsd: nullableDecimalSchema,
   amountInr: nullableDecimalSchema,

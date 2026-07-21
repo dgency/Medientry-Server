@@ -113,6 +113,28 @@ const getMedicalCollegeFeeSummary = (item: ResourceItem) => {
   return '-';
 };
 
+const sanitizeMedicalCollegeFeeStructure = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((item): item is Record<string, unknown> => isRecord(item))
+    .map((item) => ({
+      label: typeof item.label === 'string' ? item.label : '',
+      amountUsd: typeof item.amountUsd === 'number' ? item.amountUsd : item.amountUsd ?? null,
+      amountInr: typeof item.amountInr === 'number' ? item.amountInr : item.amountInr ?? null,
+      billingPeriod: typeof item.billingPeriod === 'string' ? item.billingPeriod : 'custom',
+      description: typeof item.description === 'string' ? item.description : item.description ?? null,
+      sortOrder:
+        typeof item.sortOrder === 'number' && Number.isFinite(item.sortOrder)
+          ? item.sortOrder
+          : 0,
+      isTotal: item.isTotal === true,
+      isActive: item.isActive !== false,
+    }));
+};
+
 const homeHeroFallbackContent = {
   badgeText: 'TRUSTED MBBS CONSULTANCY SINCE 2018',
   headingText: 'Your Gateway\nto MBBS\nAbroad',
@@ -1808,9 +1830,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
 
       return {
         ...restValues,
-        feeStructure: Array.isArray(feeManagement?.feeStructure)
-          ? feeManagement?.feeStructure
-          : [],
+        feeStructure: sanitizeMedicalCollegeFeeStructure(feeManagement?.feeStructure),
         feeSettings:
           feeManagement?.feeSettings &&
           typeof feeManagement.feeSettings === 'object' &&

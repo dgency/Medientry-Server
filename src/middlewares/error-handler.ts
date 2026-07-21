@@ -5,6 +5,7 @@ import { ZodError } from 'zod';
 
 import { ApiError } from '../utils/api-error';
 import { mapPrismaErrorToHttp } from '../utils/prisma-error';
+import { buildZodErrorDetails } from '../utils/zod-error';
 
 type ErrorResponse = {
   success: false;
@@ -34,19 +35,13 @@ export const errorHandler = (
     code = errorWithCode?.code;
   } else if (error instanceof ZodError) {
     statusCode = 400;
-    const fieldNames = Array.from(
-      new Set(
-        error.issues
-          .map((issue) => issue.path.join('.'))
-          .filter(Boolean)
-          .map((path) => path.replace(/^body\./, '')),
-      ),
-    );
+    const zodErrorDetails = buildZodErrorDetails(error);
+    const fieldNames = Object.keys(zodErrorDetails.fieldErrors);
     message =
       fieldNames.length > 0
         ? `Validation failed for: ${fieldNames.join(', ')}.`
         : 'Validation failed.';
-    errors = error.flatten();
+    errors = zodErrorDetails;
     code = 'VALIDATION_FAILED';
   } else {
     const prismaError = mapPrismaErrorToHttp(error);
