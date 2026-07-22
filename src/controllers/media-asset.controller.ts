@@ -1,6 +1,12 @@
 import type { Response } from 'express';
 
-import { listMediaAssets, updateMediaAsset } from '../services/media-asset.service';
+import {
+  getMediaAssetUsageSummaries,
+  bulkDeleteMediaAssets,
+  deleteMediaAsset,
+  listMediaAssets,
+  updateMediaAsset,
+} from '../services/media-asset.service';
 import { asyncHandler } from '../utils/async-handler';
 import { sendResponse } from '../utils/send-response';
 
@@ -25,5 +31,38 @@ export const updateCmsMediaAsset = asyncHandler(async (req, res: Response) => {
     success: true,
     message: 'Media asset updated successfully.',
     data: mediaAsset,
+  });
+});
+
+export const getCmsMediaAssetUsageSummaries = asyncHandler(async (req, res: Response) => {
+  const summaries = await getMediaAssetUsageSummaries(req.body.ids);
+
+  sendResponse(res, 200, {
+    success: true,
+    message: 'Media asset usage retrieved successfully.',
+    data: summaries,
+  });
+});
+
+export const deleteCmsMediaAsset = asyncHandler(async (req, res: Response) => {
+  const deletedMediaAsset = await deleteMediaAsset(String(req.params.id));
+
+  sendResponse(res, 200, {
+    success: true,
+    message: 'Media asset deleted successfully.',
+    data: deletedMediaAsset,
+  });
+});
+
+export const bulkDeleteCmsMediaAssets = asyncHandler(async (req, res: Response) => {
+  const result = await bulkDeleteMediaAssets(req.body.ids);
+
+  sendResponse(res, 200, {
+    success: true,
+    message:
+      result.deletedCount === 1
+        ? '1 media asset deleted successfully.'
+        : `${result.deletedCount} media assets deleted successfully.`,
+    data: result,
   });
 });

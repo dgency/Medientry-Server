@@ -34,3 +34,27 @@ export const updateMediaAssetSchema = z.object({
       message: 'At least one media asset field is required.',
     }),
 });
+
+export const mediaAssetIdParamSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
+});
+
+export const bulkDeleteMediaAssetsSchema = z.object({
+  body: z.object({
+    ids: z
+      .array(z.string().uuid())
+      .min(1, 'Select at least one media asset to delete.')
+      .max(100, 'You can delete up to 100 media assets at once.'),
+  }),
+});
+
+export const mediaAssetUsageSummarySchema = z.object({
+  body: z.object({
+    ids: z
+      .array(z.string().uuid())
+      .min(1, 'Select at least one media asset.')
+      .max(50, 'You can check up to 50 media assets at once.'),
+  }),
+});

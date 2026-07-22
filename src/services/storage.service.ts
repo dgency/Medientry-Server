@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
@@ -19,6 +19,7 @@ export type StoredFile = {
 
 export interface StorageAdapter {
   save(input: SaveFileInput): Promise<StoredFile>;
+  remove(relativePath: string): Promise<void>;
 }
 
 class LocalStorageAdapter implements StorageAdapter {
@@ -40,6 +41,13 @@ class LocalStorageAdapter implements StorageAdapter {
       relativePath,
       publicPath: `/uploads/${relativePath}`,
     };
+  }
+
+  public async remove(relativePath: string): Promise<void> {
+    const normalizedRelativePath = relativePath.replace(/^[/\\]+/, '');
+    const absolutePath = path.join(uploadsRootDirectory, normalizedRelativePath);
+
+    await rm(absolutePath, { force: true });
   }
 }
 

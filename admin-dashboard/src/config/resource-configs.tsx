@@ -393,6 +393,489 @@ const homeVideoStoriesFallbackContent = {
   subtitle: 'Watch short videos from students, parents, and the Medientry team.',
 } as const;
 
+const homePhilosophyFallbackContent = {
+  eyebrow: 'OUR PHILOSOPHY',
+  title: 'We Are Not Here to Sell You a College.',
+  supportingHeading: "We Are Here to Protect Your Child's Future.",
+  description:
+    'There are 60+ medical colleges in Bangladesh. Not all offer the same quality education, facilities, or patient exposure. Many consultancies push low-quality colleges for higher commissions. Medientry does the opposite.',
+  imageSrc: '/images/bangladesh-parliament-students.jpg',
+  imageAlt: 'Medical students standing in front of the Bangladesh Parliament',
+} as const;
+
+const homeStudyDestinationsFallbackContent = {
+  eyebrow: 'STUDY DESTINATIONS',
+  title: 'Choose Your Path to Becoming a Doctor',
+  subtitle:
+    'We specialize in MBBS admission in Bangladesh and Georgia with recognized colleges and transparent guidance.',
+} as const;
+
+const genericPageCtaFallbackContent = {
+  title: 'Ready to Take the Next Step?',
+  subtitle:
+    'Talk to our admissions team for clear guidance, quick answers, and a transparent roadmap for your MBBS or study abroad journey.',
+  primaryButtonText: 'Book Free Consultation',
+  primaryButtonUrl: '/contact',
+  secondaryButtonText: 'Chat on WhatsApp',
+  secondaryButtonUrl: '',
+} as const;
+
+const aboutPageFallbackContent = {
+  whoWeAreEyebrow: 'Who We Are',
+  whoWeAreTitle: 'The Leading MBBS Consultancy for Bangladesh',
+  whoWeAreImage: '/images/team-photo.jpg',
+  whoWeAreImageAlt: 'Medientry Bangladesh team - MBBS admission consultants',
+  whoWeAreBadgeValue: '7+',
+  whoWeAreBadgeLabel: 'Years of Excellence',
+  overview: [
+    'Led by a team of professionals with over 10 years of experience in the education sector, Medientry Bangladesh was established with a singular mission: to help Indian students find the right medical college that best fits their needs and aspirations.',
+    'We specialize exclusively in MBBS admission in Bangladesh, giving us unparalleled expertise and the most accurate, up-to-date information on medical colleges in the country. This focused approach has made us the go-to consultancy for students and parents seeking genuine guidance.',
+    'As a local consultancy with direct relationships with medical colleges, we are capable of securing admission to any college of your choice. Over the years, we have helped hundreds of Indian students gain admission to their desired medical colleges, and our support remains active until they successfully complete their degree.',
+  ],
+  valuesEyebrow: 'Our Values',
+  valuesTitle: 'What Sets Medientry Apart',
+  valuesSubtitle:
+    'Our approach goes beyond just securing admissions. We serve as career guidance consultants, helping students choose the best-fit college to become successful doctors with premium services during admission and throughout their study period.',
+  values: [
+    {
+      title: 'Transparency First',
+      description: 'We provide only genuine, verified information. No hidden fees, no false promises.',
+      sortOrder: 1,
+      isActive: true,
+    },
+    {
+      title: 'Student-Centric Approach',
+      description: "Your success is our success. We guide you based on what's best for your career, not our commission.",
+      sortOrder: 2,
+      isActive: true,
+    },
+    {
+      title: 'Specialized Expertise',
+      description: 'We focus exclusively on MBBS admission in Bangladesh, making us the most knowledgeable consultancy in this domain.',
+      sortOrder: 3,
+      isActive: true,
+    },
+    {
+      title: 'Long-term Partnership',
+      description: "Our relationship doesn't end with admission. We support you throughout your 5-year medical journey.",
+      sortOrder: 4,
+      isActive: true,
+    },
+  ],
+  trustEyebrow: 'Why Parents Trust Us',
+  trustTitle: 'Peace of Mind for Every Family',
+  trustDescription:
+    'We understand that sending your child abroad for education is a significant decision that comes with many concerns. Medientry addresses every worry with transparency, local presence, and unwavering support.',
+  trustPoints: [
+    'Over 500 successful student admissions since 2018',
+    'Direct partnerships with 30+ medical colleges',
+    'Local presence in Bangladesh for immediate support',
+    'Zero upfront payment policy - pay only after admission',
+    'Comprehensive visa and documentation assistance',
+    'Emergency support throughout your study period',
+  ],
+  trustCtaText: 'Schedule a Consultation',
+  trustCtaUrl: '/contact',
+  metrics: {
+    studentsPlaced: '500+',
+    partnerColleges: '30+',
+    yearsExperience: '7+',
+    admissionSuccess: '100%',
+  },
+  pageCtaTitle: "Let's Discuss Your Medical Career",
+  pageCtaSubtitle:
+    'Our experienced counselors are ready to answer all your questions and help you make an informed decision about your future.',
+} as const;
+
+const whyMedientryFallbackContent = {
+  heroQuoteText: "Your child's 6 years matter more to us than a one-time commission.",
+  differenceTitle: 'The Medientry Difference',
+  differenceDescription:
+    'There are 60+ medical colleges in Bangladesh. Not all offer the same education, facilities, or patient exposure. Many consultancies push low-quality colleges for higher commissions. We do the opposite.',
+  philosophyPoints: [
+    { title: 'College Selection Based on Quality', description: 'FMGE track record, facilities, and your future goals - not commission rates.', sortOrder: 1, isActive: true },
+    { title: 'Budget-Based Shortlisting', description: 'No pressure to overspend - we match colleges to your actual budget.', sortOrder: 2, isActive: true },
+    { title: 'Honest Comparison', description: 'Transparent comparison between multiple colleges with clear pros and cons.', sortOrder: 3, isActive: true },
+    { title: 'Clear Risk Explanation', description: 'We explain limitations and potential challenges upfront so you can decide with confidence.', sortOrder: 4, isActive: true },
+    { title: 'Guidance Continues After Admission', description: 'Our support does not end with payment - we stay with you throughout your 5-6 year journey.', sortOrder: 5, isActive: true },
+  ],
+  differenceQuoteText: 'This transparent approach is why hundreds of parents have trusted Medientry for the last 7 years.',
+  commitmentsEyebrow: 'Our Commitments',
+  commitmentsTitle: 'What Makes Us Different',
+  reasons: [
+    { title: 'Genuine Information Only', description: 'We understand how crucial accurate information is for your decision. With over 60 private medical colleges in Bangladesh, each with its own pros and cons, choosing can be overwhelming.', details: 'We provide only verified, accurate overviews of colleges based on your budget and requirements. No misleading information, no hidden agendas - just honest guidance.', sortOrder: 1, isActive: true },
+    { title: 'Quality-Based Selection', description: 'College recommendation based on FMGE track record, clinical facilities, teaching quality, and your specific goals - never based on which college pays us higher commission.', details: "We've turned down partnerships with colleges that don't meet our quality standards. Your child's 6-year investment deserves a college chosen for the right reasons.", sortOrder: 2, isActive: true },
+    { title: 'Free One-on-One Consultation', description: 'Being a local consultancy with vast knowledge about every medical college, we offer personalized consultations that go beyond internet research.', details: 'Ask any question, no matter how specific or unusual. Our goal is to help you make an informed decision - whether you choose to admit through us or not.', sortOrder: 3, isActive: true },
+    { title: 'Admission to Any College', description: 'As an authorized representative with partnerships across top-ranked medical colleges in Bangladesh, we can secure your admission to any college of your choice.', details: "Unlike other consultancies that push their preferred colleges, we help you choose based on what's best for YOU. We provide all necessary information so you can decide on your own.", sortOrder: 4, isActive: true },
+    { title: 'Complete Paperwork & Visa Processing', description: 'Navigating admission documentation and visa processes can be stressful. We handle it all so you can focus on preparing for your journey.', details: "From admission forms to visa applications, we manage every piece of paperwork. We'll even pick you up from the airport and bring you to your college hostel.", sortOrder: 5, isActive: true },
+    { title: 'Guidance Beyond Admission', description: "Our responsibility doesn't end with admission. We understand the concerns of studying in a foreign country as a young student.", details: "Throughout your entire 5-6 year study period, Medientry serves as your safe house in Bangladesh. From currency transfers to emergency visa assistance - we're always there when you need us.", sortOrder: 6, isActive: true },
+    { title: 'No Advance Payment', description: "We don't charge anything before your admission is confirmed. This is our commitment to transparency and trust.", details: 'Many fraud consultancies charge upfront and disappear. With Medientry, you pay only after you have your admission letter in hand. Our formal connections with colleges guarantee your admission.', sortOrder: 7, isActive: true },
+    { title: 'Your Future Over Our Profit', description: 'We prioritize your career over commissions. Even if it means lower earnings for us, we\'ll always recommend what\'s best for you.', details: 'Some consultancies push high-commission colleges regardless of quality. We\'ve turned down such partnerships because your 6-year investment and career deserve better.', sortOrder: 8, isActive: true },
+    { title: 'Protection Against Fraud', description: 'The education consultancy space has many fraudsters. Being a local, established consultancy with formal college partnerships, we offer safety and reliability.', details: "We've helped students who were scammed by other consultancies get admission just before deadlines. Our reputation is built on trust, not false promises.", sortOrder: 9, isActive: true },
+  ],
+  promiseEyebrow: 'Our Promise',
+  promiseTitle: 'What We Guarantee',
+  promiseDescription:
+    'When you choose Medientry, you are not just getting an admission consultant. You are getting a partner who is invested in your long-term success.',
+  guarantees: [
+    '100% admission guarantee to your chosen college',
+    'Complete transparency in fees - no hidden charges',
+    'Local presence in Bangladesh for immediate support',
+    'Direct relationships with college administrations',
+    'Emergency assistance throughout your study period',
+    'Career guidance beyond just admission',
+  ],
+  promiseCtaText: 'Start Your Journey',
+  promiseCtaUrl: '/contact',
+  metrics: {
+    studentsGuided: '500+',
+    yearsExperience: '7+',
+    partnerColleges: '60+',
+    successRate: '100%',
+  },
+  trackRecordTitle: 'Our Track Record',
+  trackRecordQuoteText: "We've helped students who were scammed by other consultancies get last-minute admissions. That's the Medientry difference.",
+  feelEyebrow: 'What You Should Feel',
+  feelTitle: 'After Talking to Medientry',
+  feelStatements: [
+    'These people will tell me the truth.',
+    'They are thinking long-term.',
+    "Even if I don't choose them, they are guiding me honestly.",
+  ],
+  feelSummary: 'Medientry is: A mentor + local guardian + strategist - not a middleman.',
+  pageCtaTitle: 'Experience the Medientry Difference',
+  pageCtaSubtitle:
+    'Book a free consultation and see for yourself why hundreds of students and parents trust Medientry for their medical education journey.',
+} as const;
+
+const successStoriesFallbackContent = {
+  stats: {
+    studentsPlaced: '500+',
+    admissionSuccess: '100%',
+    yearsOfTrust: '7+',
+    parentSatisfaction: '4.9/5',
+  },
+  shareTitle: 'Are You a Medientry Student?',
+  shareSubtitle:
+    "We'd love to feature your story. Share your experience with Medientry and help other students and parents make informed decisions.",
+  shareCtaText: 'Share Your Story',
+  shareCtaUrl: '/contact',
+  pageCtaTitle: 'Ready to Write Your Success Story?',
+  pageCtaSubtitle:
+    "Join hundreds of students who have successfully started their medical careers with Medientry's guidance.",
+} as const;
+
+const contactPageFallbackContent = {
+  formTitle: 'Book Free Consultation',
+  formSubtitle: 'Fill in your details and our team will get back to you within 24 hours.',
+  workingHoursTitle: 'Working Hours',
+  whatToExpectTitle: 'What to Expect',
+  whatsappCardTitle: 'Prefer WhatsApp?',
+  whatsappCardDescription: 'Get quick answers to your questions on WhatsApp. Our team typically responds within minutes.',
+  whatsappCtaText: 'Chat on WhatsApp',
+  officesEyebrow: 'Our Offices',
+  officesTitle: 'Visit Us',
+  officesSubtitle: 'We have offices in Bangladesh and India to serve you better.',
+  workingHours: {
+    officeHours: 'Saturday - Thursday: 10:00 AM - 7:00 PM',
+    friday: 'Friday: By Appointment Only',
+  },
+  whatToExpect: [
+    'Quick response within 24 hours',
+    'No-obligation free consultation',
+    'Honest assessment of your options',
+    'Detailed fee breakdown',
+    'Complete admission roadmap',
+  ],
+  offices: [
+    {
+      id: 'bangladesh-office',
+      title: 'Head Office - Bangladesh',
+      company: 'Medientry Bangladesh',
+      country: 'Bangladesh',
+      address: [
+        'Online Wasi Tower, 572/K (13th Floor)',
+        'Matikata, Dhaka Cantonment',
+        'Dhaka-1206, Bangladesh',
+      ],
+      phone: '+880 1713 456 910',
+      phoneHref: 'tel:+8801713456910',
+      email: 'info@medientrybd.com',
+      emailHref: 'mailto:info@medientrybd.com',
+    },
+    {
+      id: 'india-office',
+      title: 'India Office',
+      company: 'Talentz Edu Connect',
+      country: 'India',
+      address: [
+        'House No. 125, C-1',
+        'SRP Colony 8th Street Extension',
+        'Peravallur, Chennai-600082',
+        'Tamil Nadu, India',
+      ],
+      phone: '+91 97917 15555',
+      phoneHref: 'tel:+919791715555',
+      email: '',
+      emailHref: '',
+    },
+  ],
+} as const;
+
+const collegesPageFallbackContent = {
+  heroEyebrow: 'Partner Institutions',
+  expertTipLabel: 'Expert Tip',
+  expertTipText:
+    "Don't choose a college based solely on fees. Consider FMGE pass rate, hospital facilities, faculty quality, and overall infrastructure. Our counselors can help you make the right choice.",
+  bangladeshEyebrow: 'Bangladesh',
+  bangladeshTitle: 'Medical Colleges in Bangladesh',
+  bangladeshDescription:
+    'Bangladesh has over 60 private medical colleges. We partner with the best NMC-recognized institutions known for quality education and high FMGE pass rates.',
+  georgiaEyebrow: 'Georgia',
+  georgiaTitle: 'Medical Universities in Georgia',
+  georgiaDescription:
+    'Georgian medical universities offer European standard education with international recognition. Perfect for students seeking global career opportunities.',
+  guidanceEyebrow: 'Guidance',
+  guidanceTitle: 'How to Choose the Right College',
+  guidanceTips: [
+    {
+      title: 'Identify Your Budget',
+      description:
+        'Determine how much you can afford and find colleges within that range without compromising quality.',
+      sortOrder: 1,
+      isActive: true,
+    },
+    {
+      title: 'Check FMGE Pass Rate',
+      description:
+        'A high FMGE pass rate indicates quality education that prepares you for the licensing exam.',
+      sortOrder: 2,
+      isActive: true,
+    },
+    {
+      title: 'Verify NMC Recognition',
+      description:
+        'Ensure the college is recognized by NMC so you can practice medicine in India.',
+      sortOrder: 3,
+      isActive: true,
+    },
+    {
+      title: 'Consider Hospital Facilities',
+      description:
+        'Check patient flow and infrastructure of the attached hospital for clinical training.',
+      sortOrder: 4,
+      isActive: true,
+    },
+    {
+      title: 'Evaluate Living Conditions',
+      description:
+        'Consider hostel quality, food options, and overall campus environment.',
+      sortOrder: 5,
+      isActive: true,
+    },
+    {
+      title: 'Consult an Expert',
+      description:
+        "Don't rely solely on internet searches. Get guidance from someone with local knowledge.",
+      sortOrder: 6,
+      isActive: true,
+    },
+  ],
+} as const;
+
+const mbbsBangladeshGovernmentFallbackContent = {
+  heroEyebrow: 'Government Medical Colleges',
+  heroBadgeText: 'SAARC & Non-SAARC Quota',
+  introTitle: 'Introduction',
+  introParagraph:
+    'Government Medical Colleges in Bangladesh offer a limited number of seats for foreign students each academic year. These seats are divided into two categories:',
+  introQuotaItems: [
+    'SAARC Countries Quota - for students from India, Pakistan, Nepal, Sri Lanka, Bhutan, Maldives, and Afghanistan',
+    'Non-SAARC Countries Quota - for students from all other countries',
+  ],
+  introConclusion:
+    'The entire admission process is managed and overseen by the Directorate General of Medical Education (DGME), Bangladesh, under the Ministry of Health and Family Welfare. All admissions are centralized and governed by official policy.',
+  seatEyebrow: 'As Per DGME Circular 2025-2026',
+  seatTitle: 'Total Seat Allocation for Foreign Students',
+  seatDescription:
+    'A total of 224 seats are allocated for foreign students - 125 for SAARC countries and 99 for Non-SAARC countries. Allocation is country-wise as detailed below.',
+  saarcTableTitle: 'SAARC Countries',
+  saarcSeats: [
+    { country: 'India', mbbs: 22, bds: 2, sortOrder: 1, isActive: true },
+    { country: 'Pakistan', mbbs: 21, bds: 2, sortOrder: 2, isActive: true },
+    { country: 'Nepal', mbbs: 19, bds: 3, sortOrder: 3, isActive: true },
+    { country: 'Sri Lanka', mbbs: 13, bds: 2, sortOrder: 4, isActive: true },
+    { country: 'Bhutan', mbbs: 28, bds: 2, sortOrder: 5, isActive: true },
+    { country: 'Maldives', mbbs: 6, bds: 1, sortOrder: 6, isActive: true },
+    { country: 'Afghanistan', mbbs: 3, bds: 1, sortOrder: 7, isActive: true },
+  ],
+  nonSaarcTableTitle: 'Non-SAARC Countries',
+  nonSaarcSeats: [
+    { country: 'Myanmar', mbbs: 5, bds: 2, sortOrder: 1, isActive: true },
+    { country: 'Palestine', mbbs: 18, bds: 3, sortOrder: 2, isActive: true },
+    { country: 'All other countries of the world', mbbs: 49, bds: 22, sortOrder: 3, isActive: true },
+  ],
+  saarcSectionTitle: 'SAARC Countries Admission (Merit Basis)',
+  saarcApplicableTitle: 'Applicable Countries',
+  saarcCountries: ['India', 'Pakistan', 'Nepal', 'Sri Lanka', 'Bhutan', 'Maldives', 'Afghanistan'],
+  saarcKeyPointsTitle: 'Key Points',
+  saarcKeyPoints: [
+    'Admission is based on 10th & 12th exam results (O Level & A Level equivalent)',
+    'Selection is strictly merit-based',
+    'Seats are under Bangladesh Government scholarship allocation',
+    'Tuition is substantially subsidized under the government scholarship program, with only minor institutional charges applicable',
+  ],
+  nonSaarcSectionTitle: 'Non-SAARC Countries Admission',
+  nonSaarcPoints: [
+    'Non-SAARC students can apply under the paid quota',
+    'Fee structure as per government policy: approximately USD $5,000 per year (as per current foreign student policy)',
+    'Limited seats available with centralized approval',
+    'Final decision is subject to DGME approval',
+  ],
+  eligibilityTitle: 'Eligibility Criteria (As Per DGME Circular)',
+  eligibilityPoints: [
+    'Minimum aggregated GPA of 8.50 combined in O-Level and A-Level (on an individual GPA scale of 5.00)',
+    'Individual GPA minimum 5.00 scale',
+    'Biology minimum 3.50 in A-Level / 12th class equivalent',
+    'No grade below 4.00 in any single exam will be considered',
+    'All academic documents must be attested by Ministry of Education and Ministry of Foreign Affairs of the respective country',
+    'Documents must be authenticated by the Bangladesh Embassy of the concerned country',
+    'Equivalent Certificate required from DG Health, Bangladesh',
+    'Valid passport and recent passport-size photograph required',
+  ],
+  applicationProcessTitle: 'Application Process',
+  applicationSteps: [
+    { title: 'Fill Application Form', description: "Interested candidates must duly fill up the official application form (Annexure 'A') and arrange all necessary documents.", sortOrder: 1, isActive: true },
+    { title: 'Submit via Ministry of Foreign Affairs', description: "Application form with all academic records and relevant documents must be submitted to the respective country's Ministry of Foreign Affairs / responsible authority.", sortOrder: 2, isActive: true },
+    { title: 'Deadline-Based Submission', description: 'Applications must be submitted within the official deadline window. No application will be considered after the deadline.', sortOrder: 3, isActive: true },
+    { title: 'Verification & Eligible List', description: 'The respective Ministry of Foreign Affairs will verify documents according to admission criteria and prepare an eligible list of students.', sortOrder: 4, isActive: true },
+    { title: 'Forwarded to DGME', description: 'Documents are forwarded to the Ministry of Foreign Affairs of Bangladesh, then to the Directorate General of Medical Education.', sortOrder: 5, isActive: true },
+    { title: 'Final Selection', description: 'The admission committee makes the final selection. The decision of the admission committee is final in all matters.', sortOrder: 6, isActive: true },
+  ],
+  legalNoticeTitle: 'Important Legal Notice',
+  legalNoticeSummary:
+    'Fabrication of any documents in the admission process is subject to cancellation of admission, which will be punishable under law.',
+  legalNoticeDetails:
+    'As stated in the DGME circular: If any information, document, or procedure is found fictitious in future, the admission will be void immediately, and the Ministry of Health & Family Welfare of Bangladesh will not bear any responsibility.',
+  helpTitle: 'How Medientry Can Help',
+  helpDescription:
+    'Medientry provides guidance, documentation support, and application assistance in accordance with official DGME policies. Admission decisions are made solely by the Government of Bangladesh.',
+  helpPoints: [
+    'Eligibility assessment and document checklist preparation',
+    'Guidance on attestation and authentication requirements',
+    'Application form filling support',
+    'Information about government medical college options',
+  ],
+  helpDisclaimer:
+    'Disclaimer: Medientry does not have any control over government seat allocation or admission decisions. All information on this page is based on the official DGME circular for Session 2025-2026 and is subject to change by the Government of Bangladesh.',
+  helpPrimaryButtonText: 'Get Application Guidance',
+  helpSecondaryButtonText: 'Explore Private College Admission',
+} as const;
+
+const georgiaForBangladeshisFallbackContent = {
+  heroEyebrow: 'Study in Georgia',
+  heroBadgeText: 'Official Representative for Bangladesh',
+  heroLeadText:
+    'Medientry Bangladesh is the Official Representative of Alte University, Georgia, for Bangladesh.',
+  heroPrimaryButtonText: 'Apply Now',
+  heroPrimaryButtonUrl: '/contact',
+  heroSecondaryButtonText: 'Explore Programs',
+  heroSecondaryButtonUrl: '#programs',
+  programsEyebrow: 'Programs at Alte University',
+  programsTitle: 'World-Class Programs for Bangladeshi Students',
+  programsSubtitle:
+    'Choose from internationally recognized programs designed to prepare you for global careers.',
+  programs: [
+    {
+      title: 'MBBS in Georgia',
+      duration: '6 Years',
+      description: 'Internationally recognized medical degree with WHO, NMC, and ECFMG approval. Clinical rotations in European hospitals.',
+      highlights: ['WHO & NMC Recognized', 'English Medium', 'Hands-on Clinical Training', 'USMLE & PLAB Eligible'],
+      sortOrder: 1,
+      isActive: true,
+    },
+    {
+      title: 'Computer Science & Engineering',
+      duration: '4 Years',
+      description: 'Industry-aligned curriculum with internship opportunities at leading tech companies across Europe.',
+      highlights: ['Modern Tech Stack', 'Industry Internships', 'Global Job Prospects', 'Research Opportunities'],
+      sortOrder: 2,
+      isActive: true,
+    },
+    {
+      title: 'AI & Data Science',
+      duration: '4 Years',
+      description: 'Cutting-edge programs in artificial intelligence, machine learning, and data analytics with practical applications.',
+      highlights: ['Machine Learning Focus', 'Real-world Projects', 'Industry Mentorship', 'High Demand Skills'],
+      sortOrder: 3,
+      isActive: true,
+    },
+  ],
+  whyGeorgiaEyebrow: 'Why Georgia',
+  whyGeorgiaTitle: 'Why Georgian Education for Bangladeshi Students',
+  whyGeorgiaSubtitle:
+    'Georgia offers the perfect blend of quality education, affordability, and international recognition.',
+  whyGeorgiaCards: [
+    { title: 'European Education Standards', description: 'Georgian universities follow European Bologna Process standards, ensuring globally recognized degrees.', sortOrder: 1, isActive: true },
+    { title: 'Affordable Tuition', description: 'Quality European education at a fraction of the cost compared to Western European or American universities.', sortOrder: 2, isActive: true },
+    { title: 'Safe & Welcoming', description: 'Georgia ranks among the safest countries in the world with a welcoming culture for international students.', sortOrder: 3, isActive: true },
+    { title: 'No Language Barrier', description: 'All programs offered in English with no requirement to learn Georgian for academics.', sortOrder: 4, isActive: true },
+  ],
+  partnerEyebrow: 'Partner Institution',
+  partnerTitle: 'Why Alte University',
+  partnerDescription:
+    "Alte University is one of Georgia's premier private universities, known for its commitment to academic excellence and international standards. As the official representative for Bangladesh, Medientry ensures seamless admission support.",
+  partnerBenefits: [
+    'Modern campus with state-of-the-art facilities',
+    'Experienced faculty with international backgrounds',
+    'Strong industry partnerships for internships',
+    'Multicultural environment with students from 60+ countries',
+    'Career development and placement support',
+    'Affordable tuition with scholarship opportunities',
+  ],
+  partnerImage: '',
+  partnerImageAlt: 'Alte University campus',
+  partnerStatValue: '60+',
+  partnerStatLabel: 'Countries Represented',
+  recognitionEyebrow: 'Global Recognition',
+  recognitionTitle: 'Internationally Recognized Degrees',
+  recognitionSubtitle:
+    'Alte University degrees are recognized by major international bodies, ensuring your qualifications are accepted worldwide.',
+  recognitionItems: [
+    { title: 'World Health Organization (WHO)', description: 'Medical', sortOrder: 1, isActive: true },
+    { title: 'Bangladesh Medical & Dental Council (BM&DC)', description: 'Medical', sortOrder: 2, isActive: true },
+    { title: 'Educational Commission for Foreign Medical Graduates (ECFMG)', description: 'Medical', sortOrder: 3, isActive: true },
+    { title: 'World Federation for Medical Education (WFME)', description: 'Medical', sortOrder: 4, isActive: true },
+    { title: 'European Higher Education Area (EHEA)', description: 'All Programs', sortOrder: 5, isActive: true },
+    { title: 'Ministry of Education, Georgia', description: 'All Programs', sortOrder: 6, isActive: true },
+  ],
+  supportEyebrow: 'Our Support',
+  supportTitle: 'Complete Admission Support by Medientry',
+  supportSubtitle:
+    'As the official representative, we provide end-to-end support from application to arrival.',
+  supportSteps: [
+    { title: 'Free Counseling', description: 'Understand your options and eligibility', sortOrder: 1, isActive: true },
+    { title: 'Application Support', description: 'Complete documentation and submission', sortOrder: 2, isActive: true },
+    { title: 'Visa Assistance', description: 'Full support for visa processing', sortOrder: 3, isActive: true },
+    { title: 'Pre-Departure', description: 'Travel, accommodation & orientation', sortOrder: 4, isActive: true },
+  ],
+  careerEyebrow: 'Future Prospects',
+  careerTitle: 'Career & Future Opportunities',
+  careerDescription:
+    'A degree from Alte University opens doors to global career opportunities. Graduates work in leading organizations across Europe, Asia, and beyond.',
+  careerCards: [
+    { title: 'MBBS Graduates', description: 'Eligible for USMLE (USA), PLAB (UK), FMGE (India), and licensure exams worldwide.', sortOrder: 1, isActive: true },
+    { title: 'CSE & AI Graduates', description: 'Strong placements in European tech companies, startups, and global corporations.', sortOrder: 2, isActive: true },
+    { title: 'Further Studies', description: 'Seamless pathways to postgraduate programs in EU universities.', sortOrder: 3, isActive: true },
+  ],
+  careerSnapshotTitle: 'Career Snapshot',
+  careerSnapshotCards: [
+    { title: 'MBBS Graduates', description: 'Eligible for USMLE, PLAB, FMGE, and licensure pathways worldwide.', sortOrder: 1, isActive: true },
+    { title: 'Tech Graduates', description: 'Strong prospects in European companies, startups, and global teams.', sortOrder: 2, isActive: true },
+    { title: 'Further Studies', description: 'Smooth progression into postgraduate programs across Europe.', sortOrder: 3, isActive: true },
+  ],
+} as const;
+
 const homeWhyChooseUsIconKeys = [
   'quality-based-recommendations',
   'years-of-trust',
@@ -446,6 +929,42 @@ const isHomePageValues = (values: Record<string, unknown>) =>
   String(values.pageType ?? '').trim() === 'HOME' ||
   String(values.slug ?? '').trim().toLowerCase() === 'home';
 
+const getNormalizedPageSlug = (values: Record<string, unknown>) =>
+  String(values.slug ?? '').trim().toLowerCase();
+
+const getNormalizedPageType = (values: Record<string, unknown>) =>
+  String(values.pageType ?? '').trim().toUpperCase();
+
+const isAboutPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageType(values) === 'ABOUT' || getNormalizedPageSlug(values) === 'about';
+
+const isContactPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageType(values) === 'CONTACT' || getNormalizedPageSlug(values) === 'contact';
+
+const isWhyMedientryPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageSlug(values) === 'why-medientry';
+
+const isSuccessStoriesPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageSlug(values) === 'success-stories';
+
+const isCollegesPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageSlug(values) === 'colleges';
+
+const isMbbsBangladeshGovernmentPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageSlug(values) === 'mbbs-bangladesh-government';
+
+const isGeorgiaForBangladeshisPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageSlug(values) === 'georgia-for-bangladeshis';
+
+const usesStructuredStaticPageEditor = (values: Record<string, unknown>) =>
+  isAboutPageValues(values) ||
+  isContactPageValues(values) ||
+  isWhyMedientryPageValues(values) ||
+  isSuccessStoriesPageValues(values) ||
+  isCollegesPageValues(values) ||
+  isMbbsBangladeshGovernmentPageValues(values) ||
+  isGeorgiaForBangladeshisPageValues(values);
+
 const isValidHexColor = (value: string) => /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value);
 const defaultPageHeroOverlayColor = '#052118';
 const defaultPageHeroOverlayOpacity = 0.82;
@@ -471,6 +990,136 @@ const readContentNumber = (content: Record<string, unknown>, key: string) => {
   }
 
   return null;
+};
+
+const toStructuredContentCards = (
+  value: unknown,
+  descriptionLookup: Record<string, string> = {},
+) => {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const cards = value
+    .map((item, index) => {
+      if (typeof item === 'string') {
+        const title = item.trim();
+
+        if (!title) {
+          return null;
+        }
+
+        return {
+          title,
+          description: descriptionLookup[title] ?? '',
+          sortOrder: index + 1,
+          isActive: true,
+        };
+      }
+
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const title = normalizeString(item.title);
+      const description = normalizeString(item.description);
+
+      if (!title) {
+        return null;
+      }
+
+      return {
+        title,
+        description,
+        sortOrder:
+          typeof item.sortOrder === 'number' && Number.isFinite(item.sortOrder)
+            ? item.sortOrder
+            : index + 1,
+        isActive: item.isActive !== false,
+      };
+    })
+    .filter(Boolean);
+
+  return cards.length > 0 ? cards : null;
+};
+
+const toStructuredProgramCards = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const cards = value
+    .map((item, index) => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const title = normalizeString(item.title);
+      const duration = normalizeString(item.duration);
+      const description = normalizeString(item.description);
+      const highlights = Array.isArray(item.highlights)
+        ? item.highlights.filter(
+            (highlight): highlight is string =>
+              typeof highlight === 'string' && highlight.trim().length > 0,
+          )
+        : [];
+
+      if (!title || !duration || !description) {
+        return null;
+      }
+
+      return {
+        title,
+        duration,
+        description,
+        highlights,
+        sortOrder:
+          typeof item.sortOrder === 'number' && Number.isFinite(item.sortOrder)
+            ? item.sortOrder
+            : index + 1,
+        isActive: item.isActive !== false,
+      };
+    })
+    .filter(Boolean);
+
+  return cards.length > 0 ? cards : null;
+};
+
+const toStructuredSeatAllocationRows = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const rows = value
+    .map((item, index) => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const country = normalizeString(item.country);
+      const mbbs =
+        typeof item.mbbs === 'number' && Number.isFinite(item.mbbs) ? item.mbbs : null;
+      const bds =
+        typeof item.bds === 'number' && Number.isFinite(item.bds) ? item.bds : null;
+
+      if (!country || mbbs === null || bds === null) {
+        return null;
+      }
+
+      return {
+        country,
+        mbbs,
+        bds,
+        sortOrder:
+          typeof item.sortOrder === 'number' && Number.isFinite(item.sortOrder)
+            ? item.sortOrder
+            : index + 1,
+        isActive: item.isActive !== false,
+      };
+    })
+    .filter(Boolean);
+
+  return rows.length > 0 ? rows : null;
 };
 
 const readHomeHeroStat = (content: Record<string, unknown>, index: number) => {
@@ -646,6 +1295,12 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       videoStoriesEyebrow: homeVideoStoriesFallbackContent.eyebrow,
       videoStoriesTitle: homeVideoStoriesFallbackContent.title,
       videoStoriesSubtitle: homeVideoStoriesFallbackContent.subtitle,
+      philosophyEyebrow: homePhilosophyFallbackContent.eyebrow,
+      philosophyTitle: homePhilosophyFallbackContent.title,
+      philosophySupportingHeading: homePhilosophyFallbackContent.supportingHeading,
+      philosophyDescription: homePhilosophyFallbackContent.description,
+      philosophyImageSrc: homePhilosophyFallbackContent.imageSrc,
+      philosophyImageAlt: homePhilosophyFallbackContent.imageAlt,
       successStoriesLabel: homeSuccessStoriesFallbackContent.label,
       successStoriesHeadingBeforeHighlight:
         homeSuccessStoriesFallbackContent.headingBeforeHighlight,
@@ -677,6 +1332,164 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       studyAbroadTitle: homeStudyAbroadFallbackContent.title,
       studyAbroadSubtitle: homeStudyAbroadFallbackContent.subtitle,
       studyAbroadCards: homeStudyAbroadFallbackContent.cards,
+      studyDestinationsEyebrow: homeStudyDestinationsFallbackContent.eyebrow,
+      studyDestinationsTitle: homeStudyDestinationsFallbackContent.title,
+      studyDestinationsSubtitle: homeStudyDestinationsFallbackContent.subtitle,
+      pageCtaTitle: genericPageCtaFallbackContent.title,
+      pageCtaSubtitle: genericPageCtaFallbackContent.subtitle,
+      pageCtaPrimaryButtonText: genericPageCtaFallbackContent.primaryButtonText,
+      pageCtaPrimaryButtonUrl: genericPageCtaFallbackContent.primaryButtonUrl,
+      pageCtaSecondaryButtonText: genericPageCtaFallbackContent.secondaryButtonText,
+      pageCtaSecondaryButtonUrl: genericPageCtaFallbackContent.secondaryButtonUrl,
+      aboutWhoWeAreEyebrow: aboutPageFallbackContent.whoWeAreEyebrow,
+      aboutWhoWeAreTitle: aboutPageFallbackContent.whoWeAreTitle,
+      aboutWhoWeAreImage: aboutPageFallbackContent.whoWeAreImage,
+      aboutWhoWeAreImageAlt: aboutPageFallbackContent.whoWeAreImageAlt,
+      aboutWhoWeAreBadgeValue: aboutPageFallbackContent.whoWeAreBadgeValue,
+      aboutWhoWeAreBadgeLabel: aboutPageFallbackContent.whoWeAreBadgeLabel,
+      aboutOverview: aboutPageFallbackContent.overview,
+      aboutValuesEyebrow: aboutPageFallbackContent.valuesEyebrow,
+      aboutValuesTitle: aboutPageFallbackContent.valuesTitle,
+      aboutValuesSubtitle: aboutPageFallbackContent.valuesSubtitle,
+      aboutValues: aboutPageFallbackContent.values,
+      aboutTrustEyebrow: aboutPageFallbackContent.trustEyebrow,
+      aboutTrustTitle: aboutPageFallbackContent.trustTitle,
+      aboutTrustDescription: aboutPageFallbackContent.trustDescription,
+      aboutTrustPoints: aboutPageFallbackContent.trustPoints,
+      aboutTrustCtaText: aboutPageFallbackContent.trustCtaText,
+      aboutTrustCtaUrl: aboutPageFallbackContent.trustCtaUrl,
+      aboutMetricStudentsPlaced: aboutPageFallbackContent.metrics.studentsPlaced,
+      aboutMetricPartnerColleges: aboutPageFallbackContent.metrics.partnerColleges,
+      aboutMetricYearsExperience: aboutPageFallbackContent.metrics.yearsExperience,
+      aboutMetricAdmissionSuccess: aboutPageFallbackContent.metrics.admissionSuccess,
+      whyHeroQuoteText: whyMedientryFallbackContent.heroQuoteText,
+      whyDifferenceTitle: whyMedientryFallbackContent.differenceTitle,
+      whyDifferenceDescription: whyMedientryFallbackContent.differenceDescription,
+      whyPhilosophyPoints: whyMedientryFallbackContent.philosophyPoints,
+      whyDifferenceQuoteText: whyMedientryFallbackContent.differenceQuoteText,
+      whyCommitmentsEyebrow: whyMedientryFallbackContent.commitmentsEyebrow,
+      whyCommitmentsTitle: whyMedientryFallbackContent.commitmentsTitle,
+      whyReasons: whyMedientryFallbackContent.reasons,
+      whyPromiseEyebrow: whyMedientryFallbackContent.promiseEyebrow,
+      whyPromiseTitle: whyMedientryFallbackContent.promiseTitle,
+      whyPromiseDescription: whyMedientryFallbackContent.promiseDescription,
+      whyGuarantees: whyMedientryFallbackContent.guarantees,
+      whyPromiseCtaText: whyMedientryFallbackContent.promiseCtaText,
+      whyPromiseCtaUrl: whyMedientryFallbackContent.promiseCtaUrl,
+      whyMetricStudentsGuided: whyMedientryFallbackContent.metrics.studentsGuided,
+      whyMetricYearsExperience: whyMedientryFallbackContent.metrics.yearsExperience,
+      whyMetricPartnerColleges: whyMedientryFallbackContent.metrics.partnerColleges,
+      whyMetricSuccessRate: whyMedientryFallbackContent.metrics.successRate,
+      whyTrackRecordTitle: whyMedientryFallbackContent.trackRecordTitle,
+      whyTrackRecordQuoteText: whyMedientryFallbackContent.trackRecordQuoteText,
+      whyFeelEyebrow: whyMedientryFallbackContent.feelEyebrow,
+      whyFeelTitle: whyMedientryFallbackContent.feelTitle,
+      whyFeelStatements: whyMedientryFallbackContent.feelStatements,
+      whyFeelSummary: whyMedientryFallbackContent.feelSummary,
+      successStatStudentsPlaced: successStoriesFallbackContent.stats.studentsPlaced,
+      successStatAdmissionSuccess: successStoriesFallbackContent.stats.admissionSuccess,
+      successStatYearsOfTrust: successStoriesFallbackContent.stats.yearsOfTrust,
+      successStatParentSatisfaction: successStoriesFallbackContent.stats.parentSatisfaction,
+      successShareTitle: successStoriesFallbackContent.shareTitle,
+      successShareSubtitle: successStoriesFallbackContent.shareSubtitle,
+      successShareCtaText: successStoriesFallbackContent.shareCtaText,
+      successShareCtaUrl: successStoriesFallbackContent.shareCtaUrl,
+      contactFormTitle: contactPageFallbackContent.formTitle,
+      contactFormSubtitle: contactPageFallbackContent.formSubtitle,
+      contactWorkingHoursTitle: contactPageFallbackContent.workingHoursTitle,
+      contactWhatToExpectTitle: contactPageFallbackContent.whatToExpectTitle,
+      contactWhatsappCardTitle: contactPageFallbackContent.whatsappCardTitle,
+      contactWhatsappCardDescription: contactPageFallbackContent.whatsappCardDescription,
+      contactWhatsappCtaText: contactPageFallbackContent.whatsappCtaText,
+      contactOfficesEyebrow: contactPageFallbackContent.officesEyebrow,
+      contactOfficesTitle: contactPageFallbackContent.officesTitle,
+      contactOfficesSubtitle: contactPageFallbackContent.officesSubtitle,
+      contactOfficeHours: contactPageFallbackContent.workingHours.officeHours,
+      contactFridayHours: contactPageFallbackContent.workingHours.friday,
+      contactWhatToExpectItems: contactPageFallbackContent.whatToExpect,
+      contactOffices: contactPageFallbackContent.offices,
+      collegesHeroEyebrow: collegesPageFallbackContent.heroEyebrow,
+      collegesExpertTipLabel: collegesPageFallbackContent.expertTipLabel,
+      collegesExpertTipText: collegesPageFallbackContent.expertTipText,
+      collegesBangladeshEyebrow: collegesPageFallbackContent.bangladeshEyebrow,
+      collegesBangladeshTitle: collegesPageFallbackContent.bangladeshTitle,
+      collegesBangladeshDescription: collegesPageFallbackContent.bangladeshDescription,
+      collegesGeorgiaEyebrow: collegesPageFallbackContent.georgiaEyebrow,
+      collegesGeorgiaTitle: collegesPageFallbackContent.georgiaTitle,
+      collegesGeorgiaDescription: collegesPageFallbackContent.georgiaDescription,
+      collegesGuidanceEyebrow: collegesPageFallbackContent.guidanceEyebrow,
+      collegesGuidanceTitle: collegesPageFallbackContent.guidanceTitle,
+      collegesGuidanceTips: collegesPageFallbackContent.guidanceTips,
+      governmentHeroEyebrow: mbbsBangladeshGovernmentFallbackContent.heroEyebrow,
+      governmentHeroBadgeText: mbbsBangladeshGovernmentFallbackContent.heroBadgeText,
+      governmentIntroTitle: mbbsBangladeshGovernmentFallbackContent.introTitle,
+      governmentIntroParagraph: mbbsBangladeshGovernmentFallbackContent.introParagraph,
+      governmentIntroQuotaItems: mbbsBangladeshGovernmentFallbackContent.introQuotaItems,
+      governmentIntroConclusion: mbbsBangladeshGovernmentFallbackContent.introConclusion,
+      governmentSeatEyebrow: mbbsBangladeshGovernmentFallbackContent.seatEyebrow,
+      governmentSeatTitle: mbbsBangladeshGovernmentFallbackContent.seatTitle,
+      governmentSeatDescription: mbbsBangladeshGovernmentFallbackContent.seatDescription,
+      governmentSaarcTableTitle: mbbsBangladeshGovernmentFallbackContent.saarcTableTitle,
+      governmentSaarcSeats: mbbsBangladeshGovernmentFallbackContent.saarcSeats,
+      governmentNonSaarcTableTitle: mbbsBangladeshGovernmentFallbackContent.nonSaarcTableTitle,
+      governmentNonSaarcSeats: mbbsBangladeshGovernmentFallbackContent.nonSaarcSeats,
+      governmentSaarcSectionTitle: mbbsBangladeshGovernmentFallbackContent.saarcSectionTitle,
+      governmentSaarcApplicableTitle: mbbsBangladeshGovernmentFallbackContent.saarcApplicableTitle,
+      governmentSaarcCountries: mbbsBangladeshGovernmentFallbackContent.saarcCountries,
+      governmentSaarcKeyPointsTitle: mbbsBangladeshGovernmentFallbackContent.saarcKeyPointsTitle,
+      governmentSaarcKeyPoints: mbbsBangladeshGovernmentFallbackContent.saarcKeyPoints,
+      governmentNonSaarcSectionTitle: mbbsBangladeshGovernmentFallbackContent.nonSaarcSectionTitle,
+      governmentNonSaarcPoints: mbbsBangladeshGovernmentFallbackContent.nonSaarcPoints,
+      governmentEligibilityTitle: mbbsBangladeshGovernmentFallbackContent.eligibilityTitle,
+      governmentEligibilityPoints: mbbsBangladeshGovernmentFallbackContent.eligibilityPoints,
+      governmentApplicationProcessTitle: mbbsBangladeshGovernmentFallbackContent.applicationProcessTitle,
+      governmentApplicationSteps: mbbsBangladeshGovernmentFallbackContent.applicationSteps,
+      governmentLegalNoticeTitle: mbbsBangladeshGovernmentFallbackContent.legalNoticeTitle,
+      governmentLegalNoticeSummary: mbbsBangladeshGovernmentFallbackContent.legalNoticeSummary,
+      governmentLegalNoticeDetails: mbbsBangladeshGovernmentFallbackContent.legalNoticeDetails,
+      governmentHelpTitle: mbbsBangladeshGovernmentFallbackContent.helpTitle,
+      governmentHelpDescription: mbbsBangladeshGovernmentFallbackContent.helpDescription,
+      governmentHelpPoints: mbbsBangladeshGovernmentFallbackContent.helpPoints,
+      governmentHelpDisclaimer: mbbsBangladeshGovernmentFallbackContent.helpDisclaimer,
+      governmentHelpPrimaryButtonText: mbbsBangladeshGovernmentFallbackContent.helpPrimaryButtonText,
+      governmentHelpSecondaryButtonText: mbbsBangladeshGovernmentFallbackContent.helpSecondaryButtonText,
+      georgiaHeroEyebrow: georgiaForBangladeshisFallbackContent.heroEyebrow,
+      georgiaHeroBadgeText: georgiaForBangladeshisFallbackContent.heroBadgeText,
+      georgiaHeroLeadText: georgiaForBangladeshisFallbackContent.heroLeadText,
+      georgiaHeroPrimaryButtonText: georgiaForBangladeshisFallbackContent.heroPrimaryButtonText,
+      georgiaHeroPrimaryButtonUrl: georgiaForBangladeshisFallbackContent.heroPrimaryButtonUrl,
+      georgiaHeroSecondaryButtonText: georgiaForBangladeshisFallbackContent.heroSecondaryButtonText,
+      georgiaHeroSecondaryButtonUrl: georgiaForBangladeshisFallbackContent.heroSecondaryButtonUrl,
+      georgiaProgramsEyebrow: georgiaForBangladeshisFallbackContent.programsEyebrow,
+      georgiaProgramsTitle: georgiaForBangladeshisFallbackContent.programsTitle,
+      georgiaProgramsSubtitle: georgiaForBangladeshisFallbackContent.programsSubtitle,
+      georgiaPrograms: georgiaForBangladeshisFallbackContent.programs,
+      georgiaWhyEyebrow: georgiaForBangladeshisFallbackContent.whyGeorgiaEyebrow,
+      georgiaWhyTitle: georgiaForBangladeshisFallbackContent.whyGeorgiaTitle,
+      georgiaWhySubtitle: georgiaForBangladeshisFallbackContent.whyGeorgiaSubtitle,
+      georgiaWhyCards: georgiaForBangladeshisFallbackContent.whyGeorgiaCards,
+      georgiaPartnerEyebrow: georgiaForBangladeshisFallbackContent.partnerEyebrow,
+      georgiaPartnerTitle: georgiaForBangladeshisFallbackContent.partnerTitle,
+      georgiaPartnerDescription: georgiaForBangladeshisFallbackContent.partnerDescription,
+      georgiaPartnerBenefits: georgiaForBangladeshisFallbackContent.partnerBenefits,
+      georgiaPartnerImage: georgiaForBangladeshisFallbackContent.partnerImage,
+      georgiaPartnerImageAlt: georgiaForBangladeshisFallbackContent.partnerImageAlt,
+      georgiaPartnerStatValue: georgiaForBangladeshisFallbackContent.partnerStatValue,
+      georgiaPartnerStatLabel: georgiaForBangladeshisFallbackContent.partnerStatLabel,
+      georgiaRecognitionEyebrow: georgiaForBangladeshisFallbackContent.recognitionEyebrow,
+      georgiaRecognitionTitle: georgiaForBangladeshisFallbackContent.recognitionTitle,
+      georgiaRecognitionSubtitle: georgiaForBangladeshisFallbackContent.recognitionSubtitle,
+      georgiaRecognitionItems: georgiaForBangladeshisFallbackContent.recognitionItems,
+      georgiaSupportEyebrow: georgiaForBangladeshisFallbackContent.supportEyebrow,
+      georgiaSupportTitle: georgiaForBangladeshisFallbackContent.supportTitle,
+      georgiaSupportSubtitle: georgiaForBangladeshisFallbackContent.supportSubtitle,
+      georgiaSupportSteps: georgiaForBangladeshisFallbackContent.supportSteps,
+      georgiaCareerEyebrow: georgiaForBangladeshisFallbackContent.careerEyebrow,
+      georgiaCareerTitle: georgiaForBangladeshisFallbackContent.careerTitle,
+      georgiaCareerDescription: georgiaForBangladeshisFallbackContent.careerDescription,
+      georgiaCareerCards: georgiaForBangladeshisFallbackContent.careerCards,
+      georgiaCareerSnapshotTitle: georgiaForBangladeshisFallbackContent.careerSnapshotTitle,
+      georgiaCareerSnapshotCards: georgiaForBangladeshisFallbackContent.careerSnapshotCards,
       heroStatYearsExperienceValue: homeHeroStatFieldConfigs[0].defaultValue,
       heroStatYearsExperienceSuffix: homeHeroStatFieldConfigs[0].defaultSuffix,
       heroStatYearsExperienceLabel: homeHeroStatFieldConfigs[0].defaultLabel,
@@ -825,6 +1638,51 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         label: 'Video Stories Subtitle',
         type: 'textarea',
         rows: 3,
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'philosophyEyebrow',
+        label: 'Our Philosophy Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'philosophyTitle',
+        label: 'Our Philosophy Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'philosophySupportingHeading',
+        label: 'Our Philosophy Supporting Heading',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'philosophyDescription',
+        label: 'Our Philosophy Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'philosophyImageSrc',
+        label: 'Our Philosophy Image',
+        type: 'url',
+        colSpan: 2,
+        uploadKind: 'image',
+        previewLabel: 'Preview philosophy image',
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'philosophyImageAlt',
+        label: 'Our Philosophy Image Alt Text',
+        type: 'text',
         colSpan: 2,
         visible: (values) => isHomePageValues(values),
       },
@@ -1038,6 +1896,1124 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         description:
           'Manage the study abroad cards, including icon, title, description, display order, and active status.',
       },
+      {
+        name: 'studyDestinationsEyebrow',
+        label: 'Study Destinations Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'studyDestinationsTitle',
+        label: 'Study Destinations Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'studyDestinationsSubtitle',
+        label: 'Study Destinations Subtitle',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isHomePageValues(values),
+      },
+      {
+        name: 'aboutWhoWeAreEyebrow',
+        label: 'About Who We Are Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutWhoWeAreTitle',
+        label: 'About Who We Are Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutOverview',
+        label: 'About Overview Paragraphs',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+        description: 'Manage the paragraphs shown in the Who We Are section.',
+      },
+      {
+        name: 'aboutWhoWeAreImage',
+        label: 'About Who We Are Image',
+        type: 'url',
+        colSpan: 2,
+        uploadKind: 'image',
+        previewLabel: 'Preview about image',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutWhoWeAreImageAlt',
+        label: 'About Who We Are Image Alt Text',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutWhoWeAreBadgeValue',
+        label: 'About Badge Value',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutWhoWeAreBadgeLabel',
+        label: 'About Badge Label',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutValuesEyebrow',
+        label: 'About Values Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutValuesTitle',
+        label: 'About Values Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutValuesSubtitle',
+        label: 'About Values Subtitle',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutValues',
+        label: 'About Value Cards',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+        description: 'Manage the value cards. Icons stay aligned with the existing frontend design.',
+      },
+      {
+        name: 'aboutTrustEyebrow',
+        label: 'About Trust Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutTrustTitle',
+        label: 'About Trust Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutTrustDescription',
+        label: 'About Trust Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutTrustPoints',
+        label: 'About Trust Points',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isAboutPageValues(values),
+        description: 'Manage the checklist items shown in the trust section.',
+      },
+      {
+        name: 'aboutTrustCtaText',
+        label: 'About Trust Button Text',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutTrustCtaUrl',
+        label: 'About Trust Button URL',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutMetricStudentsPlaced',
+        label: 'About Metric Students Placed',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutMetricPartnerColleges',
+        label: 'About Metric Partner Colleges',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutMetricYearsExperience',
+        label: 'About Metric Years Experience',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'aboutMetricAdmissionSuccess',
+        label: 'About Metric Admission Success',
+        type: 'text',
+        visible: (values) => isAboutPageValues(values),
+      },
+      {
+        name: 'whyHeroQuoteText',
+        label: 'Why Medientry Hero Quote',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyDifferenceTitle',
+        label: 'Why Difference Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyDifferenceDescription',
+        label: 'Why Difference Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyPhilosophyPoints',
+        label: 'Why Difference Cards',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+        description: 'Manage the philosophy cards shown in the first Why Medientry section.',
+      },
+      {
+        name: 'whyDifferenceQuoteText',
+        label: 'Why Difference Quote',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyCommitmentsEyebrow',
+        label: 'Why Commitments Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyCommitmentsTitle',
+        label: 'Why Commitments Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyReasons',
+        label: 'Why Commitment Cards',
+        type: 'detailed-content-cards',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+        description: 'Manage the commitment cards with title, description, and optional detail text.',
+      },
+      {
+        name: 'whyPromiseEyebrow',
+        label: 'Why Promise Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyPromiseTitle',
+        label: 'Why Promise Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyPromiseDescription',
+        label: 'Why Promise Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyGuarantees',
+        label: 'Why Guarantee Points',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyPromiseCtaText',
+        label: 'Why Promise Button Text',
+        type: 'text',
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyPromiseCtaUrl',
+        label: 'Why Promise Button URL',
+        type: 'text',
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyTrackRecordTitle',
+        label: 'Why Track Record Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyMetricStudentsGuided',
+        label: 'Why Metric Students Guided',
+        type: 'text',
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyMetricYearsExperience',
+        label: 'Why Metric Years Experience',
+        type: 'text',
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyMetricPartnerColleges',
+        label: 'Why Metric Partner Colleges',
+        type: 'text',
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyMetricSuccessRate',
+        label: 'Why Metric Success Rate',
+        type: 'text',
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyTrackRecordQuoteText',
+        label: 'Why Track Record Quote',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyFeelEyebrow',
+        label: 'Why Feel Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyFeelTitle',
+        label: 'Why Feel Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyFeelStatements',
+        label: 'Why Feel Statements',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'whyFeelSummary',
+        label: 'Why Feel Summary',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isWhyMedientryPageValues(values),
+      },
+      {
+        name: 'successStatStudentsPlaced',
+        label: 'Success Stories Students Placed',
+        type: 'text',
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'successStatAdmissionSuccess',
+        label: 'Success Stories Admission Success',
+        type: 'text',
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'successStatYearsOfTrust',
+        label: 'Success Stories Years of Trust',
+        type: 'text',
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'successStatParentSatisfaction',
+        label: 'Success Stories Parent Satisfaction',
+        type: 'text',
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'successShareTitle',
+        label: 'Success Share Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'successShareSubtitle',
+        label: 'Success Share Subtitle',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'successShareCtaText',
+        label: 'Success Share Button Text',
+        type: 'text',
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'successShareCtaUrl',
+        label: 'Success Share Button URL',
+        type: 'text',
+        visible: (values) => isSuccessStoriesPageValues(values),
+      },
+      {
+        name: 'contactFormTitle',
+        label: 'Contact Form Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactFormSubtitle',
+        label: 'Contact Form Subtitle',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactWorkingHoursTitle',
+        label: 'Contact Working Hours Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactOfficeHours',
+        label: 'Contact Office Hours',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactFridayHours',
+        label: 'Contact Friday Hours',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactWhatToExpectTitle',
+        label: 'Contact What To Expect Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactWhatToExpectItems',
+        label: 'Contact What To Expect Items',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactWhatsappCardTitle',
+        label: 'Contact WhatsApp Card Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactWhatsappCardDescription',
+        label: 'Contact WhatsApp Card Description',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactWhatsappCtaText',
+        label: 'Contact WhatsApp Button Text',
+        type: 'text',
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactOfficesEyebrow',
+        label: 'Contact Offices Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactOfficesTitle',
+        label: 'Contact Offices Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactOfficesSubtitle',
+        label: 'Contact Offices Subtitle',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'contactOffices',
+        label: 'Contact Office Cards',
+        type: 'contact-offices',
+        colSpan: 2,
+        visible: (values) => isContactPageValues(values),
+      },
+      {
+        name: 'collegesHeroEyebrow',
+        label: 'Hero Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesExpertTipLabel',
+        label: 'Expert Tip Label',
+        type: 'text',
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesExpertTipText',
+        label: 'Expert Tip Text',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesBangladeshEyebrow',
+        label: 'Bangladesh Section Eyebrow',
+        type: 'text',
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesBangladeshTitle',
+        label: 'Bangladesh Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesBangladeshDescription',
+        label: 'Bangladesh Section Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesGeorgiaEyebrow',
+        label: 'Georgia Section Eyebrow',
+        type: 'text',
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesGeorgiaTitle',
+        label: 'Georgia Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesGeorgiaDescription',
+        label: 'Georgia Section Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesGuidanceEyebrow',
+        label: 'Guidance Section Eyebrow',
+        type: 'text',
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesGuidanceTitle',
+        label: 'Guidance Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesGuidanceTips',
+        label: 'Guidance Tips',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+        description:
+          'Manage the tip cards shown below the automatic college grids. Medical college cards themselves stay synced from Medical Colleges and Study Destinations.',
+      },
+      {
+        name: 'governmentHeroEyebrow',
+        label: 'Government Hero Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentHeroBadgeText',
+        label: 'Government Hero Badge Text',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentIntroTitle',
+        label: 'Introduction Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentIntroParagraph',
+        label: 'Introduction Paragraph',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentIntroQuotaItems',
+        label: 'Introduction Quota Points',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+        description: 'Each point becomes one quota bullet in the introduction section.',
+      },
+      {
+        name: 'governmentIntroConclusion',
+        label: 'Introduction Closing Paragraph',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSeatEyebrow',
+        label: 'Seat Section Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSeatTitle',
+        label: 'Seat Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSeatDescription',
+        label: 'Seat Section Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSaarcTableTitle',
+        label: 'SAARC Table Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSaarcSeats',
+        label: 'SAARC Seat Rows',
+        type: 'seat-allocation',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+        description: 'Manage the SAARC country seat table.',
+      },
+      {
+        name: 'governmentNonSaarcTableTitle',
+        label: 'Non-SAARC Table Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentNonSaarcSeats',
+        label: 'Non-SAARC Seat Rows',
+        type: 'seat-allocation',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+        description: 'Manage the non-SAARC country seat table.',
+      },
+      {
+        name: 'governmentSaarcSectionTitle',
+        label: 'SAARC Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSaarcApplicableTitle',
+        label: 'Applicable Countries Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSaarcCountries',
+        label: 'Applicable Countries',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSaarcKeyPointsTitle',
+        label: 'SAARC Key Points Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentSaarcKeyPoints',
+        label: 'SAARC Key Points',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentNonSaarcSectionTitle',
+        label: 'Non-SAARC Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentNonSaarcPoints',
+        label: 'Non-SAARC Points',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentEligibilityTitle',
+        label: 'Eligibility Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentEligibilityPoints',
+        label: 'Eligibility Points',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentApplicationProcessTitle',
+        label: 'Application Process Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentApplicationSteps',
+        label: 'Application Steps',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+        description: 'Each card becomes one application step. Display order controls the step number.',
+      },
+      {
+        name: 'governmentLegalNoticeTitle',
+        label: 'Legal Notice Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentLegalNoticeSummary',
+        label: 'Legal Notice Summary',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentLegalNoticeDetails',
+        label: 'Legal Notice Details',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentHelpTitle',
+        label: 'Help Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentHelpDescription',
+        label: 'Help Section Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentHelpPoints',
+        label: 'Help Section Points',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentHelpDisclaimer',
+        label: 'Help Section Disclaimer',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentHelpPrimaryButtonText',
+        label: 'Help Primary Button Text',
+        type: 'text',
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'governmentHelpSecondaryButtonText',
+        label: 'Help Secondary Button Text',
+        type: 'text',
+        visible: (values) => isMbbsBangladeshGovernmentPageValues(values),
+      },
+      {
+        name: 'georgiaHeroEyebrow',
+        label: 'Georgia Hero Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaHeroBadgeText',
+        label: 'Georgia Hero Badge Text',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaHeroLeadText',
+        label: 'Georgia Hero Lead Text',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaHeroPrimaryButtonText',
+        label: 'Georgia Hero Primary Button Text',
+        type: 'text',
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaHeroPrimaryButtonUrl',
+        label: 'Georgia Hero Primary Button URL',
+        type: 'text',
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaHeroSecondaryButtonText',
+        label: 'Georgia Hero Secondary Button Text',
+        type: 'text',
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaHeroSecondaryButtonUrl',
+        label: 'Georgia Hero Secondary Button URL',
+        type: 'text',
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaProgramsEyebrow',
+        label: 'Programs Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaProgramsTitle',
+        label: 'Programs Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaProgramsSubtitle',
+        label: 'Programs Subtitle',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPrograms',
+        label: 'Programs',
+        type: 'program-cards',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+        description: 'Manage the program cards shown in the first content section.',
+      },
+      {
+        name: 'georgiaWhyEyebrow',
+        label: 'Why Georgia Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaWhyTitle',
+        label: 'Why Georgia Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaWhySubtitle',
+        label: 'Why Georgia Subtitle',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaWhyCards',
+        label: 'Why Georgia Cards',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerEyebrow',
+        label: 'Partner Section Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerTitle',
+        label: 'Partner Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerDescription',
+        label: 'Partner Section Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerBenefits',
+        label: 'Partner Benefits',
+        type: 'string-list',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerImage',
+        label: 'Partner Image URL',
+        type: 'url',
+        colSpan: 2,
+        uploadKind: 'image',
+        previewLabel: 'Preview partner image',
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerImageAlt',
+        label: 'Partner Image Alt Text',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerStatValue',
+        label: 'Partner Stat Value',
+        type: 'text',
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaPartnerStatLabel',
+        label: 'Partner Stat Label',
+        type: 'text',
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaRecognitionEyebrow',
+        label: 'Recognition Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaRecognitionTitle',
+        label: 'Recognition Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaRecognitionSubtitle',
+        label: 'Recognition Subtitle',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaRecognitionItems',
+        label: 'Recognition Items',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+        description: 'Use the title for the recognition name and the description for the category label.',
+      },
+      {
+        name: 'georgiaSupportEyebrow',
+        label: 'Support Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaSupportTitle',
+        label: 'Support Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaSupportSubtitle',
+        label: 'Support Subtitle',
+        type: 'textarea',
+        rows: 3,
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaSupportSteps',
+        label: 'Support Steps',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+        description: 'Each card becomes one support step. Display order controls the step number.',
+      },
+      {
+        name: 'georgiaCareerEyebrow',
+        label: 'Career Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaCareerTitle',
+        label: 'Career Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaCareerDescription',
+        label: 'Career Description',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaCareerCards',
+        label: 'Career Cards',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaCareerSnapshotTitle',
+        label: 'Career Snapshot Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'georgiaCareerSnapshotCards',
+        label: 'Career Snapshot Cards',
+        type: 'content-cards',
+        colSpan: 2,
+        visible: (values) => isGeorgiaForBangladeshisPageValues(values),
+      },
+      {
+        name: 'pageCtaTitle',
+        label: 'Page CTA Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => usesStructuredStaticPageEditor(values),
+      },
+      {
+        name: 'pageCtaSubtitle',
+        label: 'Page CTA Subtitle',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => usesStructuredStaticPageEditor(values),
+      },
+      {
+        name: 'pageCtaPrimaryButtonText',
+        label: 'Page CTA Primary Button Text',
+        type: 'text',
+        visible: (values) => usesStructuredStaticPageEditor(values),
+      },
+      {
+        name: 'pageCtaPrimaryButtonUrl',
+        label: 'Page CTA Primary Button URL',
+        type: 'text',
+        visible: (values) => usesStructuredStaticPageEditor(values),
+      },
+      {
+        name: 'pageCtaSecondaryButtonText',
+        label: 'Page CTA Secondary Button Text',
+        type: 'text',
+        visible: (values) => usesStructuredStaticPageEditor(values),
+      },
+      {
+        name: 'pageCtaSecondaryButtonUrl',
+        label: 'Page CTA Secondary Button URL',
+        type: 'text',
+        visible: (values) => usesStructuredStaticPageEditor(values),
+      },
       ...homeHeroStatFieldConfigs.flatMap((statConfig) => {
         const prefix =
           statConfig.key.charAt(0).toUpperCase() + statConfig.key.slice(1);
@@ -1119,6 +3095,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         rows: 10,
         colSpan: 2,
         placeholder: '{\n  "blocks": []\n}',
+        visible: (values) => !usesStructuredStaticPageEditor(values),
       },
       ...defaultSeoFields,
     ],
@@ -1159,6 +3136,529 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         content.heroOverlayOpacity = Number.isFinite(rawHeroOverlayOpacity)
           ? clampNumber(rawHeroOverlayOpacity, 0.15, 0.95)
           : defaultPageHeroOverlayOpacity;
+
+        if (usesStructuredStaticPageEditor(values)) {
+          content.pageCtaTitle =
+            normalizeString(values.pageCtaTitle) || genericPageCtaFallbackContent.title;
+          content.pageCtaSubtitle =
+            normalizeString(values.pageCtaSubtitle) || genericPageCtaFallbackContent.subtitle;
+          content.pageCtaPrimaryButtonText =
+            normalizeString(values.pageCtaPrimaryButtonText) ||
+            genericPageCtaFallbackContent.primaryButtonText;
+          content.pageCtaPrimaryButtonUrl =
+            normalizeString(values.pageCtaPrimaryButtonUrl) ||
+            genericPageCtaFallbackContent.primaryButtonUrl;
+          content.pageCtaSecondaryButtonText =
+            normalizeString(values.pageCtaSecondaryButtonText) ||
+            genericPageCtaFallbackContent.secondaryButtonText;
+          content.pageCtaSecondaryButtonUrl =
+            normalizeString(values.pageCtaSecondaryButtonUrl) ||
+            genericPageCtaFallbackContent.secondaryButtonUrl;
+        }
+
+        if (isAboutPageValues(values)) {
+          content.aboutWhoWeAreEyebrow =
+            normalizeString(values.aboutWhoWeAreEyebrow) ||
+            aboutPageFallbackContent.whoWeAreEyebrow;
+          content.aboutWhoWeAreTitle =
+            normalizeString(values.aboutWhoWeAreTitle) ||
+            aboutPageFallbackContent.whoWeAreTitle;
+          content.aboutWhoWeAreImage =
+            normalizeString(values.aboutWhoWeAreImage) ||
+            aboutPageFallbackContent.whoWeAreImage;
+          content.aboutWhoWeAreImageAlt =
+            normalizeString(values.aboutWhoWeAreImageAlt) ||
+            aboutPageFallbackContent.whoWeAreImageAlt;
+          content.aboutWhoWeAreBadgeValue =
+            normalizeString(values.aboutWhoWeAreBadgeValue) ||
+            aboutPageFallbackContent.whoWeAreBadgeValue;
+          content.aboutWhoWeAreBadgeLabel =
+            normalizeString(values.aboutWhoWeAreBadgeLabel) ||
+            aboutPageFallbackContent.whoWeAreBadgeLabel;
+          content.aboutOverview =
+            Array.isArray(values.aboutOverview) && values.aboutOverview.length > 0
+              ? values.aboutOverview
+              : aboutPageFallbackContent.overview;
+          content.aboutValuesEyebrow =
+            normalizeString(values.aboutValuesEyebrow) ||
+            aboutPageFallbackContent.valuesEyebrow;
+          content.aboutValuesTitle =
+            normalizeString(values.aboutValuesTitle) ||
+            aboutPageFallbackContent.valuesTitle;
+          content.aboutValuesSubtitle =
+            normalizeString(values.aboutValuesSubtitle) ||
+            aboutPageFallbackContent.valuesSubtitle;
+          content.aboutValues =
+            Array.isArray(values.aboutValues) && values.aboutValues.length > 0
+              ? values.aboutValues
+              : aboutPageFallbackContent.values;
+          content.aboutTrustEyebrow =
+            normalizeString(values.aboutTrustEyebrow) ||
+            aboutPageFallbackContent.trustEyebrow;
+          content.aboutTrustTitle =
+            normalizeString(values.aboutTrustTitle) ||
+            aboutPageFallbackContent.trustTitle;
+          content.aboutTrustDescription =
+            normalizeString(values.aboutTrustDescription) ||
+            aboutPageFallbackContent.trustDescription;
+          content.aboutTrustPoints =
+            Array.isArray(values.aboutTrustPoints) && values.aboutTrustPoints.length > 0
+              ? values.aboutTrustPoints
+              : aboutPageFallbackContent.trustPoints;
+          content.aboutTrustCtaText =
+            normalizeString(values.aboutTrustCtaText) ||
+            aboutPageFallbackContent.trustCtaText;
+          content.aboutTrustCtaUrl =
+            normalizeString(values.aboutTrustCtaUrl) ||
+            aboutPageFallbackContent.trustCtaUrl;
+          content.aboutMetrics = {
+            studentsPlaced:
+              normalizeString(values.aboutMetricStudentsPlaced) ||
+              aboutPageFallbackContent.metrics.studentsPlaced,
+            partnerColleges:
+              normalizeString(values.aboutMetricPartnerColleges) ||
+              aboutPageFallbackContent.metrics.partnerColleges,
+            yearsExperience:
+              normalizeString(values.aboutMetricYearsExperience) ||
+              aboutPageFallbackContent.metrics.yearsExperience,
+            admissionSuccess:
+              normalizeString(values.aboutMetricAdmissionSuccess) ||
+              aboutPageFallbackContent.metrics.admissionSuccess,
+          };
+        }
+
+        if (isWhyMedientryPageValues(values)) {
+          content.whyHeroQuoteText =
+            normalizeString(values.whyHeroQuoteText) ||
+            whyMedientryFallbackContent.heroQuoteText;
+          content.whyDifferenceTitle =
+            normalizeString(values.whyDifferenceTitle) ||
+            whyMedientryFallbackContent.differenceTitle;
+          content.whyDifferenceDescription =
+            normalizeString(values.whyDifferenceDescription) ||
+            whyMedientryFallbackContent.differenceDescription;
+          content.whyPhilosophyPoints =
+            Array.isArray(values.whyPhilosophyPoints) && values.whyPhilosophyPoints.length > 0
+              ? values.whyPhilosophyPoints
+              : whyMedientryFallbackContent.philosophyPoints;
+          content.whyDifferenceQuoteText =
+            normalizeString(values.whyDifferenceQuoteText) ||
+            whyMedientryFallbackContent.differenceQuoteText;
+          content.whyCommitmentsEyebrow =
+            normalizeString(values.whyCommitmentsEyebrow) ||
+            whyMedientryFallbackContent.commitmentsEyebrow;
+          content.whyCommitmentsTitle =
+            normalizeString(values.whyCommitmentsTitle) ||
+            whyMedientryFallbackContent.commitmentsTitle;
+          content.whyReasons =
+            Array.isArray(values.whyReasons) && values.whyReasons.length > 0
+              ? values.whyReasons
+              : whyMedientryFallbackContent.reasons;
+          content.whyPromiseEyebrow =
+            normalizeString(values.whyPromiseEyebrow) ||
+            whyMedientryFallbackContent.promiseEyebrow;
+          content.whyPromiseTitle =
+            normalizeString(values.whyPromiseTitle) ||
+            whyMedientryFallbackContent.promiseTitle;
+          content.whyPromiseDescription =
+            normalizeString(values.whyPromiseDescription) ||
+            whyMedientryFallbackContent.promiseDescription;
+          content.whyGuarantees =
+            Array.isArray(values.whyGuarantees) && values.whyGuarantees.length > 0
+              ? values.whyGuarantees
+              : whyMedientryFallbackContent.guarantees;
+          content.whyPromiseCtaText =
+            normalizeString(values.whyPromiseCtaText) ||
+            whyMedientryFallbackContent.promiseCtaText;
+          content.whyPromiseCtaUrl =
+            normalizeString(values.whyPromiseCtaUrl) ||
+            whyMedientryFallbackContent.promiseCtaUrl;
+          content.whyMetrics = {
+            studentsGuided:
+              normalizeString(values.whyMetricStudentsGuided) ||
+              whyMedientryFallbackContent.metrics.studentsGuided,
+            yearsExperience:
+              normalizeString(values.whyMetricYearsExperience) ||
+              whyMedientryFallbackContent.metrics.yearsExperience,
+            partnerColleges:
+              normalizeString(values.whyMetricPartnerColleges) ||
+              whyMedientryFallbackContent.metrics.partnerColleges,
+            successRate:
+              normalizeString(values.whyMetricSuccessRate) ||
+              whyMedientryFallbackContent.metrics.successRate,
+          };
+          content.whyTrackRecordTitle =
+            normalizeString(values.whyTrackRecordTitle) ||
+            whyMedientryFallbackContent.trackRecordTitle;
+          content.whyTrackRecordQuoteText =
+            normalizeString(values.whyTrackRecordQuoteText) ||
+            whyMedientryFallbackContent.trackRecordQuoteText;
+          content.whyFeelEyebrow =
+            normalizeString(values.whyFeelEyebrow) ||
+            whyMedientryFallbackContent.feelEyebrow;
+          content.whyFeelTitle =
+            normalizeString(values.whyFeelTitle) ||
+            whyMedientryFallbackContent.feelTitle;
+          content.whyFeelStatements =
+            Array.isArray(values.whyFeelStatements) && values.whyFeelStatements.length > 0
+              ? values.whyFeelStatements
+              : whyMedientryFallbackContent.feelStatements;
+          content.whyFeelSummary =
+            normalizeString(values.whyFeelSummary) ||
+            whyMedientryFallbackContent.feelSummary;
+        }
+
+        if (isSuccessStoriesPageValues(values)) {
+          content.successStoriesStats = {
+            studentsPlaced:
+              normalizeString(values.successStatStudentsPlaced) ||
+              successStoriesFallbackContent.stats.studentsPlaced,
+            admissionSuccess:
+              normalizeString(values.successStatAdmissionSuccess) ||
+              successStoriesFallbackContent.stats.admissionSuccess,
+            yearsOfTrust:
+              normalizeString(values.successStatYearsOfTrust) ||
+              successStoriesFallbackContent.stats.yearsOfTrust,
+            parentSatisfaction:
+              normalizeString(values.successStatParentSatisfaction) ||
+              successStoriesFallbackContent.stats.parentSatisfaction,
+          };
+          content.successShareTitle =
+            normalizeString(values.successShareTitle) ||
+            successStoriesFallbackContent.shareTitle;
+          content.successShareSubtitle =
+            normalizeString(values.successShareSubtitle) ||
+            successStoriesFallbackContent.shareSubtitle;
+          content.successShareCtaText =
+            normalizeString(values.successShareCtaText) ||
+            successStoriesFallbackContent.shareCtaText;
+          content.successShareCtaUrl =
+            normalizeString(values.successShareCtaUrl) ||
+            successStoriesFallbackContent.shareCtaUrl;
+        }
+
+        if (isContactPageValues(values)) {
+          content.contactFormTitle =
+            normalizeString(values.contactFormTitle) ||
+            contactPageFallbackContent.formTitle;
+          content.contactFormSubtitle =
+            normalizeString(values.contactFormSubtitle) ||
+            contactPageFallbackContent.formSubtitle;
+          content.contactWorkingHoursTitle =
+            normalizeString(values.contactWorkingHoursTitle) ||
+            contactPageFallbackContent.workingHoursTitle;
+          content.contactWhatToExpectTitle =
+            normalizeString(values.contactWhatToExpectTitle) ||
+            contactPageFallbackContent.whatToExpectTitle;
+          content.contactWhatsappCardTitle =
+            normalizeString(values.contactWhatsappCardTitle) ||
+            contactPageFallbackContent.whatsappCardTitle;
+          content.contactWhatsappCardDescription =
+            normalizeString(values.contactWhatsappCardDescription) ||
+            contactPageFallbackContent.whatsappCardDescription;
+          content.contactWhatsappCtaText =
+            normalizeString(values.contactWhatsappCtaText) ||
+            contactPageFallbackContent.whatsappCtaText;
+          content.contactOfficesEyebrow =
+            normalizeString(values.contactOfficesEyebrow) ||
+            contactPageFallbackContent.officesEyebrow;
+          content.contactOfficesTitle =
+            normalizeString(values.contactOfficesTitle) ||
+            contactPageFallbackContent.officesTitle;
+          content.contactOfficesSubtitle =
+            normalizeString(values.contactOfficesSubtitle) ||
+            contactPageFallbackContent.officesSubtitle;
+          content.contactWorkingHours = {
+            officeHours:
+              normalizeString(values.contactOfficeHours) ||
+              contactPageFallbackContent.workingHours.officeHours,
+            friday:
+              normalizeString(values.contactFridayHours) ||
+              contactPageFallbackContent.workingHours.friday,
+          };
+          content.contactWhatToExpectItems =
+            Array.isArray(values.contactWhatToExpectItems) &&
+            values.contactWhatToExpectItems.length > 0
+              ? values.contactWhatToExpectItems
+              : contactPageFallbackContent.whatToExpect;
+          content.contactOffices =
+            Array.isArray(values.contactOffices) && values.contactOffices.length > 0
+              ? values.contactOffices
+              : contactPageFallbackContent.offices;
+        }
+
+        if (isCollegesPageValues(values)) {
+          content.collegesHeroEyebrow =
+            normalizeString(values.collegesHeroEyebrow) ||
+            collegesPageFallbackContent.heroEyebrow;
+          content.collegesExpertTipLabel =
+            normalizeString(values.collegesExpertTipLabel) ||
+            collegesPageFallbackContent.expertTipLabel;
+          content.collegesExpertTipText =
+            normalizeString(values.collegesExpertTipText) ||
+            collegesPageFallbackContent.expertTipText;
+          content.collegesBangladeshEyebrow =
+            normalizeString(values.collegesBangladeshEyebrow) ||
+            collegesPageFallbackContent.bangladeshEyebrow;
+          content.collegesBangladeshTitle =
+            normalizeString(values.collegesBangladeshTitle) ||
+            collegesPageFallbackContent.bangladeshTitle;
+          content.collegesBangladeshDescription =
+            normalizeString(values.collegesBangladeshDescription) ||
+            collegesPageFallbackContent.bangladeshDescription;
+          content.collegesGeorgiaEyebrow =
+            normalizeString(values.collegesGeorgiaEyebrow) ||
+            collegesPageFallbackContent.georgiaEyebrow;
+          content.collegesGeorgiaTitle =
+            normalizeString(values.collegesGeorgiaTitle) ||
+            collegesPageFallbackContent.georgiaTitle;
+          content.collegesGeorgiaDescription =
+            normalizeString(values.collegesGeorgiaDescription) ||
+            collegesPageFallbackContent.georgiaDescription;
+          content.collegesGuidanceEyebrow =
+            normalizeString(values.collegesGuidanceEyebrow) ||
+            collegesPageFallbackContent.guidanceEyebrow;
+          content.collegesGuidanceTitle =
+            normalizeString(values.collegesGuidanceTitle) ||
+            collegesPageFallbackContent.guidanceTitle;
+          content.collegeSelectionTips =
+            Array.isArray(values.collegesGuidanceTips) && values.collegesGuidanceTips.length > 0
+              ? values.collegesGuidanceTips
+              : collegesPageFallbackContent.guidanceTips;
+        }
+
+        if (isMbbsBangladeshGovernmentPageValues(values)) {
+          content.governmentHeroEyebrow =
+            normalizeString(values.governmentHeroEyebrow) ||
+            mbbsBangladeshGovernmentFallbackContent.heroEyebrow;
+          content.governmentHeroBadgeText =
+            normalizeString(values.governmentHeroBadgeText) ||
+            mbbsBangladeshGovernmentFallbackContent.heroBadgeText;
+          content.governmentIntroTitle =
+            normalizeString(values.governmentIntroTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.introTitle;
+          content.governmentIntroParagraph =
+            normalizeString(values.governmentIntroParagraph) ||
+            mbbsBangladeshGovernmentFallbackContent.introParagraph;
+          content.governmentIntroQuotaItems =
+            Array.isArray(values.governmentIntroQuotaItems) &&
+            values.governmentIntroQuotaItems.length > 0
+              ? values.governmentIntroQuotaItems
+              : mbbsBangladeshGovernmentFallbackContent.introQuotaItems;
+          content.governmentIntroConclusion =
+            normalizeString(values.governmentIntroConclusion) ||
+            mbbsBangladeshGovernmentFallbackContent.introConclusion;
+          content.governmentSeatEyebrow =
+            normalizeString(values.governmentSeatEyebrow) ||
+            mbbsBangladeshGovernmentFallbackContent.seatEyebrow;
+          content.governmentSeatTitle =
+            normalizeString(values.governmentSeatTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.seatTitle;
+          content.governmentSeatDescription =
+            normalizeString(values.governmentSeatDescription) ||
+            mbbsBangladeshGovernmentFallbackContent.seatDescription;
+          content.governmentSaarcTableTitle =
+            normalizeString(values.governmentSaarcTableTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.saarcTableTitle;
+          content.governmentSaarcSeats =
+            Array.isArray(values.governmentSaarcSeats) && values.governmentSaarcSeats.length > 0
+              ? values.governmentSaarcSeats
+              : mbbsBangladeshGovernmentFallbackContent.saarcSeats;
+          content.governmentNonSaarcTableTitle =
+            normalizeString(values.governmentNonSaarcTableTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.nonSaarcTableTitle;
+          content.governmentNonSaarcSeats =
+            Array.isArray(values.governmentNonSaarcSeats) && values.governmentNonSaarcSeats.length > 0
+              ? values.governmentNonSaarcSeats
+              : mbbsBangladeshGovernmentFallbackContent.nonSaarcSeats;
+          content.governmentSaarcSectionTitle =
+            normalizeString(values.governmentSaarcSectionTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.saarcSectionTitle;
+          content.governmentSaarcApplicableTitle =
+            normalizeString(values.governmentSaarcApplicableTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.saarcApplicableTitle;
+          content.governmentSaarcCountries =
+            Array.isArray(values.governmentSaarcCountries) && values.governmentSaarcCountries.length > 0
+              ? values.governmentSaarcCountries
+              : mbbsBangladeshGovernmentFallbackContent.saarcCountries;
+          content.governmentSaarcKeyPointsTitle =
+            normalizeString(values.governmentSaarcKeyPointsTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.saarcKeyPointsTitle;
+          content.governmentSaarcKeyPoints =
+            Array.isArray(values.governmentSaarcKeyPoints) && values.governmentSaarcKeyPoints.length > 0
+              ? values.governmentSaarcKeyPoints
+              : mbbsBangladeshGovernmentFallbackContent.saarcKeyPoints;
+          content.governmentNonSaarcSectionTitle =
+            normalizeString(values.governmentNonSaarcSectionTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.nonSaarcSectionTitle;
+          content.governmentNonSaarcPoints =
+            Array.isArray(values.governmentNonSaarcPoints) && values.governmentNonSaarcPoints.length > 0
+              ? values.governmentNonSaarcPoints
+              : mbbsBangladeshGovernmentFallbackContent.nonSaarcPoints;
+          content.governmentEligibilityTitle =
+            normalizeString(values.governmentEligibilityTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.eligibilityTitle;
+          content.governmentEligibilityPoints =
+            Array.isArray(values.governmentEligibilityPoints) && values.governmentEligibilityPoints.length > 0
+              ? values.governmentEligibilityPoints
+              : mbbsBangladeshGovernmentFallbackContent.eligibilityPoints;
+          content.governmentApplicationProcessTitle =
+            normalizeString(values.governmentApplicationProcessTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.applicationProcessTitle;
+          content.governmentApplicationSteps =
+            Array.isArray(values.governmentApplicationSteps) && values.governmentApplicationSteps.length > 0
+              ? values.governmentApplicationSteps
+              : mbbsBangladeshGovernmentFallbackContent.applicationSteps;
+          content.governmentLegalNoticeTitle =
+            normalizeString(values.governmentLegalNoticeTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.legalNoticeTitle;
+          content.governmentLegalNoticeSummary =
+            normalizeString(values.governmentLegalNoticeSummary) ||
+            mbbsBangladeshGovernmentFallbackContent.legalNoticeSummary;
+          content.governmentLegalNoticeDetails =
+            normalizeString(values.governmentLegalNoticeDetails) ||
+            mbbsBangladeshGovernmentFallbackContent.legalNoticeDetails;
+          content.governmentHelpTitle =
+            normalizeString(values.governmentHelpTitle) ||
+            mbbsBangladeshGovernmentFallbackContent.helpTitle;
+          content.governmentHelpDescription =
+            normalizeString(values.governmentHelpDescription) ||
+            mbbsBangladeshGovernmentFallbackContent.helpDescription;
+          content.governmentHelpPoints =
+            Array.isArray(values.governmentHelpPoints) && values.governmentHelpPoints.length > 0
+              ? values.governmentHelpPoints
+              : mbbsBangladeshGovernmentFallbackContent.helpPoints;
+          content.governmentHelpDisclaimer =
+            normalizeString(values.governmentHelpDisclaimer) ||
+            mbbsBangladeshGovernmentFallbackContent.helpDisclaimer;
+          content.governmentHelpPrimaryButtonText =
+            normalizeString(values.governmentHelpPrimaryButtonText) ||
+            mbbsBangladeshGovernmentFallbackContent.helpPrimaryButtonText;
+          content.governmentHelpSecondaryButtonText =
+            normalizeString(values.governmentHelpSecondaryButtonText) ||
+            mbbsBangladeshGovernmentFallbackContent.helpSecondaryButtonText;
+        }
+
+        if (isGeorgiaForBangladeshisPageValues(values)) {
+          content.georgiaHeroEyebrow =
+            normalizeString(values.georgiaHeroEyebrow) ||
+            georgiaForBangladeshisFallbackContent.heroEyebrow;
+          content.georgiaHeroBadgeText =
+            normalizeString(values.georgiaHeroBadgeText) ||
+            georgiaForBangladeshisFallbackContent.heroBadgeText;
+          content.georgiaHeroLeadText =
+            normalizeString(values.georgiaHeroLeadText) ||
+            georgiaForBangladeshisFallbackContent.heroLeadText;
+          content.georgiaHeroPrimaryButtonText =
+            normalizeString(values.georgiaHeroPrimaryButtonText) ||
+            georgiaForBangladeshisFallbackContent.heroPrimaryButtonText;
+          content.georgiaHeroPrimaryButtonUrl =
+            normalizeString(values.georgiaHeroPrimaryButtonUrl) ||
+            georgiaForBangladeshisFallbackContent.heroPrimaryButtonUrl;
+          content.georgiaHeroSecondaryButtonText =
+            normalizeString(values.georgiaHeroSecondaryButtonText) ||
+            georgiaForBangladeshisFallbackContent.heroSecondaryButtonText;
+          content.georgiaHeroSecondaryButtonUrl =
+            normalizeString(values.georgiaHeroSecondaryButtonUrl) ||
+            georgiaForBangladeshisFallbackContent.heroSecondaryButtonUrl;
+          content.georgiaProgramsEyebrow =
+            normalizeString(values.georgiaProgramsEyebrow) ||
+            georgiaForBangladeshisFallbackContent.programsEyebrow;
+          content.georgiaProgramsTitle =
+            normalizeString(values.georgiaProgramsTitle) ||
+            georgiaForBangladeshisFallbackContent.programsTitle;
+          content.georgiaProgramsSubtitle =
+            normalizeString(values.georgiaProgramsSubtitle) ||
+            georgiaForBangladeshisFallbackContent.programsSubtitle;
+          content.georgiaPrograms =
+            Array.isArray(values.georgiaPrograms) && values.georgiaPrograms.length > 0
+              ? values.georgiaPrograms
+              : georgiaForBangladeshisFallbackContent.programs;
+          content.georgiaWhyEyebrow =
+            normalizeString(values.georgiaWhyEyebrow) ||
+            georgiaForBangladeshisFallbackContent.whyGeorgiaEyebrow;
+          content.georgiaWhyTitle =
+            normalizeString(values.georgiaWhyTitle) ||
+            georgiaForBangladeshisFallbackContent.whyGeorgiaTitle;
+          content.georgiaWhySubtitle =
+            normalizeString(values.georgiaWhySubtitle) ||
+            georgiaForBangladeshisFallbackContent.whyGeorgiaSubtitle;
+          content.georgiaWhyCards =
+            Array.isArray(values.georgiaWhyCards) && values.georgiaWhyCards.length > 0
+              ? values.georgiaWhyCards
+              : georgiaForBangladeshisFallbackContent.whyGeorgiaCards;
+          content.georgiaPartnerEyebrow =
+            normalizeString(values.georgiaPartnerEyebrow) ||
+            georgiaForBangladeshisFallbackContent.partnerEyebrow;
+          content.georgiaPartnerTitle =
+            normalizeString(values.georgiaPartnerTitle) ||
+            georgiaForBangladeshisFallbackContent.partnerTitle;
+          content.georgiaPartnerDescription =
+            normalizeString(values.georgiaPartnerDescription) ||
+            georgiaForBangladeshisFallbackContent.partnerDescription;
+          content.georgiaPartnerBenefits =
+            Array.isArray(values.georgiaPartnerBenefits) && values.georgiaPartnerBenefits.length > 0
+              ? values.georgiaPartnerBenefits
+              : georgiaForBangladeshisFallbackContent.partnerBenefits;
+          content.georgiaPartnerImage =
+            normalizeString(values.georgiaPartnerImage) ||
+            georgiaForBangladeshisFallbackContent.partnerImage;
+          content.georgiaPartnerImageAlt =
+            normalizeString(values.georgiaPartnerImageAlt) ||
+            georgiaForBangladeshisFallbackContent.partnerImageAlt;
+          content.georgiaPartnerStatValue =
+            normalizeString(values.georgiaPartnerStatValue) ||
+            georgiaForBangladeshisFallbackContent.partnerStatValue;
+          content.georgiaPartnerStatLabel =
+            normalizeString(values.georgiaPartnerStatLabel) ||
+            georgiaForBangladeshisFallbackContent.partnerStatLabel;
+          content.georgiaRecognitionEyebrow =
+            normalizeString(values.georgiaRecognitionEyebrow) ||
+            georgiaForBangladeshisFallbackContent.recognitionEyebrow;
+          content.georgiaRecognitionTitle =
+            normalizeString(values.georgiaRecognitionTitle) ||
+            georgiaForBangladeshisFallbackContent.recognitionTitle;
+          content.georgiaRecognitionSubtitle =
+            normalizeString(values.georgiaRecognitionSubtitle) ||
+            georgiaForBangladeshisFallbackContent.recognitionSubtitle;
+          content.georgiaRecognitionItems =
+            Array.isArray(values.georgiaRecognitionItems) && values.georgiaRecognitionItems.length > 0
+              ? values.georgiaRecognitionItems
+              : georgiaForBangladeshisFallbackContent.recognitionItems;
+          content.georgiaSupportEyebrow =
+            normalizeString(values.georgiaSupportEyebrow) ||
+            georgiaForBangladeshisFallbackContent.supportEyebrow;
+          content.georgiaSupportTitle =
+            normalizeString(values.georgiaSupportTitle) ||
+            georgiaForBangladeshisFallbackContent.supportTitle;
+          content.georgiaSupportSubtitle =
+            normalizeString(values.georgiaSupportSubtitle) ||
+            georgiaForBangladeshisFallbackContent.supportSubtitle;
+          content.georgiaSupportSteps =
+            Array.isArray(values.georgiaSupportSteps) && values.georgiaSupportSteps.length > 0
+              ? values.georgiaSupportSteps
+              : georgiaForBangladeshisFallbackContent.supportSteps;
+          content.georgiaCareerEyebrow =
+            normalizeString(values.georgiaCareerEyebrow) ||
+            georgiaForBangladeshisFallbackContent.careerEyebrow;
+          content.georgiaCareerTitle =
+            normalizeString(values.georgiaCareerTitle) ||
+            georgiaForBangladeshisFallbackContent.careerTitle;
+          content.georgiaCareerDescription =
+            normalizeString(values.georgiaCareerDescription) ||
+            georgiaForBangladeshisFallbackContent.careerDescription;
+          content.georgiaCareerCards =
+            Array.isArray(values.georgiaCareerCards) && values.georgiaCareerCards.length > 0
+              ? values.georgiaCareerCards
+              : georgiaForBangladeshisFallbackContent.careerCards;
+          content.georgiaCareerSnapshotTitle =
+            normalizeString(values.georgiaCareerSnapshotTitle) ||
+            georgiaForBangladeshisFallbackContent.careerSnapshotTitle;
+          content.georgiaCareerSnapshotCards =
+            Array.isArray(values.georgiaCareerSnapshotCards) && values.georgiaCareerSnapshotCards.length > 0
+              ? values.georgiaCareerSnapshotCards
+              : georgiaForBangladeshisFallbackContent.careerSnapshotCards;
+        }
 
         return {
           ...payload,
@@ -1234,6 +3734,24 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       content.videoStoriesSubtitle =
         normalizeString(values.videoStoriesSubtitle) ||
         homeVideoStoriesFallbackContent.subtitle;
+      content.philosophyEyebrow =
+        normalizeString(values.philosophyEyebrow) ||
+        homePhilosophyFallbackContent.eyebrow;
+      content.philosophyTitle =
+        normalizeString(values.philosophyTitle) ||
+        homePhilosophyFallbackContent.title;
+      content.philosophySupportingHeading =
+        normalizeString(values.philosophySupportingHeading) ||
+        homePhilosophyFallbackContent.supportingHeading;
+      content.philosophyDescription =
+        normalizeString(values.philosophyDescription) ||
+        homePhilosophyFallbackContent.description;
+      content.philosophyImageSrc =
+        normalizeString(values.philosophyImageSrc) ||
+        homePhilosophyFallbackContent.imageSrc;
+      content.philosophyImageAlt =
+        normalizeString(values.philosophyImageAlt) ||
+        homePhilosophyFallbackContent.imageAlt;
       content.successStoriesLabel =
         normalizeString(values.successStoriesLabel) || homeSuccessStoriesFallbackContent.label;
       content.successStoriesHeadingBeforeHighlight =
@@ -1327,6 +3845,15 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         values.studyAbroadCards.length > 0
           ? values.studyAbroadCards
           : homeStudyAbroadFallbackContent.cards;
+      content.studyDestinationsEyebrow =
+        normalizeString(values.studyDestinationsEyebrow) ||
+        homeStudyDestinationsFallbackContent.eyebrow;
+      content.studyDestinationsTitle =
+        normalizeString(values.studyDestinationsTitle) ||
+        homeStudyDestinationsFallbackContent.title;
+      content.studyDestinationsSubtitle =
+        normalizeString(values.studyDestinationsSubtitle) ||
+        homeStudyDestinationsFallbackContent.subtitle;
       content.heroStats = homeHeroStats;
 
       return {
@@ -1352,6 +3879,475 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         heroOverlayOpacity:
           readContentNumber(content, 'heroOverlayOpacity') ??
           defaultPageHeroOverlayOpacity,
+        pageCtaTitle:
+          readContentString(content, 'pageCtaTitle') ??
+          genericPageCtaFallbackContent.title,
+        pageCtaSubtitle:
+          readContentString(content, 'pageCtaSubtitle') ??
+          genericPageCtaFallbackContent.subtitle,
+        pageCtaPrimaryButtonText:
+          readContentString(content, 'pageCtaPrimaryButtonText') ??
+          genericPageCtaFallbackContent.primaryButtonText,
+        pageCtaPrimaryButtonUrl:
+          readContentString(content, 'pageCtaPrimaryButtonUrl') ??
+          genericPageCtaFallbackContent.primaryButtonUrl,
+        pageCtaSecondaryButtonText:
+          readContentString(content, 'pageCtaSecondaryButtonText') ??
+          genericPageCtaFallbackContent.secondaryButtonText,
+        pageCtaSecondaryButtonUrl:
+          readContentString(content, 'pageCtaSecondaryButtonUrl') ??
+          genericPageCtaFallbackContent.secondaryButtonUrl,
+        aboutWhoWeAreEyebrow:
+          readContentString(content, 'aboutWhoWeAreEyebrow') ??
+          aboutPageFallbackContent.whoWeAreEyebrow,
+        aboutWhoWeAreTitle:
+          readContentString(content, 'aboutWhoWeAreTitle') ??
+          aboutPageFallbackContent.whoWeAreTitle,
+        aboutWhoWeAreImage:
+          readContentString(content, 'aboutWhoWeAreImage') ??
+          aboutPageFallbackContent.whoWeAreImage,
+        aboutWhoWeAreImageAlt:
+          readContentString(content, 'aboutWhoWeAreImageAlt') ??
+          aboutPageFallbackContent.whoWeAreImageAlt,
+        aboutWhoWeAreBadgeValue:
+          readContentString(content, 'aboutWhoWeAreBadgeValue') ??
+          aboutPageFallbackContent.whoWeAreBadgeValue,
+        aboutWhoWeAreBadgeLabel:
+          readContentString(content, 'aboutWhoWeAreBadgeLabel') ??
+          aboutPageFallbackContent.whoWeAreBadgeLabel,
+        aboutOverview:
+          content.aboutOverview ?? aboutPageFallbackContent.overview,
+        aboutValuesEyebrow:
+          readContentString(content, 'aboutValuesEyebrow') ??
+          aboutPageFallbackContent.valuesEyebrow,
+        aboutValuesTitle:
+          readContentString(content, 'aboutValuesTitle') ??
+          aboutPageFallbackContent.valuesTitle,
+        aboutValuesSubtitle:
+          readContentString(content, 'aboutValuesSubtitle') ??
+          aboutPageFallbackContent.valuesSubtitle,
+        aboutValues:
+          content.aboutValues ?? aboutPageFallbackContent.values,
+        aboutTrustEyebrow:
+          readContentString(content, 'aboutTrustEyebrow') ??
+          aboutPageFallbackContent.trustEyebrow,
+        aboutTrustTitle:
+          readContentString(content, 'aboutTrustTitle') ??
+          aboutPageFallbackContent.trustTitle,
+        aboutTrustDescription:
+          readContentString(content, 'aboutTrustDescription') ??
+          aboutPageFallbackContent.trustDescription,
+        aboutTrustPoints:
+          content.aboutTrustPoints ?? aboutPageFallbackContent.trustPoints,
+        aboutTrustCtaText:
+          readContentString(content, 'aboutTrustCtaText') ??
+          aboutPageFallbackContent.trustCtaText,
+        aboutTrustCtaUrl:
+          readContentString(content, 'aboutTrustCtaUrl') ??
+          aboutPageFallbackContent.trustCtaUrl,
+        aboutMetricStudentsPlaced:
+          readContentString(isRecord(content.aboutMetrics) ? content.aboutMetrics : {}, 'studentsPlaced') ??
+          aboutPageFallbackContent.metrics.studentsPlaced,
+        aboutMetricPartnerColleges:
+          readContentString(isRecord(content.aboutMetrics) ? content.aboutMetrics : {}, 'partnerColleges') ??
+          aboutPageFallbackContent.metrics.partnerColleges,
+        aboutMetricYearsExperience:
+          readContentString(isRecord(content.aboutMetrics) ? content.aboutMetrics : {}, 'yearsExperience') ??
+          aboutPageFallbackContent.metrics.yearsExperience,
+        aboutMetricAdmissionSuccess:
+          readContentString(isRecord(content.aboutMetrics) ? content.aboutMetrics : {}, 'admissionSuccess') ??
+          aboutPageFallbackContent.metrics.admissionSuccess,
+        whyHeroQuoteText:
+          readContentString(content, 'whyHeroQuoteText') ??
+          whyMedientryFallbackContent.heroQuoteText,
+        whyDifferenceTitle:
+          readContentString(content, 'whyDifferenceTitle') ??
+          whyMedientryFallbackContent.differenceTitle,
+        whyDifferenceDescription:
+          readContentString(content, 'whyDifferenceDescription') ??
+          whyMedientryFallbackContent.differenceDescription,
+        whyPhilosophyPoints:
+          content.whyPhilosophyPoints ?? whyMedientryFallbackContent.philosophyPoints,
+        whyDifferenceQuoteText:
+          readContentString(content, 'whyDifferenceQuoteText') ??
+          whyMedientryFallbackContent.differenceQuoteText,
+        whyCommitmentsEyebrow:
+          readContentString(content, 'whyCommitmentsEyebrow') ??
+          whyMedientryFallbackContent.commitmentsEyebrow,
+        whyCommitmentsTitle:
+          readContentString(content, 'whyCommitmentsTitle') ??
+          whyMedientryFallbackContent.commitmentsTitle,
+        whyReasons:
+          content.whyReasons ?? whyMedientryFallbackContent.reasons,
+        whyPromiseEyebrow:
+          readContentString(content, 'whyPromiseEyebrow') ??
+          whyMedientryFallbackContent.promiseEyebrow,
+        whyPromiseTitle:
+          readContentString(content, 'whyPromiseTitle') ??
+          whyMedientryFallbackContent.promiseTitle,
+        whyPromiseDescription:
+          readContentString(content, 'whyPromiseDescription') ??
+          whyMedientryFallbackContent.promiseDescription,
+        whyGuarantees:
+          content.whyGuarantees ?? whyMedientryFallbackContent.guarantees,
+        whyPromiseCtaText:
+          readContentString(content, 'whyPromiseCtaText') ??
+          whyMedientryFallbackContent.promiseCtaText,
+        whyPromiseCtaUrl:
+          readContentString(content, 'whyPromiseCtaUrl') ??
+          whyMedientryFallbackContent.promiseCtaUrl,
+        whyMetricStudentsGuided:
+          readContentString(isRecord(content.whyMetrics) ? content.whyMetrics : {}, 'studentsGuided') ??
+          whyMedientryFallbackContent.metrics.studentsGuided,
+        whyMetricYearsExperience:
+          readContentString(isRecord(content.whyMetrics) ? content.whyMetrics : {}, 'yearsExperience') ??
+          whyMedientryFallbackContent.metrics.yearsExperience,
+        whyMetricPartnerColleges:
+          readContentString(isRecord(content.whyMetrics) ? content.whyMetrics : {}, 'partnerColleges') ??
+          whyMedientryFallbackContent.metrics.partnerColleges,
+        whyMetricSuccessRate:
+          readContentString(isRecord(content.whyMetrics) ? content.whyMetrics : {}, 'successRate') ??
+          whyMedientryFallbackContent.metrics.successRate,
+        whyTrackRecordTitle:
+          readContentString(content, 'whyTrackRecordTitle') ??
+          whyMedientryFallbackContent.trackRecordTitle,
+        whyTrackRecordQuoteText:
+          readContentString(content, 'whyTrackRecordQuoteText') ??
+          whyMedientryFallbackContent.trackRecordQuoteText,
+        whyFeelEyebrow:
+          readContentString(content, 'whyFeelEyebrow') ??
+          whyMedientryFallbackContent.feelEyebrow,
+        whyFeelTitle:
+          readContentString(content, 'whyFeelTitle') ??
+          whyMedientryFallbackContent.feelTitle,
+        whyFeelStatements:
+          content.whyFeelStatements ?? whyMedientryFallbackContent.feelStatements,
+        whyFeelSummary:
+          readContentString(content, 'whyFeelSummary') ??
+          whyMedientryFallbackContent.feelSummary,
+        successStatStudentsPlaced:
+          readContentString(isRecord(content.successStoriesStats) ? content.successStoriesStats : {}, 'studentsPlaced') ??
+          successStoriesFallbackContent.stats.studentsPlaced,
+        successStatAdmissionSuccess:
+          readContentString(isRecord(content.successStoriesStats) ? content.successStoriesStats : {}, 'admissionSuccess') ??
+          successStoriesFallbackContent.stats.admissionSuccess,
+        successStatYearsOfTrust:
+          readContentString(isRecord(content.successStoriesStats) ? content.successStoriesStats : {}, 'yearsOfTrust') ??
+          successStoriesFallbackContent.stats.yearsOfTrust,
+        successStatParentSatisfaction:
+          readContentString(isRecord(content.successStoriesStats) ? content.successStoriesStats : {}, 'parentSatisfaction') ??
+          successStoriesFallbackContent.stats.parentSatisfaction,
+        successShareTitle:
+          readContentString(content, 'successShareTitle') ??
+          successStoriesFallbackContent.shareTitle,
+        successShareSubtitle:
+          readContentString(content, 'successShareSubtitle') ??
+          successStoriesFallbackContent.shareSubtitle,
+        successShareCtaText:
+          readContentString(content, 'successShareCtaText') ??
+          successStoriesFallbackContent.shareCtaText,
+        successShareCtaUrl:
+          readContentString(content, 'successShareCtaUrl') ??
+          successStoriesFallbackContent.shareCtaUrl,
+        contactFormTitle:
+          readContentString(content, 'contactFormTitle') ??
+          contactPageFallbackContent.formTitle,
+        contactFormSubtitle:
+          readContentString(content, 'contactFormSubtitle') ??
+          contactPageFallbackContent.formSubtitle,
+        contactWorkingHoursTitle:
+          readContentString(content, 'contactWorkingHoursTitle') ??
+          contactPageFallbackContent.workingHoursTitle,
+        contactWhatToExpectTitle:
+          readContentString(content, 'contactWhatToExpectTitle') ??
+          contactPageFallbackContent.whatToExpectTitle,
+        contactWhatsappCardTitle:
+          readContentString(content, 'contactWhatsappCardTitle') ??
+          contactPageFallbackContent.whatsappCardTitle,
+        contactWhatsappCardDescription:
+          readContentString(content, 'contactWhatsappCardDescription') ??
+          contactPageFallbackContent.whatsappCardDescription,
+        contactWhatsappCtaText:
+          readContentString(content, 'contactWhatsappCtaText') ??
+          contactPageFallbackContent.whatsappCtaText,
+        contactOfficesEyebrow:
+          readContentString(content, 'contactOfficesEyebrow') ??
+          contactPageFallbackContent.officesEyebrow,
+        contactOfficesTitle:
+          readContentString(content, 'contactOfficesTitle') ??
+          contactPageFallbackContent.officesTitle,
+        contactOfficesSubtitle:
+          readContentString(content, 'contactOfficesSubtitle') ??
+          contactPageFallbackContent.officesSubtitle,
+        contactOfficeHours:
+          readContentString(isRecord(content.contactWorkingHours) ? content.contactWorkingHours : {}, 'officeHours') ??
+          contactPageFallbackContent.workingHours.officeHours,
+        contactFridayHours:
+          readContentString(isRecord(content.contactWorkingHours) ? content.contactWorkingHours : {}, 'friday') ??
+          contactPageFallbackContent.workingHours.friday,
+        contactWhatToExpectItems:
+          content.contactWhatToExpectItems ?? contactPageFallbackContent.whatToExpect,
+        contactOffices:
+          content.contactOffices ?? contactPageFallbackContent.offices,
+        collegesHeroEyebrow:
+          readContentString(content, 'collegesHeroEyebrow') ??
+          collegesPageFallbackContent.heroEyebrow,
+        collegesExpertTipLabel:
+          readContentString(content, 'collegesExpertTipLabel') ??
+          collegesPageFallbackContent.expertTipLabel,
+        collegesExpertTipText:
+          readContentString(content, 'collegesExpertTipText') ??
+          collegesPageFallbackContent.expertTipText,
+        collegesBangladeshEyebrow:
+          readContentString(content, 'collegesBangladeshEyebrow') ??
+          collegesPageFallbackContent.bangladeshEyebrow,
+        collegesBangladeshTitle:
+          readContentString(content, 'collegesBangladeshTitle') ??
+          collegesPageFallbackContent.bangladeshTitle,
+        collegesBangladeshDescription:
+          readContentString(content, 'collegesBangladeshDescription') ??
+          collegesPageFallbackContent.bangladeshDescription,
+        collegesGeorgiaEyebrow:
+          readContentString(content, 'collegesGeorgiaEyebrow') ??
+          collegesPageFallbackContent.georgiaEyebrow,
+        collegesGeorgiaTitle:
+          readContentString(content, 'collegesGeorgiaTitle') ??
+          collegesPageFallbackContent.georgiaTitle,
+        collegesGeorgiaDescription:
+          readContentString(content, 'collegesGeorgiaDescription') ??
+          collegesPageFallbackContent.georgiaDescription,
+        collegesGuidanceEyebrow:
+          readContentString(content, 'collegesGuidanceEyebrow') ??
+          collegesPageFallbackContent.guidanceEyebrow,
+        collegesGuidanceTitle:
+          readContentString(content, 'collegesGuidanceTitle') ??
+          collegesPageFallbackContent.guidanceTitle,
+        collegesGuidanceTips:
+          content.collegeSelectionTips ?? collegesPageFallbackContent.guidanceTips,
+        governmentHeroEyebrow:
+          readContentString(content, 'governmentHeroEyebrow') ??
+          mbbsBangladeshGovernmentFallbackContent.heroEyebrow,
+        governmentHeroBadgeText:
+          readContentString(content, 'governmentHeroBadgeText') ??
+          mbbsBangladeshGovernmentFallbackContent.heroBadgeText,
+        governmentIntroTitle:
+          readContentString(content, 'governmentIntroTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.introTitle,
+        governmentIntroParagraph:
+          readContentString(content, 'governmentIntroParagraph') ??
+          mbbsBangladeshGovernmentFallbackContent.introParagraph,
+        governmentIntroQuotaItems:
+          content.governmentIntroQuotaItems ?? mbbsBangladeshGovernmentFallbackContent.introQuotaItems,
+        governmentIntroConclusion:
+          readContentString(content, 'governmentIntroConclusion') ??
+          mbbsBangladeshGovernmentFallbackContent.introConclusion,
+        governmentSeatEyebrow:
+          readContentString(content, 'governmentSeatEyebrow') ??
+          mbbsBangladeshGovernmentFallbackContent.seatEyebrow,
+        governmentSeatTitle:
+          readContentString(content, 'governmentSeatTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.seatTitle,
+        governmentSeatDescription:
+          readContentString(content, 'governmentSeatDescription') ??
+          mbbsBangladeshGovernmentFallbackContent.seatDescription,
+        governmentSaarcTableTitle:
+          readContentString(content, 'governmentSaarcTableTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.saarcTableTitle,
+        governmentSaarcSeats:
+          content.governmentSaarcSeats ??
+          toStructuredSeatAllocationRows(content.saarcSeats) ??
+          mbbsBangladeshGovernmentFallbackContent.saarcSeats,
+        governmentNonSaarcTableTitle:
+          readContentString(content, 'governmentNonSaarcTableTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.nonSaarcTableTitle,
+        governmentNonSaarcSeats:
+          content.governmentNonSaarcSeats ??
+          toStructuredSeatAllocationRows(content.nonSaarcSeats) ??
+          mbbsBangladeshGovernmentFallbackContent.nonSaarcSeats,
+        governmentSaarcSectionTitle:
+          readContentString(content, 'governmentSaarcSectionTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.saarcSectionTitle,
+        governmentSaarcApplicableTitle:
+          readContentString(content, 'governmentSaarcApplicableTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.saarcApplicableTitle,
+        governmentSaarcCountries:
+          content.governmentSaarcCountries ?? mbbsBangladeshGovernmentFallbackContent.saarcCountries,
+        governmentSaarcKeyPointsTitle:
+          readContentString(content, 'governmentSaarcKeyPointsTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.saarcKeyPointsTitle,
+        governmentSaarcKeyPoints:
+          content.governmentSaarcKeyPoints ?? mbbsBangladeshGovernmentFallbackContent.saarcKeyPoints,
+        governmentNonSaarcSectionTitle:
+          readContentString(content, 'governmentNonSaarcSectionTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.nonSaarcSectionTitle,
+        governmentNonSaarcPoints:
+          content.governmentNonSaarcPoints ?? mbbsBangladeshGovernmentFallbackContent.nonSaarcPoints,
+        governmentEligibilityTitle:
+          readContentString(content, 'governmentEligibilityTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.eligibilityTitle,
+        governmentEligibilityPoints:
+          content.governmentEligibilityPoints ??
+          content.eligibility ??
+          mbbsBangladeshGovernmentFallbackContent.eligibilityPoints,
+        governmentApplicationProcessTitle:
+          readContentString(content, 'governmentApplicationProcessTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.applicationProcessTitle,
+        governmentApplicationSteps:
+          content.governmentApplicationSteps ?? mbbsBangladeshGovernmentFallbackContent.applicationSteps,
+        governmentLegalNoticeTitle:
+          readContentString(content, 'governmentLegalNoticeTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.legalNoticeTitle,
+        governmentLegalNoticeSummary:
+          readContentString(content, 'governmentLegalNoticeSummary') ??
+          mbbsBangladeshGovernmentFallbackContent.legalNoticeSummary,
+        governmentLegalNoticeDetails:
+          readContentString(content, 'governmentLegalNoticeDetails') ??
+          mbbsBangladeshGovernmentFallbackContent.legalNoticeDetails,
+        governmentHelpTitle:
+          readContentString(content, 'governmentHelpTitle') ??
+          mbbsBangladeshGovernmentFallbackContent.helpTitle,
+        governmentHelpDescription:
+          readContentString(content, 'governmentHelpDescription') ??
+          mbbsBangladeshGovernmentFallbackContent.helpDescription,
+        governmentHelpPoints:
+          content.governmentHelpPoints ?? mbbsBangladeshGovernmentFallbackContent.helpPoints,
+        governmentHelpDisclaimer:
+          readContentString(content, 'governmentHelpDisclaimer') ??
+          mbbsBangladeshGovernmentFallbackContent.helpDisclaimer,
+        governmentHelpPrimaryButtonText:
+          readContentString(content, 'governmentHelpPrimaryButtonText') ??
+          mbbsBangladeshGovernmentFallbackContent.helpPrimaryButtonText,
+        governmentHelpSecondaryButtonText:
+          readContentString(content, 'governmentHelpSecondaryButtonText') ??
+          mbbsBangladeshGovernmentFallbackContent.helpSecondaryButtonText,
+        georgiaHeroEyebrow:
+          readContentString(content, 'georgiaHeroEyebrow') ??
+          georgiaForBangladeshisFallbackContent.heroEyebrow,
+        georgiaHeroBadgeText:
+          readContentString(content, 'georgiaHeroBadgeText') ??
+          georgiaForBangladeshisFallbackContent.heroBadgeText,
+        georgiaHeroLeadText:
+          readContentString(content, 'georgiaHeroLeadText') ??
+          georgiaForBangladeshisFallbackContent.heroLeadText,
+        georgiaHeroPrimaryButtonText:
+          readContentString(content, 'georgiaHeroPrimaryButtonText') ??
+          georgiaForBangladeshisFallbackContent.heroPrimaryButtonText,
+        georgiaHeroPrimaryButtonUrl:
+          readContentString(content, 'georgiaHeroPrimaryButtonUrl') ??
+          georgiaForBangladeshisFallbackContent.heroPrimaryButtonUrl,
+        georgiaHeroSecondaryButtonText:
+          readContentString(content, 'georgiaHeroSecondaryButtonText') ??
+          georgiaForBangladeshisFallbackContent.heroSecondaryButtonText,
+        georgiaHeroSecondaryButtonUrl:
+          readContentString(content, 'georgiaHeroSecondaryButtonUrl') ??
+          georgiaForBangladeshisFallbackContent.heroSecondaryButtonUrl,
+        georgiaProgramsEyebrow:
+          readContentString(content, 'georgiaProgramsEyebrow') ??
+          georgiaForBangladeshisFallbackContent.programsEyebrow,
+        georgiaProgramsTitle:
+          readContentString(content, 'georgiaProgramsTitle') ??
+          georgiaForBangladeshisFallbackContent.programsTitle,
+        georgiaProgramsSubtitle:
+          readContentString(content, 'georgiaProgramsSubtitle') ??
+          georgiaForBangladeshisFallbackContent.programsSubtitle,
+        georgiaPrograms:
+          content.georgiaPrograms ??
+          toStructuredProgramCards(content.programs) ??
+          georgiaForBangladeshisFallbackContent.programs,
+        georgiaWhyEyebrow:
+          readContentString(content, 'georgiaWhyEyebrow') ??
+          georgiaForBangladeshisFallbackContent.whyGeorgiaEyebrow,
+        georgiaWhyTitle:
+          readContentString(content, 'georgiaWhyTitle') ??
+          georgiaForBangladeshisFallbackContent.whyGeorgiaTitle,
+        georgiaWhySubtitle:
+          readContentString(content, 'georgiaWhySubtitle') ??
+          georgiaForBangladeshisFallbackContent.whyGeorgiaSubtitle,
+        georgiaWhyCards:
+          content.georgiaWhyCards ??
+          toStructuredContentCards(
+            content.whyGeorgia,
+            Object.fromEntries(
+              georgiaForBangladeshisFallbackContent.whyGeorgiaCards.map((item) => [
+                item.title,
+                item.description,
+              ]),
+            ),
+          ) ??
+          georgiaForBangladeshisFallbackContent.whyGeorgiaCards,
+        georgiaPartnerEyebrow:
+          readContentString(content, 'georgiaPartnerEyebrow') ??
+          georgiaForBangladeshisFallbackContent.partnerEyebrow,
+        georgiaPartnerTitle:
+          readContentString(content, 'georgiaPartnerTitle') ??
+          georgiaForBangladeshisFallbackContent.partnerTitle,
+        georgiaPartnerDescription:
+          readContentString(content, 'georgiaPartnerDescription') ??
+          georgiaForBangladeshisFallbackContent.partnerDescription,
+        georgiaPartnerBenefits:
+          content.georgiaPartnerBenefits ??
+          content.whyAlte ??
+          georgiaForBangladeshisFallbackContent.partnerBenefits,
+        georgiaPartnerImage:
+          readContentString(content, 'georgiaPartnerImage') ??
+          georgiaForBangladeshisFallbackContent.partnerImage,
+        georgiaPartnerImageAlt:
+          readContentString(content, 'georgiaPartnerImageAlt') ??
+          georgiaForBangladeshisFallbackContent.partnerImageAlt,
+        georgiaPartnerStatValue:
+          readContentString(content, 'georgiaPartnerStatValue') ??
+          georgiaForBangladeshisFallbackContent.partnerStatValue,
+        georgiaPartnerStatLabel:
+          readContentString(content, 'georgiaPartnerStatLabel') ??
+          georgiaForBangladeshisFallbackContent.partnerStatLabel,
+        georgiaRecognitionEyebrow:
+          readContentString(content, 'georgiaRecognitionEyebrow') ??
+          georgiaForBangladeshisFallbackContent.recognitionEyebrow,
+        georgiaRecognitionTitle:
+          readContentString(content, 'georgiaRecognitionTitle') ??
+          georgiaForBangladeshisFallbackContent.recognitionTitle,
+        georgiaRecognitionSubtitle:
+          readContentString(content, 'georgiaRecognitionSubtitle') ??
+          georgiaForBangladeshisFallbackContent.recognitionSubtitle,
+        georgiaRecognitionItems:
+          content.georgiaRecognitionItems ??
+          toStructuredContentCards(
+            content.recognition,
+            Object.fromEntries(
+              georgiaForBangladeshisFallbackContent.recognitionItems.map((item) => [
+                item.title,
+                item.description,
+              ]),
+            ),
+          ) ??
+          georgiaForBangladeshisFallbackContent.recognitionItems,
+        georgiaSupportEyebrow:
+          readContentString(content, 'georgiaSupportEyebrow') ??
+          georgiaForBangladeshisFallbackContent.supportEyebrow,
+        georgiaSupportTitle:
+          readContentString(content, 'georgiaSupportTitle') ??
+          georgiaForBangladeshisFallbackContent.supportTitle,
+        georgiaSupportSubtitle:
+          readContentString(content, 'georgiaSupportSubtitle') ??
+          georgiaForBangladeshisFallbackContent.supportSubtitle,
+        georgiaSupportSteps:
+          content.georgiaSupportSteps ?? georgiaForBangladeshisFallbackContent.supportSteps,
+        georgiaCareerEyebrow:
+          readContentString(content, 'georgiaCareerEyebrow') ??
+          georgiaForBangladeshisFallbackContent.careerEyebrow,
+        georgiaCareerTitle:
+          readContentString(content, 'georgiaCareerTitle') ??
+          georgiaForBangladeshisFallbackContent.careerTitle,
+        georgiaCareerDescription:
+          readContentString(content, 'georgiaCareerDescription') ??
+          georgiaForBangladeshisFallbackContent.careerDescription,
+        georgiaCareerCards:
+          content.georgiaCareerCards ?? georgiaForBangladeshisFallbackContent.careerCards,
+        georgiaCareerSnapshotTitle:
+          readContentString(content, 'georgiaCareerSnapshotTitle') ??
+          georgiaForBangladeshisFallbackContent.careerSnapshotTitle,
+        georgiaCareerSnapshotCards:
+          content.georgiaCareerSnapshotCards ?? georgiaForBangladeshisFallbackContent.careerSnapshotCards,
         heroBadgeText:
           readContentString(content, 'heroBadgeText') ?? homeHeroFallbackContent.badgeText,
         heroHeadingText:
@@ -1399,6 +4395,24 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         videoStoriesSubtitle:
           readContentString(content, 'videoStoriesSubtitle') ??
           homeVideoStoriesFallbackContent.subtitle,
+        philosophyEyebrow:
+          readContentString(content, 'philosophyEyebrow') ??
+          homePhilosophyFallbackContent.eyebrow,
+        philosophyTitle:
+          readContentString(content, 'philosophyTitle') ??
+          homePhilosophyFallbackContent.title,
+        philosophySupportingHeading:
+          readContentString(content, 'philosophySupportingHeading') ??
+          homePhilosophyFallbackContent.supportingHeading,
+        philosophyDescription:
+          readContentString(content, 'philosophyDescription') ??
+          homePhilosophyFallbackContent.description,
+        philosophyImageSrc:
+          readContentString(content, 'philosophyImageSrc') ??
+          homePhilosophyFallbackContent.imageSrc,
+        philosophyImageAlt:
+          readContentString(content, 'philosophyImageAlt') ??
+          homePhilosophyFallbackContent.imageAlt,
         successStoriesLabel:
           readContentString(content, 'successStoriesLabel') ??
           homeSuccessStoriesFallbackContent.label,
@@ -1478,6 +4492,15 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           homeStudyAbroadFallbackContent.subtitle,
         studyAbroadCards:
           content.studyAbroadCards ?? homeStudyAbroadFallbackContent.cards,
+        studyDestinationsEyebrow:
+          readContentString(content, 'studyDestinationsEyebrow') ??
+          homeStudyDestinationsFallbackContent.eyebrow,
+        studyDestinationsTitle:
+          readContentString(content, 'studyDestinationsTitle') ??
+          homeStudyDestinationsFallbackContent.title,
+        studyDestinationsSubtitle:
+          readContentString(content, 'studyDestinationsSubtitle') ??
+          homeStudyDestinationsFallbackContent.subtitle,
         heroStatYearsExperienceValue:
           normalizeString(readHomeHeroStat(content, 0)?.value) ||
           homeHeroStatFieldConfigs[0].defaultValue,

@@ -38,6 +38,11 @@ export type FieldType =
   | 'youtube-video'
   | 'admission-process-cards'
   | 'study-abroad-cards'
+  | 'content-cards'
+  | 'detailed-content-cards'
+  | 'contact-offices'
+  | 'program-cards'
+  | 'seat-allocation'
   | 'college-fee-structure';
 
 export type RichContentStorageMode = 'json-object' | 'json-loose' | 'string-html';

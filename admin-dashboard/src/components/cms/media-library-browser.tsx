@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertTriangle,
   Check,
   Copy,
   ExternalLink,
@@ -9,6 +10,7 @@ import {
   LoaderCircle,
   PencilLine,
   Search,
+  Trash2,
   UploadCloud,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,6 +20,7 @@ import { resolveCmsAssetUrl } from '../../lib/media';
 import { cn } from '../../lib/utils';
 import type { UploadKind } from '../../types/app';
 import { Button } from '../ui/button';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -38,6 +41,20 @@ export type MediaLibraryAsset = {
   status: string;
   createdAt: string;
   updatedAt: string;
+};
+
+type MediaAssetUsageReference = {
+  key: string;
+  label: string;
+  count: number;
+  examples: string[];
+};
+
+type MediaAssetUsageSummary = {
+  assetId: string;
+  isReferenced: boolean;
+  totalReferences: number;
+  references: MediaAssetUsageReference[];
 };
 
 type UploadedFile = {
@@ -237,6 +254,13 @@ export function MediaLibraryBrowser({
     buildMediaMetadataFormValues(null),
   );
   const [isSavingMetadata, setIsSavingMetadata] = useState(false);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<MediaLibraryAsset | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [isDeletingSingle, setIsDeletingSingle] = useState(false);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+  const [usageSummariesById, setUsageSummariesById] = useState<Record<string, MediaAssetUsageSummary>>({});
+  const [usageLoadingIds, setUsageLoadingIds] = useState<Record<string, true>>({});
 
   const effectiveAssetTypes = useMemo(
     () => (allowedAssetTypes && allowedAssetTypes.length > 0 ? allowedAssetTypes : null),
@@ -324,6 +348,99 @@ export function MediaLibraryBrowser({
       return searchableText.includes(normalizedSearch);
     });
   }, [fileTypeFilter, libraryItems, searchQuery, statusFilter]);
+
+  const visibleItemIds = useMemo(
+    () => filteredLibraryItems.map((item) => item.id),
+    [filteredLibraryItems],
+  );
+  const selectedVisibleCount = useMemo(
+    () => selectedItemIds.filter((id) => visibleItemIds.includes(id)).length,
+    [selectedItemIds, visibleItemIds],
+  );
+  const areAllVisibleSelected =
+    visibleItemIds.length > 0 && selectedVisibleCount === visibleItemIds.length;
+
+  useEffect(() => {
+    setSelectedItemIds((currentIds) =>
+      currentIds.filter((id) => libraryItems.some((item) => item.id === id)),
+    );
+  }, [libraryItems]);
+
+  useEffect(() => {
+    if (!deleteTarget || usageSummariesById[deleteTarget.id] || usageLoadingIds[deleteTarget.id]) {
+      return;
+    }
+
+    void (async () => {
+      setUsageLoadingIds((currentState) => ({
+        ...currentState,
+        [deleteTarget.id]: true,
+      }));
+
+      try {
+        const response = await apiClient.post('/media-assets/usage-summary', {
+          ids: [deleteTarget.id],
+        });
+        const payload = extractApiData<MediaAssetUsageSummary[]>(response);
+        setUsageSummariesById((currentState) => ({
+          ...currentState,
+          ...Object.fromEntries(payload.map((summary) => [summary.assetId, summary])),
+        }));
+      } catch (error) {
+        toast.error(getApiErrorMessage(error));
+      } finally {
+        setUsageLoadingIds((currentState) => {
+          const nextState = { ...currentState };
+          delete nextState[deleteTarget.id];
+          return nextState;
+        });
+      }
+    })();
+  }, [deleteTarget, usageLoadingIds, usageSummariesById]);
+
+  useEffect(() => {
+    if (!bulkDeleteDialogOpen) {
+      return;
+    }
+
+    const missingIds = selectedItemIds.filter(
+      (id) => !usageSummariesById[id] && !usageLoadingIds[id],
+    );
+
+    if (missingIds.length === 0) {
+      return;
+    }
+
+    void (async () => {
+      setUsageLoadingIds((currentState) => ({
+        ...currentState,
+        ...Object.fromEntries(missingIds.map((id) => [id, true])),
+      }));
+
+      try {
+        const response = await apiClient.post('/media-assets/usage-summary', {
+          ids: missingIds,
+        });
+        const payload = extractApiData<MediaAssetUsageSummary[]>(response);
+        setUsageSummariesById((currentState) => ({
+          ...currentState,
+          ...Object.fromEntries(payload.map((summary) => [summary.assetId, summary])),
+        }));
+      } catch (error) {
+        toast.error(getApiErrorMessage(error));
+      } finally {
+        setUsageLoadingIds((currentState) => {
+          const nextState = { ...currentState };
+
+          for (const id of missingIds) {
+            delete nextState[id];
+          }
+
+          return nextState;
+        });
+      }
+    })();
+  }, [bulkDeleteDialogOpen, selectedItemIds, usageLoadingIds, usageSummariesById]);
 
   const markPreviewAsBroken = (previewUrl: string, context?: Record<string, unknown>) => {
     setBrokenPreviewUrls((currentState) => {
@@ -449,6 +566,103 @@ export function MediaLibraryBrowser({
     toast.success('Image selected from media library.');
   };
 
+  const handleToggleItemSelection = (itemId: string, isChecked: boolean) => {
+    setSelectedItemIds((currentIds) => {
+      if (isChecked) {
+        return currentIds.includes(itemId) ? currentIds : [...currentIds, itemId];
+      }
+
+      return currentIds.filter((id) => id !== itemId);
+    });
+  };
+
+  const handleToggleAllVisibleItems = (isChecked: boolean) => {
+    if (!isChecked) {
+      setSelectedItemIds((currentIds) =>
+        currentIds.filter((id) => !visibleItemIds.includes(id)),
+      );
+      return;
+    }
+
+    setSelectedItemIds((currentIds) => [
+      ...currentIds,
+      ...visibleItemIds.filter((id) => !currentIds.includes(id)),
+    ]);
+  };
+
+  const removeDeletedAssetsFromState = (deletedIds: string[]) => {
+    setLibraryItems((currentItems) =>
+      currentItems.filter((item) => !deletedIds.includes(item.id)),
+    );
+    setSelectedItemIds((currentIds) =>
+      currentIds.filter((id) => !deletedIds.includes(id)),
+    );
+
+    if (activeItem && deletedIds.includes(activeItem.id)) {
+      setActiveItem(null);
+    }
+
+    if (deleteTarget && deletedIds.includes(deleteTarget.id)) {
+      setDeleteTarget(null);
+    }
+
+    setUsageSummariesById((currentState) => {
+      const nextState = { ...currentState };
+
+      for (const deletedId of deletedIds) {
+        delete nextState[deletedId];
+      }
+
+      return nextState;
+    });
+  };
+
+  const handleDeleteSingleAsset = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    setIsDeletingSingle(true);
+
+    try {
+      await apiClient.delete(`/media-assets/${deleteTarget.id}`);
+      removeDeletedAssetsFromState([deleteTarget.id]);
+      toast.success('Media asset deleted successfully.');
+      setDeleteTarget(null);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    } finally {
+      setIsDeletingSingle(false);
+    }
+  };
+
+  const handleDeleteSelectedAssets = async () => {
+    if (selectedItemIds.length === 0) {
+      toast.error('Select at least one media asset to delete.');
+      return;
+    }
+
+    setIsDeletingBulk(true);
+
+    try {
+      const response = await apiClient.post('/media-assets/bulk-delete', {
+        ids: selectedItemIds,
+      });
+      const payload = extractApiData<{ deletedIds: string[]; deletedCount: number }>(response);
+      removeDeletedAssetsFromState(payload.deletedIds);
+      toast.success(
+        payload.deletedCount === 1
+          ? '1 media asset deleted successfully.'
+          : `${payload.deletedCount} media assets deleted successfully.`,
+      );
+      setBulkDeleteDialogOpen(false);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    } finally {
+      setIsDeletingBulk(false);
+    }
+  };
+
   const handleSaveMetadata = async () => {
     if (!activeItem) {
       return;
@@ -477,6 +691,68 @@ export function MediaLibraryBrowser({
     } finally {
       setIsSavingMetadata(false);
     }
+  };
+
+  const selectedAssetsForDelete = useMemo(() => {
+    const selectedIds = new Set(selectedItemIds);
+
+    return libraryItems
+      .filter((item) => selectedIds.has(item.id))
+      .sort(
+        (left, right) =>
+          selectedItemIds.indexOf(left.id) - selectedItemIds.indexOf(right.id),
+      );
+  }, [libraryItems, selectedItemIds]);
+
+  const renderUsageSummary = (summary?: MediaAssetUsageSummary) => {
+    if (!summary) {
+      return null;
+    }
+
+    if (!summary.isReferenced) {
+      return (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          No CMS references were found for this asset in the main MediEntry content areas checked by the Media Library.
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-4">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-amber-100 p-2 text-amber-700">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-amber-900">
+              Warning: this asset is still referenced {summary.totalReferences} time
+              {summary.totalReferences === 1 ? '' : 's'}.
+            </p>
+            <p className="mt-1 text-sm text-amber-800">
+              Deleting it may create broken images or files on those pages.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {summary.references.map((reference) => (
+            <div
+              key={reference.key}
+              className="rounded-xl border border-amber-200 bg-white/80 px-3 py-3"
+            >
+              <div className="text-sm font-semibold text-slate-900">
+                {reference.label}: {reference.count}
+              </div>
+              {reference.examples.length > 0 ? (
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  Examples: {reference.examples.join(', ')}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -601,6 +877,44 @@ export function MediaLibraryBrowser({
             </div>
           </div>
         </div>
+
+        <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border/70 bg-white px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+          <label className="inline-flex items-center gap-3 text-sm font-medium text-foreground">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              checked={areAllVisibleSelected}
+              onChange={(event) => handleToggleAllVisibleItems(event.target.checked)}
+              disabled={visibleItemIds.length === 0}
+            />
+            Select all visible assets
+          </label>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{selectedItemIds.length}</span> selected
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={selectedItemIds.length === 0}
+              onClick={() => setSelectedItemIds([])}
+            >
+              Clear selection
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              disabled={selectedItemIds.length === 0}
+              onClick={() => setBulkDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Selected
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className={cn('flex-1 overflow-y-auto px-6 py-5', variant === 'page' ? 'min-h-[65vh]' : '')}>
@@ -629,6 +943,7 @@ export function MediaLibraryBrowser({
               const isSelected =
                 (selectedAssetId && selectedAssetId === item.id)
                 || (Boolean(selectedValue.trim()) && selectedValue.trim() === (getAssetUrl(item) ?? ''));
+              const isCheckedForDelete = selectedItemIds.includes(item.id);
 
               return (
                 <div
@@ -644,6 +959,19 @@ export function MediaLibraryBrowser({
                     className="block w-full text-left"
                   >
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/20">
+                      <label
+                        className="absolute right-2 top-2 z-10 inline-flex items-center rounded-full bg-white/95 p-1.5 shadow-sm"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                          checked={isCheckedForDelete}
+                          onChange={(event) =>
+                            handleToggleItemSelection(item.id, event.target.checked)
+                          }
+                        />
+                      </label>
                       <MediaPreview
                         src={itemUrl}
                         alt={item.altText ?? item.title ?? item.filename}
@@ -729,6 +1057,7 @@ export function MediaLibraryBrowser({
               const isSelected =
                 (selectedAssetId && selectedAssetId === item.id)
                 || (Boolean(selectedValue.trim()) && selectedValue.trim() === (getAssetUrl(item) ?? ''));
+              const isCheckedForDelete = selectedItemIds.includes(item.id);
 
               return (
                 <div
@@ -738,28 +1067,41 @@ export function MediaLibraryBrowser({
                     isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border/70',
                   )}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem(item)}
-                    className="overflow-hidden rounded-2xl border border-border/70 bg-muted/20"
-                  >
-                    <div className="aspect-[4/3] w-full">
-                      <MediaPreview
-                        src={itemUrl}
-                        alt={item.altText ?? item.title ?? item.filename}
-                        brokenPreviewUrls={brokenPreviewUrls}
-                        onPreviewError={(url) =>
-                          markPreviewAsBroken(url, {
-                            mediaId: item.id,
-                            storedValue: getAssetUrl(item) ?? null,
-                            fileType: item.fileType,
-                          })
+                  <div className="space-y-3">
+                    <label className="inline-flex items-center gap-3 text-sm font-medium text-foreground">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                        checked={isCheckedForDelete}
+                        onChange={(event) =>
+                          handleToggleItemSelection(item.id, event.target.checked)
                         }
-                        onRetry={retryPreview}
-                        fallbackHint={item.filename}
                       />
-                    </div>
-                  </button>
+                      Select for bulk delete
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setActiveItem(item)}
+                      className="overflow-hidden rounded-2xl border border-border/70 bg-muted/20"
+                    >
+                      <div className="aspect-[4/3] w-full">
+                        <MediaPreview
+                          src={itemUrl}
+                          alt={item.altText ?? item.title ?? item.filename}
+                          brokenPreviewUrls={brokenPreviewUrls}
+                          onPreviewError={(url) =>
+                            markPreviewAsBroken(url, {
+                              mediaId: item.id,
+                              storedValue: getAssetUrl(item) ?? null,
+                              fileType: item.fileType,
+                            })
+                          }
+                          onRetry={retryPreview}
+                          fallbackHint={item.filename}
+                        />
+                      </div>
+                    </button>
+                  </div>
 
                   <button
                     type="button"
@@ -802,6 +1144,15 @@ export function MediaLibraryBrowser({
                     <Button type="button" size="sm" variant="ghost" onClick={() => void handleCopyUrl(item)}>
                       <Copy className="h-4 w-4" />
                       Copy URL
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setDeleteTarget(item)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </div>
@@ -851,6 +1202,9 @@ export function MediaLibraryBrowser({
                         <p className="text-sm font-semibold text-foreground">Asset URL</p>
                         <p className="mt-1 break-all text-sm text-muted-foreground">
                           {resolveCmsAssetUrl(getAssetUrl(activeItem)) ?? getAssetUrl(activeItem) ?? 'Not available'}
+                        </p>
+                        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                          Deleting this asset removes the uploaded file from the shared media library. Any page or content still using this URL may show a broken image afterward.
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -943,14 +1297,22 @@ export function MediaLibraryBrowser({
                   </div>
 
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    {allowSelection ? (
-                      <Button type="button" onClick={() => handleUseLibraryItem(activeItem)}>
-                        <Check className="h-4 w-4" />
-                        {selectionActionLabel}
+                    <div className="flex flex-wrap gap-2">
+                      {allowSelection ? (
+                        <Button type="button" onClick={() => handleUseLibraryItem(activeItem)}>
+                          <Check className="h-4 w-4" />
+                          {selectionActionLabel}
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => setDeleteTarget(activeItem)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete Asset
                       </Button>
-                    ) : (
-                      <div />
-                    )}
+                    </div>
 
                     <div className="flex flex-wrap gap-2">
                       <Button type="button" variant="outline" onClick={() => setActiveItem(null)}>
@@ -972,6 +1334,74 @@ export function MediaLibraryBrowser({
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete media asset?"
+        description="This will permanently delete the selected media file from the Media Library and remove the uploaded file from storage. Pages still using this URL may show a broken image afterward."
+        isLoading={isDeletingSingle}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+          }
+        }}
+        onConfirm={() => {
+          void handleDeleteSingleAsset();
+        }}
+      >
+        {deleteTarget && usageLoadingIds[deleteTarget.id] ? (
+          <div className="rounded-2xl border border-border/70 bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
+            Checking where this asset is used...
+          </div>
+        ) : (
+          renderUsageSummary(
+            deleteTarget ? usageSummariesById[deleteTarget.id] : undefined,
+          )
+        )}
+      </DeleteConfirmDialog>
+
+      <DeleteConfirmDialog
+        open={bulkDeleteDialogOpen}
+        title="Delete selected media assets?"
+        description={`This will permanently delete ${selectedItemIds.length} selected media asset${selectedItemIds.length === 1 ? '' : 's'} from the Media Library and storage. Any page still using those URLs may show broken media afterward.`}
+        isLoading={isDeletingBulk}
+        onOpenChange={setBulkDeleteDialogOpen}
+        onConfirm={() => {
+          void handleDeleteSelectedAssets();
+        }}
+      >
+        <div className="space-y-3">
+          {selectedAssetsForDelete.map((item) => {
+            const summary = usageSummariesById[item.id];
+            const isLoadingUsage = usageLoadingIds[item.id] === true;
+
+            return (
+              <div
+                key={item.id}
+                className="rounded-2xl border border-border/70 bg-muted/10 px-4 py-4"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">
+                      {item.title || item.originalName || item.filename}
+                    </div>
+                    <div className="text-xs text-muted-foreground">{item.filename}</div>
+                  </div>
+                  <div className="text-xs font-medium text-muted-foreground">
+                    {isLoadingUsage
+                      ? 'Checking usage...'
+                      : summary?.isReferenced
+                        ? `${summary.totalReferences} reference${summary.totalReferences === 1 ? '' : 's'} found`
+                        : 'No references found'}
+                  </div>
+                </div>
+
+                {!isLoadingUsage ? renderUsageSummary(summary) : null}
+              </div>
+            );
+          })}
+        </div>
+      </DeleteConfirmDialog>
     </div>
   );
 }

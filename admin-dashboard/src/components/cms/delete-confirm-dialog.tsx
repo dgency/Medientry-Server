@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -7,6 +8,7 @@ type DeleteConfirmDialogProps = {
   open: boolean;
   title: string;
   description: string;
+  children?: ReactNode;
   isLoading?: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
@@ -16,6 +18,7 @@ export function DeleteConfirmDialog({
   open,
   title,
   description,
+  children,
   isLoading = false,
   onOpenChange,
   onConfirm,
@@ -30,6 +33,8 @@ export function DeleteConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+
+        {children ? <div>{children}</div> : null}
 
         <div className="flex items-center justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

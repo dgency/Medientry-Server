@@ -13,14 +13,18 @@ import type { ResourceConfig, ResourceField } from '../../types/app';
 import { FileUploadField } from './file-upload-field';
 import { JsonEditorField } from './json-editor-field';
 import { ContentJsonEditorField } from './content-json-editor-field';
+import { ContentCardsField } from './content-cards-field';
 import { FeatureCardsField } from './feature-cards-field';
 import { ChecklistItemsField } from './checklist-items-field';
+import { ContactOfficesField } from './contact-offices-field';
 import { StringListField } from './string-list-field';
 import { MediaGalleryListField } from './media-gallery-list-field';
 import { AdmissionProcessCardsField } from './admission-process-cards-field';
 import { StudyAbroadCardsField } from './study-abroad-cards-field';
 import { CollegeFeeStructureField } from './college-fee-structure-field';
 import { YouTubeVideoField } from './youtube-video-field';
+import { ProgramCardsField } from './program-cards-field';
+import { SeatAllocationField } from './seat-allocation-field';
 
 type ResourceFormDialogProps<TItem extends { id: string }> = {
   config: ResourceConfig<TItem>;
@@ -164,6 +168,86 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                           <AdmissionProcessCardsField
                             value={controllerField.value}
                             onChange={controllerField.onChange}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'content-cards' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <ContentCardsField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                            helperText={field.description ?? 'Manage the cards shown in this section.'}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'detailed-content-cards' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <ContentCardsField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                            helperText={field.description ?? 'Manage the cards shown in this section.'}
+                            showDetails
+                          />
+                        )}
+                      />
+                    ) : field.type === 'contact-offices' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <ContactOfficesField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'program-cards' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <ProgramCardsField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                            helperText={field.description ?? 'Manage the programs shown in this section.'}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'seat-allocation' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <SeatAllocationField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                            helperText={field.description ?? 'Manage the seat rows shown in this section.'}
                           />
                         )}
                       />

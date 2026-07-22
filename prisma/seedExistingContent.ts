@@ -924,7 +924,25 @@ const pageSeeds = [
       'Explore published medical colleges in Bangladesh and universities in Georgia managed from the CMS.',
     heroImage: siteImages.mbbsBangladeshHero,
     content: {
-      collegeSelectionTips,
+      collegesHeroEyebrow: 'Partner Institutions',
+      collegesExpertTipLabel: 'Expert Tip',
+      collegesExpertTipText:
+        "Don't choose a college based solely on fees. Consider FMGE pass rate, hospital facilities, faculty quality, and overall infrastructure. Our counselors can help you make the right choice.",
+      collegesBangladeshEyebrow: 'Bangladesh',
+      collegesBangladeshTitle: 'Medical Colleges in Bangladesh',
+      collegesBangladeshDescription:
+        'Bangladesh has over 60 private medical colleges. We partner with the best NMC-recognized institutions known for quality education and high FMGE pass rates.',
+      collegesGeorgiaEyebrow: 'Georgia',
+      collegesGeorgiaTitle: 'Medical Universities in Georgia',
+      collegesGeorgiaDescription:
+        'Georgian medical universities offer European standard education with international recognition. Perfect for students seeking global career opportunities.',
+      collegesGuidanceEyebrow: 'Guidance',
+      collegesGuidanceTitle: 'How to Choose the Right College',
+      collegeSelectionTips: collegeSelectionTips.map((tip, index) => ({
+        ...tip,
+        sortOrder: index + 1,
+        isActive: true,
+      })),
     },
     seoTitle: 'Medical Colleges and Universities - Bangladesh and Georgia',
     seoDescription:
