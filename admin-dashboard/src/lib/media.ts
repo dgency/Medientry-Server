@@ -1,3 +1,5 @@
+import { normalizeStoredMediaValue } from './media-path';
+
 const DEFAULT_API_PORT = '5000';
 const DEFAULT_API_PATH = '/api';
 
@@ -38,6 +40,20 @@ const getBrowserFallbackApiUrl = () => {
   return `${protocol}//${hostname}:${DEFAULT_API_PORT}${DEFAULT_API_PATH}`;
 };
 
+const getBrowserFallbackSiteUrl = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const { hostname, protocol } = window.location;
+
+  if (!hostname) {
+    return null;
+  }
+
+  return `${protocol}//${hostname}:3000`;
+};
+
 export const getApiBaseUrl = () =>
   normalizeApiBaseUrl(
     import.meta.env.VITE_API_URL?.trim() ||
@@ -47,13 +63,14 @@ export const getApiBaseUrl = () =>
   );
 
 export const getMediaBaseUrl = () => getApiBaseUrl().replace(/\/api\/?$/, '');
+export const getSiteBaseUrl = () =>
+  (import.meta.env.VITE_CLIENT_URL?.trim() || getBrowserFallbackSiteUrl() || '').replace(
+    /\/$/,
+    '',
+  );
 
 export function resolveCmsAssetUrl(value?: string | null): string {
-  if (!value) {
-    return '';
-  }
-
-  const clean = value.trim();
+  const clean = normalizeStoredMediaValue(value);
 
   if (!clean) {
     return '';
@@ -71,6 +88,11 @@ export function resolveCmsAssetUrl(value?: string | null): string {
 
   if (clean.startsWith('uploads')) {
     return `${mediaBase}/${clean}`;
+  }
+
+  if (clean.startsWith('/')) {
+    const siteBase = getSiteBaseUrl();
+    return siteBase ? `${siteBase}${clean}` : clean;
   }
 
   return clean;

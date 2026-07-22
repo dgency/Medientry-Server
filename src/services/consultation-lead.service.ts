@@ -39,6 +39,13 @@ type CreateConsultationLeadInput = {
   website?: string;
 };
 
+type ConsultationLeadStatusFilter = 'all' | 'read' | 'unread';
+
+type ListConsultationLeadsInput = {
+  search?: string;
+  status?: ConsultationLeadStatusFilter;
+};
+
 const consultationLeadSelect = {
   id: true,
   trackingNumber: true,
@@ -55,6 +62,7 @@ const consultationLeadSelect = {
   message: true,
   sourcePage: true,
   submissionDate: true,
+  readAt: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.ConsultationLeadSelect;
@@ -66,7 +74,7 @@ type ConsultationLeadRecord = Prisma.ConsultationLeadGetPayload<{
 type ConsultationLeadServiceDependencies = {
   consultationLeadModel: Pick<
     typeof prisma.consultationLead,
-    'create' | 'delete' | 'findFirst' | 'findMany' | 'findUnique'
+    'create' | 'delete' | 'findFirst' | 'findMany' | 'findUnique' | 'update'
   >;
   allocateTrackingNumber: () => Promise<number>;
   sendAdminFormNotification: typeof sendAdminFormNotification;
@@ -123,6 +131,11 @@ const normalizeNullableString = (value?: string | null) => {
 const normalizeNullableEmail = (value?: string | null) =>
   normalizeNullableString(value)?.toLowerCase() ?? null;
 
+const normalizeSearch = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+};
+
 const buildPhoneLink = (value?: string | null) => {
   const normalizedValue = value ? normalizePhoneNumber(value) : '';
   return normalizedValue ? `tel:${normalizedValue}` : undefined;
@@ -170,6 +183,57 @@ const getConsultationLeadById = async (
 
   return lead;
 };
+
+const buildConsultationLeadWhere = (
+  input: ListConsultationLeadsInput,
+): Prisma.ConsultationLeadWhereInput => {
+  const search = normalizeSearch(input.search);
+  const status = input.status ?? 'all';
+
+  return {
+    ...(status === 'read'
+      ? { readAt: { not: null } }
+      : status === 'unread'
+        ? { readAt: null }
+        : {}),
+    ...(search
+      ? {
+          OR: [
+            { trackingId: { contains: search, mode: 'insensitive' } },
+            { fullName: { contains: search, mode: 'insensitive' } },
+            { userRole: { contains: search, mode: 'insensitive' } },
+            { phoneNumber: { contains: search, mode: 'insensitive' } },
+            { whatsappNumber: { contains: search, mode: 'insensitive' } },
+            { emailAddress: { contains: search, mode: 'insensitive' } },
+            { passingYear: { contains: search, mode: 'insensitive' } },
+            { neetScore: { contains: search, mode: 'insensitive' } },
+            { stateName: { contains: search, mode: 'insensitive' } },
+            { preferredCollege: { contains: search, mode: 'insensitive' } },
+            { sourcePage: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  };
+};
+
+const sortConsultationLeads = <
+  TLead extends {
+    readAt: Date | null;
+    createdAt: Date;
+  },
+>(
+  leads: TLead[],
+) =>
+  [...leads].sort((firstLead, secondLead) => {
+    const firstIsUnread = firstLead.readAt === null;
+    const secondIsUnread = secondLead.readAt === null;
+
+    if (firstIsUnread !== secondIsUnread) {
+      return firstIsUnread ? -1 : 1;
+    }
+
+    return secondLead.createdAt.getTime() - firstLead.createdAt.getTime();
+  });
 
 const assertNoSpamIndicators = async (
   input: CreateConsultationLeadInput,
@@ -348,11 +412,14 @@ const sendConsultationLeadCustomerConfirmation = async (
   }
 };
 
-export const listConsultationLeads = async () => {
-  return defaultDependencies.consultationLeadModel.findMany({
+export const listConsultationLeads = async (input: ListConsultationLeadsInput = {}) => {
+  const leads = await defaultDependencies.consultationLeadModel.findMany({
+    where: buildConsultationLeadWhere(input),
     select: consultationLeadSelect,
     orderBy: [{ createdAt: 'desc' }],
   });
+
+  return sortConsultationLeads(leads);
 };
 
 export const getAdminConsultationLeadById = async (id: string) =>
@@ -390,5 +457,37 @@ export const deleteConsultationLead = async (id: string) => {
 
   await defaultDependencies.consultationLeadModel.delete({
     where: { id },
+  });
+};
+
+export const markConsultationLeadAsRead = async (id: string) => {
+  const lead = await getConsultationLeadById(id, defaultDependencies.consultationLeadModel);
+
+  if (lead.readAt) {
+    return lead;
+  }
+
+  return defaultDependencies.consultationLeadModel.update({
+    where: { id },
+    data: {
+      readAt: new Date(),
+    },
+    select: consultationLeadSelect,
+  });
+};
+
+export const markConsultationLeadAsUnread = async (id: string) => {
+  const lead = await getConsultationLeadById(id, defaultDependencies.consultationLeadModel);
+
+  if (!lead.readAt) {
+    return lead;
+  }
+
+  return defaultDependencies.consultationLeadModel.update({
+    where: { id },
+    data: {
+      readAt: null,
+    },
+    select: consultationLeadSelect,
   });
 };

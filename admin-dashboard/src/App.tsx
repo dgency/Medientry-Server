@@ -10,6 +10,7 @@ import { DashboardPage } from './pages/dashboard-page';
 import { CollegeFeeInquiriesPage, CollegeFeeInquiryDetailsPage } from './pages/college-fee-inquiries-page';
 import { HomeSectionsPage } from './pages/home-sections-page';
 import { LoginPage } from './pages/login-page';
+import { MediaLibraryPage } from './pages/media-library-page';
 import { ResourceScreenPage } from './pages/resource-screen-page';
 import { SiteSettingsPage } from './pages/site-settings-page';
 
@@ -22,6 +23,7 @@ export function App() {
           <Route index element={<DashboardPage />} />
           <Route path="/site-settings" element={<SiteSettingsPage />} />
           <Route path="/home-sections" element={<HomeSectionsPage />} />
+          <Route path="/media-library" element={<MediaLibraryPage />} />
           <Route path="/consultation-leads" element={<ConsultationLeadsPage />} />
           <Route path="/consultation-leads/:leadId" element={<ConsultationLeadDetailsPage />} />
           <Route path="/college-fee-inquiries" element={<CollegeFeeInquiriesPage />} />

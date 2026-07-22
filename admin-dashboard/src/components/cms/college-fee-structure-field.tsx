@@ -1,11 +1,16 @@
+import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Calculator, Plus, Trash2 } from 'lucide-react';
 
 import {
   feeAmountFieldLayoutClassName,
-  formatFeeCurrency,
   multiplyDecimalValues,
 } from '../../lib/fee-currency';
+import { apiClient, extractApiData } from '../../lib/api-client';
 import { Button } from '../ui/button';
+import {
+  defaultExchangeRateNoteSettingsValue,
+  normalizeExchangeRateNoteSettingsValue,
+} from './exchange-rate-note-settings-card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
@@ -32,15 +37,8 @@ type CollegeFeeItemValue = {
   isActive: boolean;
 };
 
-type FeeSettingsValue = {
-  exchangeRateUsdToInr: number | null;
-  showExchangeRateNote: boolean;
-  feeNote: string | null;
-};
-
 type CollegeFeeStructureValue = {
   feeStructure: CollegeFeeItemValue[];
-  feeSettings: FeeSettingsValue;
 };
 
 type CollegeFeeStructureFieldProps = {
@@ -110,12 +108,6 @@ const buildDefaultFeeItems = (): CollegeFeeItemValue[] => [
     isActive: true,
   },
 ];
-
-const defaultFeeSettings = (): FeeSettingsValue => ({
-  exchangeRateUsdToInr: null,
-  showExchangeRateNote: false,
-  feeNote: null,
-});
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -187,29 +179,21 @@ const normalizeItems = (value: unknown): CollegeFeeItemValue[] => {
   return items;
 };
 
-const normalizeSettings = (value: unknown): FeeSettingsValue => {
-  if (!isRecord(value)) {
-    return defaultFeeSettings();
+const normalizeValue = (value: unknown): CollegeFeeStructureValue => {
+  if (Array.isArray(value)) {
+    return {
+      feeStructure: normalizeItems(value),
+    };
   }
 
-  return {
-    exchangeRateUsdToInr: readNumber(value.exchangeRateUsdToInr),
-    showExchangeRateNote: value.showExchangeRateNote === true,
-    feeNote: typeof value.feeNote === 'string' ? value.feeNote : null,
-  };
-};
-
-const normalizeValue = (value: unknown): CollegeFeeStructureValue => {
   if (!isRecord(value)) {
     return {
       feeStructure: buildDefaultFeeItems(),
-      feeSettings: defaultFeeSettings(),
     };
   }
 
   return {
     feeStructure: normalizeItems(value.feeStructure),
-    feeSettings: normalizeSettings(value.feeSettings),
   };
 };
 
@@ -234,12 +218,24 @@ export function CollegeFeeStructureField({
 }: CollegeFeeStructureFieldProps) {
   const normalizedValue = normalizeValue(value);
   const items = normalizedValue.feeStructure;
-  const settings = normalizedValue.feeSettings;
+  const siteSettingsQuery = useQuery({
+    queryKey: ['site-settings', 'exchange-rate-settings'],
+    queryFn: async () => {
+      const response = await apiClient.get('/site-settings');
+      return normalizeExchangeRateNoteSettingsValue(
+        extractApiData<Record<string, unknown>>(response),
+      );
+    },
+  });
+  const exchangeRateSettings =
+    siteSettingsQuery.data ?? defaultExchangeRateNoteSettingsValue();
+  const hasValidExchangeRate =
+    exchangeRateSettings.exchangeRateUsdToInr != null
+    && exchangeRateSettings.exchangeRateUsdToInr > 0;
 
   const updateValue = (nextValue: Partial<CollegeFeeStructureValue>) => {
     onChange({
       feeStructure: nextValue.feeStructure ?? items,
-      feeSettings: nextValue.feeSettings ?? settings,
     });
   };
 
@@ -302,19 +298,10 @@ export function CollegeFeeStructureField({
     ]);
   };
 
-  const updateSettings = (patch: Partial<FeeSettingsValue>) => {
-    updateValue({
-      feeSettings: {
-        ...settings,
-        ...patch,
-      },
-    });
-  };
-
   const calculateInrAmount = (index: number) => {
     const amountInr = multiplyDecimalValues(
       items[index]?.amountUsd,
-      settings.exchangeRateUsdToInr,
+      exchangeRateSettings.exchangeRateUsdToInr,
     );
 
     if (amountInr == null) {
@@ -343,8 +330,8 @@ export function CollegeFeeStructureField({
         {items.map((item, index) => {
           const canCalculateInr =
             item.amountUsd != null &&
-            settings.exchangeRateUsdToInr != null &&
-            settings.exchangeRateUsdToInr > 0;
+            exchangeRateSettings.exchangeRateUsdToInr != null &&
+            exchangeRateSettings.exchangeRateUsdToInr > 0;
 
           return (
             <div
@@ -491,7 +478,7 @@ export function CollegeFeeStructureField({
                   <div className="flex min-h-11 items-center rounded-xl border border-input bg-white px-3">
                     <Switch
                       checked={item.isTotal}
-                      onCheckedChange={(checked) => {
+                      onCheckedChange={(checked: boolean) => {
                         const nextItems = items.map((currentItem, currentIndex) => ({
                           ...currentItem,
                           isTotal:
@@ -515,7 +502,7 @@ export function CollegeFeeStructureField({
                   <div className="flex min-h-11 items-center rounded-xl border border-input bg-white px-3">
                     <Switch
                       checked={item.isActive}
-                      onCheckedChange={(checked) =>
+                      onCheckedChange={(checked: boolean) =>
                         updateItem(index, { isActive: checked === true })
                       }
                     />
@@ -531,68 +518,23 @@ export function CollegeFeeStructureField({
       </div>
 
       <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
-        <div className="mb-4">
+        <div className="space-y-1">
           <p className="text-sm font-semibold text-foreground">
-            Exchange-Rate Note Settings
+            INR calculation source
           </p>
           <p className="text-sm text-muted-foreground">
-            Use a manual USD to INR rate only when you want to calculate an INR
-            value or show a note on the public page.
+            The Calculate INR action uses the global USD to INR rate from Site
+            Settings.
           </p>
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Exchange Rate (USD to INR)</Label>
-            <Input
-              type="number"
-              min={0}
-              step="any"
-              value={settings.exchangeRateUsdToInr ?? ''}
-              onChange={(event) =>
-                updateSettings({
-                  exchangeRateUsdToInr: parseNullableNumber(event.target.value),
-                })
-              }
-              placeholder="90"
-            />
-            <p className="text-xs text-muted-foreground">
-              Current value:{' '}
-              {settings.exchangeRateUsdToInr != null
-                ? formatFeeCurrency(settings.exchangeRateUsdToInr, 'INR')
-                : 'Not provided'}
+        {!siteSettingsQuery.isLoading && !hasValidExchangeRate ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-sm text-amber-800">
+              Add a valid USD-to-INR exchange rate in Site Settings to enable
+              automatic INR calculations here.
             </p>
           </div>
-
-          <div className="space-y-2">
-            <Label>Show Exchange-Rate Note</Label>
-            <div className="flex min-h-11 items-center rounded-xl border border-input bg-white px-3">
-              <Switch
-                checked={settings.showExchangeRateNote}
-                onCheckedChange={(checked) =>
-                  updateSettings({ showExchangeRateNote: checked === true })
-                }
-              />
-              <span className="ml-3 text-sm text-muted-foreground">
-                {settings.showExchangeRateNote ? 'Note enabled' : 'Note hidden'}
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label>Custom Fee Note</Label>
-            <Textarea
-              rows={3}
-              value={settings.feeNote ?? ''}
-              onChange={(event) =>
-                updateSettings({
-                  feeNote: event.target.value || null,
-                })
-              }
-              placeholder="Leave blank to use the default exchange-rate note on the public page."
-            />
-          </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );

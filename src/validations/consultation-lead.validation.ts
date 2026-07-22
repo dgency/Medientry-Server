@@ -24,6 +24,14 @@ const normalizeOptionalEmail = z
     return trimmed ? trimmed : undefined;
   });
 
+const normalizeOptionalQueryString = z.preprocess((value) => {
+  if (Array.isArray(value)) {
+    return typeof value[0] === 'string' ? value[0] : undefined;
+  }
+
+  return typeof value === 'string' ? value : undefined;
+}, z.string().trim().optional().transform((value) => (value ? value : undefined)));
+
 const phoneNumberSchema = z
   .string()
   .trim()
@@ -59,6 +67,21 @@ export const createConsultationLeadSchema = z.object({
 export const verifyThankYouTokenSchema = z.object({
   body: z.object({
     token: z.string().trim().min(1, 'Token is required.'),
+  }),
+});
+
+export const listConsultationLeadQuerySchema = z.object({
+  query: z.object({
+    search: normalizeOptionalQueryString,
+    status: z
+      .preprocess((value) => {
+        if (Array.isArray(value)) {
+          return typeof value[0] === 'string' ? value[0] : undefined;
+        }
+
+        return typeof value === 'string' ? value : undefined;
+      }, z.enum(['all', 'read', 'unread']).optional())
+      .transform((value) => value ?? 'all'),
   }),
 });
 

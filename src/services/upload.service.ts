@@ -1,8 +1,12 @@
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import type { Request } from 'express';
+import { MediaKind, SimpleStatus } from '@prisma/client';
 
 import { type UploadKind, uploadRules } from '../config/upload';
+import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
+import { publicMediaAssetSelect, resolveMediaAssetUrl, serializeMediaAsset } from '../utils/media-asset-response';
 import { storageAdapter } from './storage.service';
 
 type UploadFileInput = {
@@ -59,6 +63,24 @@ const resolveFileExtension = (file: Express.Multer.File) => {
   return extensionFromMimeType;
 };
 
+const deriveMediaAssetTitle = (originalName: string, storedFilename: string) => {
+  const candidate = path.parse(originalName).name || path.parse(storedFilename).name;
+  const normalized = candidate.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return normalized || null;
+};
+
+const resolveMediaKind = (kind: UploadKind, mimeType: string) => {
+  if (kind === 'document') {
+    return MediaKind.DOCUMENT;
+  }
+
+  if (mimeType === 'image/svg+xml') {
+    return MediaKind.SVG;
+  }
+
+  return MediaKind.IMAGE;
+};
+
 const buildPublicFileUrl = (request: Request, publicPath: string) => {
   const configuredBaseUrl = process.env.PUBLIC_BASE_URL?.trim();
   const requestBaseUrl = `${request.protocol}://${request.get('host')}`;
@@ -93,9 +115,31 @@ export const uploadFile = async ({ file, kind, request }: UploadFileInput) => {
     extension,
   });
 
+  const mediaAsset = await prisma.mediaAsset.create({
+    data: {
+      id: randomUUID(),
+      title: deriveMediaAssetTitle(file.originalname, storedFile.filename),
+      filename: storedFile.filename,
+      originalName: file.originalname,
+      path: storedFile.relativePath,
+      url: storedFile.publicPath,
+      publicUrl: storedFile.publicPath,
+      storageKey: storedFile.relativePath,
+      mimeType: file.mimetype,
+      extension,
+      fileType: resolveMediaKind(resolvedKind, file.mimetype),
+      size: file.size,
+      status: SimpleStatus.ACTIVE,
+    },
+    select: publicMediaAssetSelect,
+  });
+  const serializedMediaAsset = serializeMediaAsset(mediaAsset);
+  const mediaAssetUrl = resolveMediaAssetUrl(serializedMediaAsset) ?? storedFile.publicPath;
+
   return {
-    url: storedFile.publicPath,
-    fullUrl: buildPublicFileUrl(request, storedFile.publicPath),
+    url: mediaAssetUrl,
+    fullUrl: buildPublicFileUrl(request, mediaAssetUrl),
     filename: storedFile.filename,
+    asset: serializedMediaAsset,
   };
 };

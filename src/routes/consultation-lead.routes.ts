@@ -5,6 +5,8 @@ import {
   deleteAdminConsultationLead,
   getAdminConsultationLead,
   getConsultationLeads,
+  markAdminConsultationLeadAsRead,
+  markAdminConsultationLeadAsUnread,
   verifyPublicThankYouToken,
 } from '../controllers/consultation-lead.controller';
 import { requireAuth } from '../middlewares/require-auth';
@@ -13,6 +15,7 @@ import { validateRequest } from '../middlewares/validate-request';
 import {
   consultationLeadIdParamSchema,
   createConsultationLeadSchema,
+  listConsultationLeadQuerySchema,
   verifyThankYouTokenSchema,
 } from '../validations/consultation-lead.validation';
 
@@ -27,8 +30,10 @@ router.post(
 
 router.use(requireAuth, requireRole(cmsEditorRoles));
 
-router.get('/', getConsultationLeads);
+router.get('/', validateRequest(listConsultationLeadQuerySchema), getConsultationLeads);
 router.get('/:id', validateRequest(consultationLeadIdParamSchema), getAdminConsultationLead);
+router.patch('/:id/read', validateRequest(consultationLeadIdParamSchema), markAdminConsultationLeadAsRead);
+router.patch('/:id/unread', validateRequest(consultationLeadIdParamSchema), markAdminConsultationLeadAsUnread);
 router.delete('/:id', validateRequest(consultationLeadIdParamSchema), deleteAdminConsultationLead);
 
 export const consultationLeadRouter = router;

@@ -982,6 +982,10 @@ const seedSiteSetting = async () => {
       linkedin: siteConfig.socialLinks.find((item) => item.label === 'LinkedIn')?.href ?? '#',
       youtube: siteConfig.socialLinks.find((item) => item.label === 'YouTube')?.href ?? '#',
     },
+    exchangeRateUsdToInr: null,
+    showExchangeRateNote: false,
+    customExchangeRateNote: null,
+    exchangeRateUpdatedAt: null,
   };
 
   if (existing) {
@@ -1149,9 +1153,6 @@ const seedMedicalColleges = async () => {
         tuitionFee,
         hostelFee,
         totalFee,
-        exchangeRateUsdToInr: 90,
-        showExchangeRateNote: false,
-        feeNote: null,
         ranking: university.highlights[0] ?? null,
         eligibility:
           university.country === 'Bangladesh'
@@ -1219,9 +1220,6 @@ const seedMedicalColleges = async () => {
         tuitionFee,
         hostelFee,
         totalFee,
-        exchangeRateUsdToInr: 90,
-        showExchangeRateNote: false,
-        feeNote: null,
         ranking: university.highlights[0] ?? null,
         eligibility:
           university.country === 'Bangladesh'

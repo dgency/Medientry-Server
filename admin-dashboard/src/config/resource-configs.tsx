@@ -4,7 +4,6 @@ import {
   formatLabel,
   getSiteBaseUrl,
   toDateTimeLocalValue,
-  toJsonTextareaValue,
   toKeywordsValue,
 } from '../lib/utils';
 import { extractYouTubeVideoId } from '../lib/youtube';
@@ -66,11 +65,6 @@ const defaultCollegeFeeManagementValue = () => ({
       isActive: true,
     },
   ],
-  feeSettings: {
-    exchangeRateUsdToInr: null,
-    showExchangeRateNote: false,
-    feeNote: null,
-  },
 });
 
 const formatNullableUsd = (value: unknown) => {
@@ -665,13 +659,13 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       whyChooseUsEyebrow: homeWhyChooseUsFallbackContent.eyebrow,
       whyChooseUsTitle: homeWhyChooseUsFallbackContent.title,
       whyChooseUsSubtitle: homeWhyChooseUsFallbackContent.subtitle,
-      whyChooseUsFeatureCards: toJsonTextareaValue(homeWhyChooseUsFallbackContent.featureCards),
+      whyChooseUsFeatureCards: homeWhyChooseUsFallbackContent.featureCards,
       whyChooseUsApartTitle: homeWhyChooseUsFallbackContent.apartTitle,
-      whyChooseUsApartItems: toJsonTextareaValue(homeWhyChooseUsFallbackContent.apartItems),
+      whyChooseUsApartItems: homeWhyChooseUsFallbackContent.apartItems,
       whyChooseUsRightEyebrow: homeWhyChooseUsFallbackContent.rightEyebrow,
       whyChooseUsRightTitle: homeWhyChooseUsFallbackContent.rightTitle,
       whyChooseUsRightParagraph: homeWhyChooseUsFallbackContent.rightParagraph,
-      whyChooseUsChecklistItems: toJsonTextareaValue(homeWhyChooseUsFallbackContent.checklistItems),
+      whyChooseUsChecklistItems: homeWhyChooseUsFallbackContent.checklistItems,
       whyChooseUsQuoteText: homeWhyChooseUsFallbackContent.quoteText,
       admissionProcessEyebrow: homeAdmissionProcessFallbackContent.eyebrow,
       admissionProcessHeadingText: homeAdmissionProcessFallbackContent.headingText,
@@ -904,8 +898,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       },
       {
         name: 'whyChooseUsFeatureCards',
-        label: 'Why Choose Us Feature Cards JSON',
-        type: 'json',
+        label: 'Why Choose Us Feature Cards',
+        type: 'feature-cards',
         rows: 16,
         colSpan: 2,
         visible: (values) => isHomePageValues(values),
@@ -920,8 +914,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       },
       {
         name: 'whyChooseUsApartItems',
-        label: 'What Sets Us Apart Items JSON',
-        type: 'json',
+        label: 'What Sets Us Apart Items',
+        type: 'feature-cards',
         rows: 12,
         colSpan: 2,
         visible: (values) => isHomePageValues(values),
@@ -951,8 +945,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       },
       {
         name: 'whyChooseUsChecklistItems',
-        label: 'Right Column Checklist JSON',
-        type: 'json',
+        label: 'Right Column Checklist',
+        type: 'checklist-items',
         rows: 10,
         colSpan: 2,
         visible: (values) => isHomePageValues(values),
@@ -1119,8 +1113,9 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       },
       {
         name: 'content',
-        label: 'Content Blocks JSON',
-        type: 'json',
+        label: 'Page Content',
+        type: 'rich-content',
+        richContentStorageMode: 'json-object',
         rows: 10,
         colSpan: 2,
         placeholder: '{\n  "blocks": []\n}',
@@ -1349,7 +1344,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
 
       return {
         ...item,
-        content: toJsonTextareaValue(item.content),
+        content: item.content,
         seoKeywords: toKeywordsValue(item.seoKeywords),
         heroOverlayColor:
           readContentString(content, 'heroOverlayColor') ??
@@ -1434,15 +1429,13 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         whyChooseUsSubtitle:
           readContentString(content, 'whyChooseUsSubtitle') ??
           homeWhyChooseUsFallbackContent.subtitle,
-        whyChooseUsFeatureCards: toJsonTextareaValue(
+        whyChooseUsFeatureCards:
           content.whyChooseUsFeatureCards ?? homeWhyChooseUsFallbackContent.featureCards,
-        ),
         whyChooseUsApartTitle:
           readContentString(content, 'whyChooseUsApartTitle') ??
           homeWhyChooseUsFallbackContent.apartTitle,
-        whyChooseUsApartItems: toJsonTextareaValue(
+        whyChooseUsApartItems:
           content.whyChooseUsApartItems ?? homeWhyChooseUsFallbackContent.apartItems,
-        ),
         whyChooseUsRightEyebrow:
           readContentString(content, 'whyChooseUsRightEyebrow') ??
           homeWhyChooseUsFallbackContent.rightEyebrow,
@@ -1452,9 +1445,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         whyChooseUsRightParagraph:
           readContentString(content, 'whyChooseUsRightParagraph') ??
           homeWhyChooseUsFallbackContent.rightParagraph,
-        whyChooseUsChecklistItems: toJsonTextareaValue(
+        whyChooseUsChecklistItems:
           content.whyChooseUsChecklistItems ?? homeWhyChooseUsFallbackContent.checklistItems,
-        ),
         whyChooseUsQuoteText:
           readContentString(content, 'whyChooseUsQuoteText') ??
           homeWhyChooseUsFallbackContent.quoteText,
@@ -1620,7 +1612,14 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { name: 'sortOrder', label: 'Display Order', type: 'number', min: 0, required: true },
       { name: 'isFeatured', label: 'Featured', type: 'switch' },
       { name: 'showInMenu', label: 'Show In Menu', type: 'switch' },
-      { name: 'content', label: 'Page Content JSON', type: 'json', rows: 10, colSpan: 2 },
+      {
+        name: 'content',
+        label: 'Page Content',
+        type: 'rich-content',
+        richContentStorageMode: 'json-object',
+        rows: 12,
+        colSpan: 2,
+      },
       ...defaultSeoFields,
     ],
     columns: [
@@ -1652,7 +1651,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       heroOverlayOpacity:
         readContentNumber(isRecord(item.content) ? item.content : {}, 'heroOverlayOpacity') ??
         defaultPageHeroOverlayOpacity,
-      content: toJsonTextareaValue(item.content),
+      content: item.content,
       seoKeywords: toKeywordsValue(item.seoKeywords),
     }),
     buildPayload: (values) => {
@@ -1733,9 +1732,9 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       feeManagement: defaultCollegeFeeManagementValue(),
       sortOrder: 0,
       eligibility: '',
-      admissionProcess: '',
+      admissionProcess: [],
       facilities: '',
-      gallery: '',
+      gallery: [],
       contentBlocks: '',
       isFeatured: false,
       status: 'DRAFT',
@@ -1764,10 +1763,31 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { name: 'eligibility', label: 'Eligibility', type: 'textarea', rows: 3, colSpan: 2 },
       { name: 'status', label: 'Status', type: 'select', required: true, options: publicationStatusOptions },
       { name: 'isFeatured', label: 'Featured / Homepage Visible', type: 'switch' },
-      { name: 'admissionProcess', label: 'Admission Process JSON', type: 'json', rows: 8, colSpan: 2 },
+      {
+        name: 'admissionProcess',
+        label: 'Admission Process',
+        type: 'string-list',
+        rows: 8,
+        colSpan: 2,
+        description: 'Manage the admission-process steps shown for this college.',
+        placeholder: 'Free counseling and college shortlisting',
+      },
       { name: 'facilities', label: 'Badges / Features', type: 'keywords', colSpan: 2, description: 'Comma-separated badges shown on the homepage card.' },
-      { name: 'gallery', label: 'Gallery JSON', type: 'json', rows: 8, colSpan: 2 },
-      { name: 'contentBlocks', label: 'Advanced Content Blocks JSON', type: 'json', rows: 10, colSpan: 2 },
+      {
+        name: 'gallery',
+        label: 'Gallery Images',
+        type: 'media-gallery',
+        rows: 8,
+        colSpan: 2,
+      },
+      {
+        name: 'contentBlocks',
+        label: 'Advanced Content',
+        type: 'rich-content',
+        richContentStorageMode: 'json-object',
+        rows: 12,
+        colSpan: 2,
+      },
       ...defaultSeoFields,
     ],
     columns: [
@@ -1789,15 +1809,11 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           Array.isArray(item.feeStructure) && item.feeStructure.length > 0
             ? item.feeStructure
             : defaultCollegeFeeManagementValue().feeStructure,
-        feeSettings:
-          item.feeSettings && typeof item.feeSettings === 'object'
-            ? item.feeSettings
-            : defaultCollegeFeeManagementValue().feeSettings,
       },
-      admissionProcess: toJsonTextareaValue(item.admissionProcess),
+      admissionProcess: Array.isArray(item.admissionProcess) ? item.admissionProcess : [],
       facilities: toKeywordsValue(item.facilities),
-      gallery: toJsonTextareaValue(item.gallery),
-      contentBlocks: toJsonTextareaValue(item.contentBlocks),
+      gallery: Array.isArray(item.gallery) ? item.gallery : [],
+      contentBlocks: item.contentBlocks,
       seoKeywords: toKeywordsValue(item.seoKeywords),
     }),
     buildPayload: (values) => {
@@ -1807,7 +1823,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         !Array.isArray(values.feeManagement)
           ? (values.feeManagement as {
               feeStructure?: unknown;
-              feeSettings?: unknown;
             })
           : null;
       const existingContentBlocks =
@@ -1831,12 +1846,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       return {
         ...restValues,
         feeStructure: sanitizeMedicalCollegeFeeStructure(feeManagement?.feeStructure),
-        feeSettings:
-          feeManagement?.feeSettings &&
-          typeof feeManagement.feeSettings === 'object' &&
-          !Array.isArray(feeManagement.feeSettings)
-            ? feeManagement.feeSettings
-            : defaultCollegeFeeManagementValue().feeSettings,
         facilities: badgeFeatures,
         contentBlocks,
       };
@@ -1857,20 +1866,42 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     emptyTitle: 'No gallery items yet',
     emptyDescription: 'Add images or video items for the gallery page.',
     defaultValues: {
+      mediaAssetId: '',
       title: '',
       type: 'IMAGE',
       url: '',
-      thumbnail: '',
       category: '',
+      altText: '',
+      seoTitle: '',
+      seoDescription: '',
       sortOrder: 0,
       status: 'ACTIVE',
     },
     fields: [
-      { name: 'title', label: 'Title', type: 'text', required: true },
+      {
+        name: 'title',
+        label: 'Title',
+        type: 'text',
+        placeholder: 'Auto-filled from the selected image when left blank',
+      },
       { name: 'type', label: 'Type', type: 'select', required: true, options: galleryTypeOptions },
-      { name: 'url', label: 'Asset URL', type: 'url', required: true, colSpan: 2, uploadKind: 'image', previewLabel: 'Preview asset' },
-      { name: 'thumbnail', label: 'Thumbnail URL', type: 'url', colSpan: 2, uploadKind: 'videoThumbnail', previewLabel: 'Preview thumbnail' },
+      {
+        name: 'url',
+        label: 'Gallery Asset / Video URL',
+        type: 'url',
+        colSpan: 2,
+        uploadKind: 'image',
+        previewLabel: 'Preview asset',
+        allowMultipleUploads: true,
+        assetIdFieldName: 'mediaAssetId',
+        assetTitleFieldName: 'title',
+        description:
+          'For images, upload or select from the Media Library. Legacy/manual URLs are still accepted as a safe fallback. For videos, paste the video URL directly.',
+      },
       { name: 'category', label: 'Category', type: 'text' },
+      { name: 'altText', label: 'Alt Text', type: 'text', colSpan: 2, placeholder: 'Describe the image for accessibility and SEO' },
+      { name: 'seoTitle', label: 'SEO Title', type: 'text', colSpan: 2, placeholder: 'Optional SEO title for this asset' },
+      { name: 'seoDescription', label: 'SEO Description', type: 'textarea', rows: 4, colSpan: 2, placeholder: 'Optional SEO description for this asset' },
       { name: 'sortOrder', label: 'Sort Order', type: 'number', required: true, min: 0 },
       { name: 'status', label: 'Status', type: 'select', required: true, options: simpleStatusOptions },
     ],
@@ -1880,9 +1911,28 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { key: 'category', label: 'Category', render: (item) => String(item.category ?? '-') },
       { key: 'status', label: 'Status', render: (item) => badgeForStatus(item.status) },
       { key: 'sortOrder', label: 'Order', render: (item) => String(item.sortOrder ?? 0) },
-    ],
-    getSearchText: (item) => `${String(item.title ?? '')} ${String(item.category ?? '')}`,
-  },
+      ],
+      getSearchText: (item) => `${String(item.title ?? '')} ${String(item.category ?? '')}`,
+      getEditValues: (item) => ({
+        ...item,
+        mediaAssetId: String(item.mediaAssetId ?? ''),
+      }),
+      buildPayload: (values) => ({
+        mediaAssetId: normalizeString(values.mediaAssetId) || null,
+        title: normalizeString(values.title) || null,
+        type: String(values.type ?? 'IMAGE'),
+        url: normalizeString(values.url) || null,
+        category: normalizeString(values.category) || null,
+        altText: normalizeString(values.altText) || null,
+        seoTitle: normalizeString(values.seoTitle) || null,
+        seoDescription: normalizeString(values.seoDescription) || null,
+        sortOrder:
+          typeof values.sortOrder === 'number' && Number.isFinite(values.sortOrder)
+            ? values.sortOrder
+            : Number(values.sortOrder ?? 0),
+        status: String(values.status ?? 'ACTIVE'),
+      }),
+    },
   'home-reels': {
     key: 'home-reels',
     title: 'Reels Videos',
@@ -1932,6 +1982,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         type: 'url',
         colSpan: 2,
         uploadKind: 'videoThumbnail',
+        allowManualEntry: false,
         previewLabel: 'Preview thumbnail',
         description: 'Upload a custom thumbnail or select one from the Media Library. Leave this blank to use the YouTube thumbnail automatically.',
       },
@@ -2011,7 +2062,14 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { name: 'featuredImage', label: 'Featured Image URL', type: 'url', colSpan: 2, uploadKind: 'image', previewLabel: 'Preview featured image' },
       { name: 'status', label: 'Status', type: 'select', required: true, options: publicationStatusOptions },
       { name: 'isPinned', label: 'Pinned', type: 'switch' },
-      { name: 'content', label: 'Content JSON', type: 'json', rows: 10, colSpan: 2 },
+      {
+        name: 'content',
+        label: 'Content',
+        type: 'rich-content',
+        richContentStorageMode: 'json-loose',
+        rows: 12,
+        colSpan: 2,
+      },
       ...defaultSeoFields,
     ],
     columns: [
@@ -2028,7 +2086,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         : [],
     getEditValues: (item) => ({
       ...item,
-      content: toJsonTextareaValue(item.content),
+      content: item.content,
       seoKeywords: toKeywordsValue(item.seoKeywords),
     }),
   },
@@ -2073,7 +2131,14 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       { name: 'isPinned', label: 'Pinned', type: 'switch' },
       { name: 'publishedAt', label: 'Published At', type: 'datetime-local' },
       { name: 'fileUrl', label: 'PDF File URL', type: 'url', colSpan: 2, uploadKind: 'document', accept: 'application/pdf', previewLabel: 'Open attached PDF' },
-      { name: 'content', label: 'Description / Content', type: 'textarea', rows: 8, colSpan: 2 },
+      {
+        name: 'content',
+        label: 'Content',
+        type: 'rich-content',
+        richContentStorageMode: 'string-html',
+        rows: 10,
+        colSpan: 2,
+      },
       ...defaultSeoFields,
     ],
     columns: [

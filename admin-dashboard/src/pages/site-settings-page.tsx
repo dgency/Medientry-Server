@@ -1,5 +1,5 @@
 import { useEffect, type ChangeEvent } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -7,11 +7,19 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { FileUploadField } from '../components/cms/file-upload-field';
 import { EmptyState } from '../components/ui/empty-state';
+import {
+  defaultExchangeRateNoteSettingsValue,
+  ExchangeRateNoteSettingsCard,
+} from '../components/cms/exchange-rate-note-settings-card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Spinner } from '../components/ui/spinner';
+import { Switch } from '../components/ui/switch';
 import { Textarea } from '../components/ui/textarea';
 import { apiClient, extractApiData, getApiErrorMessage } from '../lib/api-client';
+
+type GoogleTagManagerMode = 'container-id' | 'custom-code';
+type GoogleTagManagerEnvironment = 'production' | 'all';
 
 type SiteSettingsFormValues = {
   logoLight: string;
@@ -28,6 +36,16 @@ type SiteSettingsFormValues = {
   instagram: string;
   linkedin: string;
   youtube: string;
+  exchangeRateUsdToInr: number | null;
+  showExchangeRateNote: boolean;
+  customExchangeRateNote: string | null;
+  exchangeRateUpdatedAt: string | null;
+  googleTagManagerEnabled: boolean;
+  googleTagManagerMode: GoogleTagManagerMode;
+  googleTagManagerId: string;
+  googleTagManagerHeadCode: string;
+  googleTagManagerBodyCode: string;
+  googleTagManagerEnvironment: GoogleTagManagerEnvironment;
 };
 
 const fallbackColorValues = {
@@ -57,7 +75,52 @@ const defaultValues: SiteSettingsFormValues = {
   instagram: '',
   linkedin: '',
   youtube: '',
+  ...defaultExchangeRateNoteSettingsValue(),
+  googleTagManagerEnabled: false,
+  googleTagManagerMode: 'container-id',
+  googleTagManagerId: '',
+  googleTagManagerHeadCode: '',
+  googleTagManagerBodyCode: '',
+  googleTagManagerEnvironment: 'production',
 };
+
+const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
+const gtmModeOptions: Array<{
+  value: GoogleTagManagerMode;
+  title: string;
+  description: string;
+}> = [
+  {
+    value: 'container-id',
+    title: 'Container ID',
+    description:
+      'Recommended for most teams. Save one GTM container ID and MediEntry will generate the standard head and noscript snippets for you.',
+  },
+  {
+    value: 'custom-code',
+    title: 'Custom Code',
+    description:
+      'Use this only when Google Tag Manager needs fully custom head and body snippets managed by a trusted administrator.',
+  },
+];
+const gtmEnvironmentOptions: Array<{
+  value: GoogleTagManagerEnvironment;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'production',
+    label: 'Production only',
+    description:
+      'Loads only on the main production website and stays off localhost, preview, and staging.',
+  },
+  {
+    value: 'all',
+    label: 'All environments',
+    description:
+      'Loads on localhost, preview, staging, and production for end-to-end verification.',
+  },
+];
 
 const isSixDigitHexColor = (value: string) => /^#[0-9a-fA-F]{6}$/.test(value.trim());
 
@@ -157,6 +220,34 @@ const toStringValue = (value: unknown) => {
   return String(value);
 };
 
+const normalizeGtmIdValue = (value: unknown) => {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim().toUpperCase();
+};
+
+const normalizeGtmModeValue = (value: unknown): GoogleTagManagerMode =>
+  value === 'custom-code' ? 'custom-code' : 'container-id';
+
+const normalizeGtmEnvironmentValue = (
+  value: unknown,
+): GoogleTagManagerEnvironment => (value === 'all' ? 'all' : 'production');
+
+const toNumberValue = (value: unknown) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+};
+
 const normalizeSiteSettingsValues = (value?: Partial<SiteSettingsFormValues> | null) => ({
   ...defaultValues,
   logoLight: toStringValue(value?.logoLight).trim(),
@@ -182,6 +273,30 @@ const normalizeSiteSettingsValues = (value?: Partial<SiteSettingsFormValues> | n
   instagram: toStringValue(value?.instagram),
   linkedin: toStringValue(value?.linkedin),
   youtube: toStringValue(value?.youtube),
+  exchangeRateUsdToInr: toNumberValue(value?.exchangeRateUsdToInr),
+  showExchangeRateNote: value?.showExchangeRateNote === true,
+  customExchangeRateNote:
+    typeof value?.customExchangeRateNote === 'string'
+      ? value.customExchangeRateNote
+      : null,
+  exchangeRateUpdatedAt:
+    typeof value?.exchangeRateUpdatedAt === 'string'
+      ? value.exchangeRateUpdatedAt
+      : null,
+  googleTagManagerEnabled: value?.googleTagManagerEnabled === true,
+  googleTagManagerMode: normalizeGtmModeValue(value?.googleTagManagerMode),
+  googleTagManagerId: normalizeGtmIdValue(value?.googleTagManagerId),
+  googleTagManagerHeadCode: toStringValue(value?.googleTagManagerHeadCode).replace(
+    /\r\n?/g,
+    '\n',
+  ),
+  googleTagManagerBodyCode: toStringValue(value?.googleTagManagerBodyCode).replace(
+    /\r\n?/g,
+    '\n',
+  ),
+  googleTagManagerEnvironment: normalizeGtmEnvironmentValue(
+    value?.googleTagManagerEnvironment,
+  ),
 });
 
 const sanitizeSiteSettingsPayload = (values: SiteSettingsFormValues) => {
@@ -202,15 +317,30 @@ const sanitizeSiteSettingsPayload = (values: SiteSettingsFormValues) => {
     instagram: normalizedValues.instagram.trim(),
     linkedin: normalizedValues.linkedin.trim(),
     youtube: normalizedValues.youtube.trim(),
+    exchangeRateUsdToInr: normalizedValues.exchangeRateUsdToInr,
+    showExchangeRateNote: normalizedValues.showExchangeRateNote,
+    customExchangeRateNote:
+      normalizedValues.customExchangeRateNote?.trim() || null,
+    googleTagManagerEnabled: normalizedValues.googleTagManagerEnabled,
+    googleTagManagerMode: normalizedValues.googleTagManagerMode,
+    googleTagManagerId: normalizedValues.googleTagManagerId.trim(),
+    googleTagManagerHeadCode:
+      normalizedValues.googleTagManagerHeadCode.trim() || null,
+    googleTagManagerBodyCode:
+      normalizedValues.googleTagManagerBodyCode.trim() || null,
+    googleTagManagerEnvironment: normalizedValues.googleTagManagerEnvironment,
   };
 };
 
 export function SiteSettingsPage() {
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
     reset,
     control,
+    watch,
+    setValue,
     formState: { isSubmitting },
   } = useForm<SiteSettingsFormValues>({
     defaultValues,
@@ -223,6 +353,17 @@ export function SiteSettingsPage() {
       return extractApiData<Partial<SiteSettingsFormValues>>(response);
     },
   });
+  const exchangeRateUsdToInr = watch('exchangeRateUsdToInr');
+  const showExchangeRateNote = watch('showExchangeRateNote');
+  const customExchangeRateNote = watch('customExchangeRateNote');
+  const exchangeRateUpdatedAt = watch('exchangeRateUpdatedAt');
+  const googleTagManagerEnabled = watch('googleTagManagerEnabled');
+  const googleTagManagerMode = watch('googleTagManagerMode');
+  const googleTagManagerId = watch('googleTagManagerId');
+  const googleTagManagerHeadCode = watch('googleTagManagerHeadCode');
+  const googleTagManagerBodyCode = watch('googleTagManagerBodyCode');
+  const googleTagManagerEnvironment = watch('googleTagManagerEnvironment');
+  const hasValidGtmId = GTM_ID_PATTERN.test(normalizeGtmIdValue(googleTagManagerId));
 
   useEffect(() => {
     if (settingsQuery.data) {
@@ -241,9 +382,12 @@ export function SiteSettingsPage() {
           },
         },
       );
-      return extractApiData(response);
+      return extractApiData<Partial<SiteSettingsFormValues>>(response);
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      queryClient.setQueryData(['site-settings'], data);
+      await queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      reset(normalizeSiteSettingsValues(data));
       toast.success('Site settings updated successfully.');
     },
     onError: (error) => {
@@ -286,8 +430,8 @@ export function SiteSettingsPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Site Settings</CardTitle>
           <CardDescription>
-            Control logos, colors, contact details, and social links used across
-            the frontend.
+            Control logos, colors, contact details, exchange-rate guidance, and
+            global Google Tag Manager settings used across the public website.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -388,6 +532,305 @@ export function SiteSettingsPage() {
                   <Label htmlFor="address">Address</Label>
                   <Textarea id="address" rows={4} {...register('address')} />
                 </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <ExchangeRateNoteSettingsCard
+                  value={{
+                    exchangeRateUsdToInr,
+                    showExchangeRateNote,
+                    customExchangeRateNote,
+                    exchangeRateUpdatedAt,
+                  }}
+                  currentSavedExchangeRateUsdToInr={
+                    normalizeSiteSettingsValues(settingsQuery.data).exchangeRateUsdToInr
+                  }
+                  onChange={(nextValue) => {
+                    setValue(
+                      'exchangeRateUsdToInr',
+                      nextValue.exchangeRateUsdToInr,
+                      { shouldDirty: true },
+                    );
+                    setValue(
+                      'showExchangeRateNote',
+                      nextValue.showExchangeRateNote,
+                      { shouldDirty: true },
+                    );
+                    setValue(
+                      'customExchangeRateNote',
+                      nextValue.customExchangeRateNote,
+                      { shouldDirty: true },
+                    );
+                    setValue(
+                      'exchangeRateUpdatedAt',
+                      nextValue.exchangeRateUpdatedAt,
+                      { shouldDirty: false },
+                    );
+                  }}
+                  showMissingRateWarning
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <Card className="border border-slate-200 bg-white shadow-sm">
+                  <CardHeader className="space-y-3">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="space-y-1">
+                        <CardTitle className="text-xl">Google Tag Manager</CardTitle>
+                        <CardDescription className="max-w-3xl">
+                          Save a GTM container ID or trusted custom GTM snippets
+                          once, then load them automatically on every public
+                          website page without touching source code again.
+                        </CardDescription>
+                      </div>
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                        <div className="font-medium text-slate-900">
+                          Public website only
+                        </div>
+                        <div>
+                          The dashboard preview never executes GTM scripts.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-base font-semibold text-slate-900">
+                          Enable Google Tag Manager
+                        </Label>
+                        <p className="text-sm text-slate-600">
+                          When disabled, all saved GTM values remain stored but
+                          nothing is injected into the public site.
+                        </p>
+                      </div>
+                      <Controller
+                        name="googleTagManagerEnabled"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-slate-600">
+                              {field.value ? 'Enabled' : 'Disabled'}
+                            </span>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(checked) =>
+                                field.onChange(checked === true)
+                              }
+                            />
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-6">
+                    <div className="grid gap-3 lg:grid-cols-2">
+                      {gtmModeOptions.map((option) => {
+                        const isActive = googleTagManagerMode === option.value;
+
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() =>
+                              setValue('googleTagManagerMode', option.value, {
+                                shouldDirty: true,
+                              })
+                            }
+                            className={`rounded-2xl border px-4 py-4 text-left transition ${
+                              isActive
+                                ? 'border-[#c61022]/35 bg-[#c61022]/6 shadow-sm'
+                                : 'border-slate-200 bg-white hover:border-slate-300'
+                            }`}
+                          >
+                            <div className="mb-1 text-base font-semibold text-slate-900">
+                              {option.title}
+                            </div>
+                            <p className="text-sm leading-6 text-slate-600">
+                              {option.description}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="grid gap-6 lg:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="googleTagManagerId">GTM Container ID</Label>
+                        <Input
+                          id="googleTagManagerId"
+                          type="text"
+                          placeholder="GTM-XXXXXXX"
+                          {...register('googleTagManagerId')}
+                        />
+                        <p className="text-sm text-slate-500">
+                          Enter a container ID like <span className="font-mono">GTM-ABC1234</span>. This is the recommended setup and is auto-generated into the standard GTM script and noscript code.
+                        </p>
+                        {googleTagManagerEnabled &&
+                        googleTagManagerMode === 'container-id' &&
+                        googleTagManagerId.trim().length > 0 &&
+                        !hasValidGtmId ? (
+                          <p className="text-sm font-medium text-[#c61022]">
+                            Use the official GTM format: <span className="font-mono">GTM-ABC1234</span>.
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                        <Label htmlFor="googleTagManagerEnvironment">
+                          Load GTM In
+                        </Label>
+                        <select
+                          id="googleTagManagerEnvironment"
+                          className="flex h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-[#c61022]/30 focus:ring-2 focus:ring-[#c61022]/10"
+                          value={googleTagManagerEnvironment}
+                          onChange={(event) =>
+                            setValue(
+                              'googleTagManagerEnvironment',
+                              normalizeGtmEnvironmentValue(event.target.value),
+                              { shouldDirty: true },
+                            )
+                          }
+                        >
+                          {gtmEnvironmentOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-sm leading-6 text-slate-600">
+                          {
+                            gtmEnvironmentOptions.find(
+                              (option) => option.value === googleTagManagerEnvironment,
+                            )?.description
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {googleTagManagerMode === 'custom-code' ? (
+                      <div className="space-y-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
+                        <div className="space-y-1">
+                          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
+                            Trusted admins only
+                          </div>
+                          <p className="text-sm leading-6 text-amber-800">
+                            Only paste trusted Google Tag Manager code. Custom
+                            scripts can affect website security and performance.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="googleTagManagerHeadCode">
+                            GTM Head Code
+                          </Label>
+                          <Textarea
+                            id="googleTagManagerHeadCode"
+                            rows={8}
+                            className="font-mono text-xs leading-6"
+                            placeholder="<script>...</script>"
+                            {...register('googleTagManagerHeadCode')}
+                          />
+                          <p className="text-sm text-slate-600">
+                            This code is inserted inside the public website
+                            <span className="font-mono"> &lt;head&gt; </span>
+                            and should include your main GTM loader snippet.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="googleTagManagerBodyCode">
+                            GTM Body Code
+                          </Label>
+                          <Textarea
+                            id="googleTagManagerBodyCode"
+                            rows={6}
+                            className="font-mono text-xs leading-6"
+                            placeholder="<noscript><iframe ...></iframe></noscript>"
+                            {...register('googleTagManagerBodyCode')}
+                          />
+                          <p className="text-sm text-slate-600">
+                            This code is inserted immediately after the opening
+                            <span className="font-mono"> &lt;body&gt; </span>
+                            tag. The body snippet is optional, but the official
+                            GTM noscript iframe is recommended.
+                          </p>
+                          {googleTagManagerEnabled &&
+                          googleTagManagerMode === 'custom-code' &&
+                          googleTagManagerHeadCode.trim().length === 0 ? (
+                            <p className="text-sm font-medium text-[#c61022]">
+                              Head code is required when GTM is enabled in Custom Code mode.
+                            </p>
+                          ) : null}
+                          {googleTagManagerEnabled &&
+                          googleTagManagerMode === 'custom-code' &&
+                          googleTagManagerBodyCode.trim().length === 0 ? (
+                            <p className="text-sm text-amber-700">
+                              Body code is currently empty. The public site will still load the saved head code, but no noscript fallback iframe will be rendered.
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-4 text-sm leading-6 text-emerald-900">
+                        Container ID mode is active. MediEntry will generate the
+                        official GTM head script and body noscript iframe from
+                        the saved container ID, so there is no duplicate manual
+                        code to maintain.
+                      </div>
+                    )}
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                      <div className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Configuration Summary
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        {[
+                          [
+                            'Status',
+                            googleTagManagerEnabled ? 'Enabled' : 'Disabled',
+                          ],
+                          [
+                            'Mode',
+                            googleTagManagerMode === 'custom-code'
+                              ? 'Custom Code'
+                              : 'Container ID',
+                          ],
+                          [
+                            'Container ID',
+                            googleTagManagerId.trim() || 'Not configured',
+                          ],
+                          [
+                            'Head code configured',
+                            googleTagManagerHeadCode.trim() ? 'Yes' : 'No',
+                          ],
+                          [
+                            'Body code configured',
+                            googleTagManagerBodyCode.trim() ? 'Yes' : 'No',
+                          ],
+                          [
+                            'Environment',
+                            googleTagManagerEnvironment === 'all'
+                              ? 'All environments'
+                              : 'Production only',
+                          ],
+                        ].map(([label, value]) => (
+                          <div
+                            key={label}
+                            className="rounded-xl border border-white bg-white px-4 py-3 shadow-sm"
+                          >
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                              {label}
+                            </div>
+                            <div className="mt-1 text-sm font-medium text-slate-900">
+                              {value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 

@@ -4,8 +4,11 @@ import test from 'node:test';
 import {
   extractYouTubeVideoId,
   getYouTubeEmbedUrl,
+  getYouTubeThumbnailCandidates,
   getYouTubeThumbnailUrls,
   getYouTubeVideoDetails,
+  isYouTubeShortsUrl,
+  normalizeYouTubeUrl,
 } from '../src/utils/youtube';
 
 const regularVideoId = 'dQw4w9WgXcQ';
@@ -49,10 +52,36 @@ test('getYouTubeVideoDetails normalizes watch URLs and preserves shorts layout d
   });
 });
 
+test('normalizeYouTubeUrl returns the canonical watch or shorts URL', () => {
+  assert.equal(
+    normalizeYouTubeUrl(`https://www.youtube.com/watch?v=${regularVideoId}&t=10`),
+    `https://www.youtube.com/watch?v=${regularVideoId}`,
+  );
+  assert.equal(
+    normalizeYouTubeUrl(`https://youtu.be/${shortsVideoId}?si=abc123`),
+    `https://www.youtube.com/watch?v=${shortsVideoId}`,
+  );
+  assert.equal(normalizeYouTubeUrl('https://example.com/not-youtube'), null);
+});
+
+test('isYouTubeShortsUrl identifies shorts URLs only', () => {
+  assert.equal(isYouTubeShortsUrl(`https://www.youtube.com/shorts/${shortsVideoId}`), true);
+  assert.equal(isYouTubeShortsUrl(`https://www.youtube.com/watch?v=${regularVideoId}`), false);
+});
+
 test('getYouTubeThumbnailUrls returns maxres and hq fallbacks', () => {
   assert.deepEqual(getYouTubeThumbnailUrls(regularVideoId), [
     `https://img.youtube.com/vi/${regularVideoId}/maxresdefault.jpg`,
     `https://img.youtube.com/vi/${regularVideoId}/hqdefault.jpg`,
+  ]);
+});
+
+test('getYouTubeThumbnailCandidates honors custom thumbnail priority before YouTube fallbacks', () => {
+  assert.deepEqual(getYouTubeThumbnailCandidates(regularVideoId, '/uploads/reels/custom-thumb.webp'), [
+    '/uploads/reels/custom-thumb.webp',
+    `https://img.youtube.com/vi/${regularVideoId}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${regularVideoId}/hqdefault.jpg`,
+    '/images/hero-campus-students.jpeg',
   ]);
 });
 

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { apiClient, extractApiData, getApiErrorMessage } from '../../lib/api-client';
 import { formatDateTime, parseJsonTextareaValue, parseKeywordsValue } from '../../lib/utils';
+import { normalizeContentValue } from '../../lib/rich-content';
 import type { ResourceConfig } from '../../types/app';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
@@ -41,6 +42,12 @@ const normalizePayload = (
       case 'json':
         payload[field.name] =
           typeof rawValue === 'string' && rawValue.trim() ? parseJsonTextareaValue(rawValue) : null;
+        break;
+      case 'rich-content':
+        payload[field.name] = normalizeContentValue(
+          rawValue,
+          field.richContentStorageMode ?? 'json-object',
+        );
         break;
       case 'keywords':
         payload[field.name] = typeof rawValue === 'string' ? parseKeywordsValue(rawValue) : [];

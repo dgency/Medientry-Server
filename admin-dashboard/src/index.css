@@ -127,4 +127,69 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.16);
     @apply rounded-2xl text-base font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-22px_rgba(14,116,144,0.5)];
   }
+
+  .rich-editor-surface {
+    @apply overflow-hidden rounded-[1.5rem] border border-border/70 bg-white shadow-sm;
+  }
+
+  .rich-editor-prose {
+    @apply max-w-none px-5 py-5 font-sans text-[15px] leading-7 text-foreground;
+  }
+
+  .rich-editor-prose h1 {
+    @apply mb-4 mt-2 text-3xl font-extrabold text-foreground;
+  }
+
+  .rich-editor-prose h2 {
+    @apply mb-3 mt-2 text-2xl font-bold text-foreground;
+  }
+
+  .rich-editor-prose h3 {
+    @apply mb-3 mt-2 text-xl font-bold text-foreground;
+  }
+
+  .rich-editor-prose p {
+    @apply mb-4 text-[15px] leading-7 text-foreground;
+  }
+
+  .rich-editor-prose ul,
+  .rich-editor-prose ol {
+    @apply mb-4 pl-6;
+  }
+
+  .rich-editor-prose ul {
+    @apply list-disc;
+  }
+
+  .rich-editor-prose ol {
+    @apply list-decimal;
+  }
+
+  .rich-editor-prose blockquote {
+    @apply my-5 border-l-4 border-primary/40 bg-primary/5 px-4 py-3 italic text-muted-foreground;
+  }
+
+  .rich-editor-prose pre {
+    @apply my-5 overflow-x-auto rounded-2xl bg-slate-950 px-4 py-4 text-sm text-slate-100;
+  }
+
+  .rich-editor-prose code {
+    @apply rounded bg-muted px-1.5 py-0.5 text-[0.9em] text-foreground;
+  }
+
+  .rich-editor-prose pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .rich-editor-prose a {
+    @apply font-semibold text-primary underline underline-offset-4;
+  }
+
+  .rich-editor-prose hr {
+    @apply my-6 border-border;
+  }
+
+  .rich-editor-prose img {
+    @apply my-5 rounded-2xl border border-border/70;
+  }
 }

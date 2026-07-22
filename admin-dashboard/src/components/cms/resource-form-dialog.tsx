@@ -12,6 +12,11 @@ import { formatLabel, slugify } from '../../lib/utils';
 import type { ResourceConfig, ResourceField } from '../../types/app';
 import { FileUploadField } from './file-upload-field';
 import { JsonEditorField } from './json-editor-field';
+import { ContentJsonEditorField } from './content-json-editor-field';
+import { FeatureCardsField } from './feature-cards-field';
+import { ChecklistItemsField } from './checklist-items-field';
+import { StringListField } from './string-list-field';
+import { MediaGalleryListField } from './media-gallery-list-field';
 import { AdmissionProcessCardsField } from './admission-process-cards-field';
 import { StudyAbroadCardsField } from './study-abroad-cards-field';
 import { CollegeFeeStructureField } from './college-fee-structure-field';
@@ -162,6 +167,70 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                           />
                         )}
                       />
+                    ) : field.type === 'feature-cards' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <FeatureCardsField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                            helperText={field.description ?? 'Manage the cards shown in this section.'}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'checklist-items' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <ChecklistItemsField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'string-list' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <StringListField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                            helperText={field.description ?? 'Manage the list in display order.'}
+                            placeholder={field.placeholder}
+                            label={field.label}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'media-gallery' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <MediaGalleryListField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                          />
+                        )}
+                      />
                     ) : field.type === 'study-abroad-cards' ? (
                       <Controller
                         name={field.name}
@@ -191,6 +260,24 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                             onChange={controllerField.onChange}
                             rows={field.rows ?? 5}
                             placeholder={field.placeholder}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'rich-content' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <ContentJsonEditorField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                            rows={field.rows ?? 12}
+                            placeholder={field.placeholder}
+                            storageMode={field.richContentStorageMode ?? 'json-object'}
                           />
                         )}
                       />
@@ -226,6 +313,35 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                             placeholder={field.placeholder}
                             previewable={field.previewable}
                             previewLabel={field.previewLabel}
+                            allowManualEntry={field.allowManualEntry}
+                            allowMultipleUploads={field.allowMultipleUploads}
+                            assetId={
+                              field.assetIdFieldName
+                                ? String(watchedValues[field.assetIdFieldName] ?? '')
+                                : undefined
+                            }
+                            onAssetSelect={(asset) => {
+                              if (field.assetIdFieldName) {
+                                setValue(field.assetIdFieldName, asset?.id ?? '', {
+                                  shouldDirty: true,
+                                });
+                              }
+
+                              if (field.assetTitleFieldName && asset?.title) {
+                                const currentTitle = String(
+                                  getValues(field.assetTitleFieldName) ?? '',
+                                ).trim();
+                                const titleWasEdited = Boolean(
+                                  dirtyFields[field.assetTitleFieldName],
+                                );
+
+                                if (!currentTitle || (mode === 'create' && !titleWasEdited)) {
+                                  setValue(field.assetTitleFieldName, asset.title, {
+                                    shouldDirty: !currentTitle,
+                                  });
+                                }
+                              }
+                            }}
                           />
                         )}
                       />

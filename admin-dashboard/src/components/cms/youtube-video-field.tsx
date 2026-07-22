@@ -65,18 +65,17 @@ export function YouTubeVideoField({
   const details = useMemo(() => getYouTubeVideoDetails(value), [value]);
   const normalizedThumbnailValue = thumbnailValue?.trim() ?? '';
   const previewCandidates = useMemo(() => {
-    if (normalizedThumbnailValue) {
-      const resolvedCustomThumbnail =
-        resolveCmsAssetUrl(normalizedThumbnailValue) || normalizedThumbnailValue;
+    const resolvedCustomThumbnail =
+      resolveCmsAssetUrl(normalizedThumbnailValue) || normalizedThumbnailValue || null;
 
-      return [resolvedCustomThumbnail, fallbackPreviewImage];
-    }
-
-    if (!details) {
+    if (!details && !resolvedCustomThumbnail) {
       return [fallbackPreviewImage];
     }
 
-    return [...getYouTubeThumbnailCandidates(details.videoId), fallbackPreviewImage];
+    return getYouTubeThumbnailCandidates(
+      details?.videoId ?? '',
+      resolvedCustomThumbnail,
+    );
   }, [details, normalizedThumbnailValue]);
   const hasTypedValue = value.trim().length > 0;
   const hasValidVideo = Boolean(details);
@@ -118,9 +117,7 @@ export function YouTubeVideoField({
         </div>
 
         <div
-          className={`relative overflow-hidden rounded-[20px] bg-[#041b11] ${
-            details?.isShort ? 'aspect-[9/16] max-w-[240px]' : 'aspect-video'
-          }`}
+          className="relative aspect-[9/16] max-w-[240px] overflow-hidden rounded-[20px] bg-[#041b11]"
         >
           <PreviewImage
             key={previewCandidates.join('|')}

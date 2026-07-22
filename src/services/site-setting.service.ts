@@ -1,4 +1,16 @@
+import {
+  GoogleTagManagerEnvironment,
+  GoogleTagManagerMode,
+  Prisma,
+} from '@prisma/client';
+
 import { prisma } from '../config/prisma';
+import {
+  normalizeGtmCode,
+  normalizeGtmEnvironment,
+  normalizeGtmId,
+  normalizeGtmMode,
+} from '../utils/google-tag-manager';
 
 export type SiteSettingApiShape = {
   logoLight: string | null;
@@ -15,6 +27,16 @@ export type SiteSettingApiShape = {
   instagram: string | null;
   linkedin: string | null;
   youtube: string | null;
+  exchangeRateUsdToInr: number | null;
+  showExchangeRateNote: boolean;
+  customExchangeRateNote: string | null;
+  exchangeRateUpdatedAt: string | null;
+  googleTagManagerEnabled: boolean;
+  googleTagManagerMode: 'container-id' | 'custom-code';
+  googleTagManagerId: string | null;
+  googleTagManagerHeadCode: string | null;
+  googleTagManagerBodyCode: string | null;
+  googleTagManagerEnvironment: 'production' | 'all';
 };
 
 type UpdateSiteSettingInput = Partial<SiteSettingApiShape>;
@@ -60,6 +82,41 @@ const resolveUpdatedValue = (
   return nextValue;
 };
 
+const resolveUpdatedBoolean = (
+  nextValue: boolean | undefined,
+  currentValue: boolean | undefined,
+) => {
+  if (nextValue === undefined) {
+    return currentValue ?? false;
+  }
+
+  return nextValue;
+};
+
+const decimalToNumber = (value: Prisma.Decimal | null | undefined) => {
+  if (!value) {
+    return null;
+  }
+
+  return Number(value.toString());
+};
+
+const getSiteSettingRecord = async () => {
+  const existing = await prisma.siteSetting.findFirst({
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.siteSetting.create({
+    data: {},
+  });
+};
+
 export const getDefaultSiteSetting = (): SiteSettingApiShape => ({
   logoLight: null,
   logoDark: null,
@@ -75,6 +132,16 @@ export const getDefaultSiteSetting = (): SiteSettingApiShape => ({
   instagram: null,
   linkedin: null,
   youtube: null,
+  exchangeRateUsdToInr: null,
+  showExchangeRateNote: false,
+  customExchangeRateNote: null,
+  exchangeRateUpdatedAt: null,
+  googleTagManagerEnabled: false,
+  googleTagManagerMode: 'container-id',
+  googleTagManagerId: null,
+  googleTagManagerHeadCode: null,
+  googleTagManagerBodyCode: null,
+  googleTagManagerEnvironment: 'production',
 });
 
 const mapSiteSettingToApi = (siteSetting: {
@@ -89,6 +156,16 @@ const mapSiteSettingToApi = (siteSetting: {
   contactEmail: string | null;
   address: string | null;
   socialLinks: unknown;
+  exchangeRateUsdToInr: Prisma.Decimal | null;
+  showExchangeRateNote: boolean;
+  customExchangeRateNote: string | null;
+  exchangeRateUpdatedAt: Date | null;
+  googleTagManagerEnabled: boolean;
+  googleTagManagerMode: GoogleTagManagerMode;
+  googleTagManagerId: string | null;
+  googleTagManagerHeadCode: string | null;
+  googleTagManagerBodyCode: string | null;
+  googleTagManagerEnvironment: GoogleTagManagerEnvironment;
 } | null): SiteSettingApiShape => {
   const socialLinks =
     typeof siteSetting?.socialLinks === 'object' && siteSetting.socialLinks !== null
@@ -111,28 +188,66 @@ const mapSiteSettingToApi = (siteSetting: {
     instagram: normalizeNullableSocialLink(socialLinks.instagram),
     linkedin: normalizeNullableSocialLink(socialLinks.linkedin),
     youtube: normalizeNullableSocialLink(socialLinks.youtube),
+    exchangeRateUsdToInr: decimalToNumber(siteSetting?.exchangeRateUsdToInr),
+    showExchangeRateNote: siteSetting?.showExchangeRateNote ?? false,
+    customExchangeRateNote: normalizeNullableString(siteSetting?.customExchangeRateNote) ?? null,
+    exchangeRateUpdatedAt: siteSetting?.exchangeRateUpdatedAt?.toISOString() ?? null,
+    googleTagManagerEnabled: siteSetting?.googleTagManagerEnabled ?? false,
+    googleTagManagerMode:
+      siteSetting?.googleTagManagerMode === GoogleTagManagerMode.CUSTOM_CODE
+        ? 'custom-code'
+        : 'container-id',
+    googleTagManagerId: normalizeGtmId(siteSetting?.googleTagManagerId) ?? null,
+    googleTagManagerHeadCode: siteSetting?.googleTagManagerHeadCode ?? null,
+    googleTagManagerBodyCode: siteSetting?.googleTagManagerBodyCode ?? null,
+    googleTagManagerEnvironment:
+      siteSetting?.googleTagManagerEnvironment === GoogleTagManagerEnvironment.ALL
+        ? 'all'
+        : 'production',
   };
 };
 
 export const getSiteSetting = async () => {
-  const siteSetting = await prisma.siteSetting.findFirst({
-    orderBy: {
-      createdAt: 'asc',
-    },
-  });
+  const siteSetting = await getSiteSettingRecord();
 
   return mapSiteSettingToApi(siteSetting);
 };
 
 export const updateSiteSetting = async (input: UpdateSiteSettingInput) => {
-  const existing = await prisma.siteSetting.findFirst({
-    orderBy: {
-      createdAt: 'asc',
-    },
-  });
-
-  const socialLinks = existing?.socialLinks as SocialLinksShape | null;
+  const existing = await getSiteSettingRecord();
+  const socialLinks = existing.socialLinks as SocialLinksShape | null;
   const normalizedEmail = normalizeNullableString(input.email);
+  const normalizedExchangeRate = input.exchangeRateUsdToInr;
+  const normalizedCustomExchangeRateNote = normalizeNullableString(
+    input.customExchangeRateNote,
+  );
+  const normalizedGoogleTagManagerId = normalizeGtmId(input.googleTagManagerId);
+  const normalizedGoogleTagManagerHeadCode = normalizeGtmCode(
+    input.googleTagManagerHeadCode,
+  );
+  const normalizedGoogleTagManagerBodyCode = normalizeGtmCode(
+    input.googleTagManagerBodyCode,
+  );
+  const nextExchangeRateUsdToInr =
+    normalizedExchangeRate === undefined
+      ? decimalToNumber(existing.exchangeRateUsdToInr)
+      : normalizedExchangeRate;
+  const nextShowExchangeRateNote = resolveUpdatedBoolean(
+    input.showExchangeRateNote,
+    existing.showExchangeRateNote,
+  );
+  const nextCustomExchangeRateNote = resolveUpdatedValue(
+    normalizedCustomExchangeRateNote,
+    existing.customExchangeRateNote,
+  );
+  const exchangeRateSettingsChanged =
+    normalizedExchangeRate !== undefined
+    || input.showExchangeRateNote !== undefined
+    || normalizedCustomExchangeRateNote !== undefined
+      ? nextExchangeRateUsdToInr !== decimalToNumber(existing.exchangeRateUsdToInr)
+        || nextShowExchangeRateNote !== existing.showExchangeRateNote
+        || nextCustomExchangeRateNote !== (existing.customExchangeRateNote ?? null)
+      : false;
 
   const nextSocialLinks: SocialLinksShape = {
     facebook: resolveUpdatedValue(
@@ -170,16 +285,46 @@ export const updateSiteSetting = async (input: UpdateSiteSettingInput) => {
           : normalizedEmail.toLowerCase(),
     address: normalizeNullableString(input.address),
     socialLinks: nextSocialLinks,
+    exchangeRateUsdToInr:
+      normalizedExchangeRate === undefined
+        ? undefined
+        : normalizedExchangeRate,
+    showExchangeRateNote:
+      input.showExchangeRateNote === undefined
+        ? undefined
+        : nextShowExchangeRateNote,
+    customExchangeRateNote: normalizedCustomExchangeRateNote,
+    exchangeRateUpdatedAt: exchangeRateSettingsChanged
+      ? new Date()
+      : undefined,
+    googleTagManagerEnabled:
+      input.googleTagManagerEnabled === undefined
+        ? undefined
+        : input.googleTagManagerEnabled === true,
+    googleTagManagerMode:
+      input.googleTagManagerMode === undefined
+        ? undefined
+        : normalizeGtmMode(input.googleTagManagerMode) === 'custom-code'
+          ? GoogleTagManagerMode.CUSTOM_CODE
+          : GoogleTagManagerMode.CONTAINER_ID,
+    googleTagManagerId:
+      input.googleTagManagerId === undefined
+        ? undefined
+        : normalizedGoogleTagManagerId,
+    googleTagManagerHeadCode: normalizedGoogleTagManagerHeadCode,
+    googleTagManagerBodyCode: normalizedGoogleTagManagerBodyCode,
+    googleTagManagerEnvironment:
+      input.googleTagManagerEnvironment === undefined
+        ? undefined
+        : normalizeGtmEnvironment(input.googleTagManagerEnvironment) === 'all'
+          ? GoogleTagManagerEnvironment.ALL
+          : GoogleTagManagerEnvironment.PRODUCTION,
   };
 
-  const siteSetting = existing
-    ? await prisma.siteSetting.update({
-        where: { id: existing.id },
-        data,
-      })
-    : await prisma.siteSetting.create({
-        data,
-      });
+  const siteSetting = await prisma.siteSetting.update({
+    where: { id: existing.id },
+    data,
+  });
 
   return mapSiteSettingToApi(siteSetting);
 };

@@ -7,6 +7,7 @@ const YOUTUBE_HOSTS = new Set([
 ]);
 
 const YOUTUBE_VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
+const fallbackYouTubeThumbnail = '/images/hero-campus-students.jpeg';
 
 const isValidYouTubeVideoId = (value: string) => YOUTUBE_VIDEO_ID_PATTERN.test(value);
 
@@ -43,6 +44,12 @@ export type YouTubeVideoDetails = {
   normalizedUrl: string;
   isShort: boolean;
 };
+
+export const isYouTubeShortsUrl = (value: string) =>
+  getYouTubeVideoDetails(value)?.isShort ?? false;
+
+export const normalizeYouTubeUrl = (value: string) =>
+  getYouTubeVideoDetails(value)?.normalizedUrl ?? null;
 
 export const extractYouTubeVideoId = (value: string) => {
   const trimmed = value.trim();
@@ -113,20 +120,38 @@ export const getYouTubeVideoDetails = (value: string): YouTubeVideoDetails | nul
   }
 };
 
-export const getYouTubeThumbnailUrls = (videoId: string) => {
+export const getYouTubeThumbnailCandidates = (
+  videoId: string,
+  customThumbnail?: string | null,
+) => {
   const normalizedVideoId = normalizeVideoId(videoId);
+  const customThumbnailValue = customThumbnail?.trim() ?? '';
+  const candidates: string[] = [];
 
-  if (!normalizedVideoId) {
-    return [];
+  if (customThumbnailValue) {
+    candidates.push(customThumbnailValue);
   }
 
-  return [
-    `https://img.youtube.com/vi/${normalizedVideoId}/maxresdefault.jpg`,
-    `https://img.youtube.com/vi/${normalizedVideoId}/hqdefault.jpg`,
-  ];
+  if (normalizedVideoId) {
+    candidates.push(
+      `https://img.youtube.com/vi/${normalizedVideoId}/maxresdefault.jpg`,
+      `https://img.youtube.com/vi/${normalizedVideoId}/hqdefault.jpg`,
+    );
+  }
+
+  candidates.push(fallbackYouTubeThumbnail);
+
+  return Array.from(new Set(candidates));
 };
 
-export const getYouTubeEmbedUrl = (videoId: string, autoplay = false) => {
+export const getYouTubeThumbnailUrls = (videoId: string) =>
+  getYouTubeThumbnailCandidates(videoId).slice(0, 2);
+
+export const getYouTubeEmbedUrl = (
+  videoId: string,
+  autoplay = false,
+  extraSearchParams?: Record<string, boolean | number | string | undefined>,
+) => {
   const normalizedVideoId = normalizeVideoId(videoId);
 
   if (!normalizedVideoId) {
@@ -138,6 +163,14 @@ export const getYouTubeEmbedUrl = (videoId: string, autoplay = false) => {
     rel: '0',
     modestbranding: '1',
     playsinline: '1',
+  });
+
+  Object.entries(extraSearchParams ?? {}).forEach(([key, value]) => {
+    if (value === undefined) {
+      return;
+    }
+
+    searchParams.set(key, String(value));
   });
 
   return `https://www.youtube-nocookie.com/embed/${normalizedVideoId}?${searchParams.toString()}`;

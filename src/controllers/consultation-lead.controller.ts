@@ -9,10 +9,15 @@ import {
   deleteConsultationLead,
   getAdminConsultationLeadById,
   listConsultationLeads,
+  markConsultationLeadAsRead,
+  markConsultationLeadAsUnread,
 } from '../services/consultation-lead.service';
 
-export const getConsultationLeads = asyncHandler(async (_req, res: Response) => {
-  const leads = await listConsultationLeads();
+export const getConsultationLeads = asyncHandler(async (req, res: Response) => {
+  const leads = await listConsultationLeads({
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    status: typeof req.query.status === 'string' ? (req.query.status as 'all' | 'read' | 'unread') : undefined,
+  });
 
   sendResponse(res, 200, {
     success: true,
@@ -83,5 +88,25 @@ export const deleteAdminConsultationLead = asyncHandler(async (req, res: Respons
   sendResponse(res, 200, {
     success: true,
     message: 'Consultation lead deleted successfully.',
+  });
+});
+
+export const markAdminConsultationLeadAsRead = asyncHandler(async (req, res: Response) => {
+  const lead = await markConsultationLeadAsRead(String(req.params.id));
+
+  sendResponse(res, 200, {
+    success: true,
+    message: 'Consultation lead marked as read successfully.',
+    data: lead,
+  });
+});
+
+export const markAdminConsultationLeadAsUnread = asyncHandler(async (req, res: Response) => {
+  const lead = await markConsultationLeadAsUnread(String(req.params.id));
+
+  sendResponse(res, 200, {
+    success: true,
+    message: 'Consultation lead marked as unread successfully.',
+    data: lead,
   });
 });

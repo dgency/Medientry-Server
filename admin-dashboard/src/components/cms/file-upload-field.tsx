@@ -1,12 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ImagePlus, Link2, LoaderCircle, Trash2, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { apiClient, extractApiData, getApiErrorMessage } from '../../lib/api-client';
 import { resolveCmsAssetUrl } from '../../lib/media';
+import {
+  defaultAcceptByKind,
+  getAssetUrl,
+  MediaPreview,
+  MediaLibraryBrowser,
+} from './media-library-browser';
+import type { MediaLibraryAsset } from './media-library-browser';
 import { cn } from '../../lib/utils';
 import type { UploadKind } from '../../types/app';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 
@@ -14,16 +21,10 @@ type UploadedFile = {
   url: string;
   fullUrl: string;
   filename: string;
+  asset: MediaLibraryAsset;
 };
 
-type GalleryImageItem = {
-  id: string;
-  title: string;
-  type: 'IMAGE' | 'VIDEO';
-  url: string;
-  thumbnail: string | null;
-  status: string;
-};
+type BrokenPreviewMap = Record<string, true>;
 
 type FileUploadFieldProps = {
   value: string;
@@ -33,14 +34,10 @@ type FileUploadFieldProps = {
   placeholder?: string;
   previewable?: boolean;
   previewLabel?: string;
-};
-
-const defaultAcceptByKind: Record<UploadKind, string> = {
-  image:
-    'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.svg',
-  document: 'application/pdf',
-  videoThumbnail:
-    'image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.ico,.svg',
+  allowManualEntry?: boolean;
+  allowMultipleUploads?: boolean;
+  assetId?: string;
+  onAssetSelect?: (asset: MediaLibraryAsset | null) => void;
 };
 
 export function FileUploadField({
@@ -51,76 +48,92 @@ export function FileUploadField({
   placeholder,
   previewable = true,
   previewLabel = 'Preview file',
+  allowManualEntry = true,
+  allowMultipleUploads = false,
+  assetId,
+  onAssetSelect,
 }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [previewErrorUrl, setPreviewErrorUrl] = useState<string | null>(null);
+  const [brokenPreviewUrls, setBrokenPreviewUrls] = useState<BrokenPreviewMap>({});
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
-  const [libraryItems, setLibraryItems] = useState<GalleryImageItem[]>([]);
-  const [libraryError, setLibraryError] = useState<string | null>(null);
 
   const canUseLibrary = uploadKind === 'image' || uploadKind === 'videoThumbnail';
 
-  useEffect(() => {
-    if (!isLibraryOpen || !canUseLibrary) {
+  const markPreviewAsBroken = (previewUrl: string, context?: Record<string, unknown>) => {
+    setBrokenPreviewUrls((currentState) => {
+      if (currentState[previewUrl]) {
+        return currentState;
+      }
+
+      if (import.meta.env.DEV) {
+        console.warn('[media-preview] Failed to load image preview.', {
+          resolvedUrl: previewUrl,
+          errorCategory: 'image_request_failed',
+          ...context,
+        });
+      }
+
+      return {
+        ...currentState,
+        [previewUrl]: true,
+      };
+    });
+  };
+
+  const retryPreview = (previewUrl: string) => {
+    setBrokenPreviewUrls((currentState) => {
+      if (!currentState[previewUrl]) {
+        return currentState;
+      }
+
+      const nextState = { ...currentState };
+      delete nextState[previewUrl];
+      return nextState;
+    });
+  };
+
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) {
       return;
     }
-
-    let isActive = true;
-
-    const loadLibraryItems = async () => {
-      setIsLoadingLibrary(true);
-      setLibraryError(null);
-
-      try {
-        const response = await apiClient.get('/gallery');
-        const payload = extractApiData<GalleryImageItem[]>(response);
-
-        if (!isActive) {
-          return;
-        }
-
-        setLibraryItems(
-          payload.filter((item) => item.type === 'IMAGE' && typeof item.url === 'string' && item.url.trim().length > 0),
-        );
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
-
-        setLibraryError(getApiErrorMessage(error));
-      } finally {
-        if (isActive) {
-          setIsLoadingLibrary(false);
-        }
-      }
-    };
-
-    void loadLibraryItems();
-
-    return () => {
-      isActive = false;
-    };
-  }, [canUseLibrary, isLibraryOpen]);
-
-  const handleFileUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append('kind', uploadKind);
-    formData.append('file', file);
 
     setIsUploading(true);
 
     try {
-      const response = await apiClient.post('/uploads', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const uploadedPayloads: UploadedFile[] = [];
 
-      const payload = extractApiData<UploadedFile>(response);
-      onChange(payload.url);
-      toast.success('File uploaded successfully.');
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('kind', uploadKind);
+        formData.append('file', file);
+
+        const response = await apiClient.post('/uploads', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        uploadedPayloads.push(extractApiData<UploadedFile>(response));
+      }
+
+      if (uploadedPayloads.length === 0) {
+        return;
+      }
+
+      const primaryAsset = uploadedPayloads[0]?.asset ?? null;
+
+      if (primaryAsset) {
+        const primaryAssetUrl = getAssetUrl(primaryAsset) ?? uploadedPayloads[0].url;
+        onChange(primaryAssetUrl);
+        onAssetSelect?.(primaryAsset);
+      }
+
+      toast.success(
+        uploadedPayloads.length === 1
+          ? 'File uploaded successfully.'
+          : `${uploadedPayloads.length} files uploaded successfully.`,
+      );
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {
@@ -131,34 +144,36 @@ export function FileUploadField({
       }
     }
   };
-
-  const isImagePreview =
-    previewable &&
-    uploadKind !== 'document' &&
-    Boolean(resolveCmsAssetUrl(value)) &&
-    /\.(jpg|jpeg|png|webp|gif|svg|ico)$/i.test(value);
   const previewUrl = resolveCmsAssetUrl(value);
-  const hasPreviewError = Boolean(previewUrl) && previewErrorUrl === previewUrl;
+  const isImagePreview = previewable && uploadKind !== 'document' && Boolean(previewUrl);
 
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => {
+            onChange(event.target.value);
+
+            if (!event.target.value.trim()) {
+              onAssetSelect?.(null);
+            }
+          }}
           placeholder={placeholder}
           className="flex-1"
+          readOnly={!allowManualEntry}
         />
         <input
           ref={inputRef}
           type="file"
           accept={accept ?? defaultAcceptByKind[uploadKind]}
           className="hidden"
+          multiple={allowMultipleUploads}
           onChange={(event) => {
-            const file = event.target.files?.[0];
+            const selectedFiles = Array.from(event.target.files ?? []);
 
-            if (file) {
-              void handleFileUpload(file);
+            if (selectedFiles.length > 0) {
+              void uploadFiles(selectedFiles);
             }
           }}
         />
@@ -170,7 +185,7 @@ export function FileUploadField({
           disabled={isUploading}
         >
           {isUploading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-          {isUploading ? 'Uploading...' : 'Upload'}
+          {isUploading ? 'Uploading...' : allowMultipleUploads ? 'Upload Files' : 'Upload'}
         </Button>
         {canUseLibrary ? (
           <Button type="button" variant="outline" className="sm:w-auto" onClick={() => setIsLibraryOpen(true)}>
@@ -179,7 +194,15 @@ export function FileUploadField({
           </Button>
         ) : null}
         {value.trim() ? (
-          <Button type="button" variant="ghost" className="sm:w-auto" onClick={() => onChange('')}>
+          <Button
+            type="button"
+            variant="ghost"
+            className="sm:w-auto"
+            onClick={() => {
+              onChange('');
+              onAssetSelect?.(null);
+            }}
+          >
             <Trash2 className="h-4 w-4" />
             Remove
           </Button>
@@ -202,85 +225,62 @@ export function FileUploadField({
             </a>
           </div>
 
-          {isImagePreview && !hasPreviewError ? (
+          {isImagePreview ? (
             <div className="mt-3 overflow-hidden rounded-2xl border border-border/70 bg-white p-2">
-              <img
-                src={previewUrl}
-                alt={previewLabel}
-                className="h-36 w-full rounded-xl object-contain"
-                onError={() => {
-                  setPreviewErrorUrl(previewUrl);
-                }}
-              />
-            </div>
-          ) : null}
-
-          {isImagePreview && hasPreviewError ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-border/70 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
-              Image preview unavailable. The saved file path is kept, but this image could not be displayed here.
+              <div className="h-36 overflow-hidden rounded-xl">
+                <MediaPreview
+                  src={previewUrl}
+                  alt={previewLabel}
+                  fit="contain"
+                  brokenPreviewUrls={brokenPreviewUrls}
+                  onPreviewError={(url) => {
+                    markPreviewAsBroken(url, {
+                      mediaId: assetId ?? null,
+                      storedValue: value || null,
+                    });
+                  }}
+                  onRetry={retryPreview}
+                  fallbackHint="The current saved file path is still kept, but this image could not be loaded."
+                />
+              </div>
             </div>
           ) : null}
         </div>
       ) : null}
 
-      <Dialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Select from Media Library</DialogTitle>
-            <DialogDescription>Choose an existing image from the Gallery module.</DialogDescription>
-          </DialogHeader>
+      <Dialog
+        open={isLibraryOpen}
+        onOpenChange={(open) => {
+          setIsLibraryOpen(open);
+        }}
+      >
+        <DialogContent className="max-h-[88vh] w-[85vw] max-w-[85vw] overflow-hidden p-0">
+          <MediaLibraryBrowser
+            variant="dialog"
+            title="Select from Media Library"
+            description="Browse uploaded assets, filter the library, switch between grid and list views, and edit image SEO metadata before using an asset."
+            allowedAssetTypes={uploadKind === 'document' ? ['DOCUMENT'] : ['IMAGE', 'SVG']}
+            selectedAssetId={assetId ?? null}
+            selectedValue={value}
+            onSelectAsset={(asset) => {
+              const itemUrl = getAssetUrl(asset);
 
-          {isLoadingLibrary ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
-              <LoaderCircle className="h-4 w-4 animate-spin" />
-              Loading media library...
-            </div>
-          ) : libraryError ? (
-            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-6 text-sm text-destructive">
-              {libraryError}
-            </div>
-          ) : libraryItems.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 px-4 py-8 text-sm text-muted-foreground">
-              No image items are available in the media library yet.
-            </div>
-          ) : (
-            <div className="grid max-h-[60vh] gap-4 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
-              {libraryItems.map((item) => {
-                const itemUrl = resolveCmsAssetUrl(item.url);
-                const isSelected = value.trim() === item.url.trim();
+              if (!itemUrl) {
+                toast.error('This asset does not have a usable URL yet.');
+                return;
+              }
 
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      onChange(item.url);
-                      setIsLibraryOpen(false);
-                      toast.success('Image selected from media library.');
-                    }}
-                    className={cn(
-                      'overflow-hidden rounded-2xl border bg-white text-left transition hover:border-primary/40 hover:shadow-soft',
-                      isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border/70',
-                    )}
-                  >
-                    <div className="aspect-[4/3] w-full overflow-hidden bg-muted/20">
-                      {itemUrl ? (
-                        <img src={itemUrl} alt={item.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                          Preview unavailable
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-1 px-4 py-3">
-                      <p className="line-clamp-2 text-sm font-semibold text-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.status}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+              onChange(itemUrl);
+              onAssetSelect?.(asset);
+            }}
+            onAssetUpdated={(updatedAsset) => {
+              if (assetId && updatedAsset.id === assetId) {
+                onAssetSelect?.(updatedAsset);
+              }
+            }}
+            onCloseRequest={() => setIsLibraryOpen(false)}
+            selectionActionLabel={uploadKind === 'document' ? 'Use File' : 'Use Image'}
+          />
         </DialogContent>
       </Dialog>
     </div>

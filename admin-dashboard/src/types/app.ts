@@ -30,10 +30,17 @@ export type FieldType =
   | 'keywords'
   | 'url'
   | 'datetime-local'
+  | 'rich-content'
+  | 'feature-cards'
+  | 'checklist-items'
+  | 'string-list'
+  | 'media-gallery'
   | 'youtube-video'
   | 'admission-process-cards'
   | 'study-abroad-cards'
   | 'college-fee-structure';
+
+export type RichContentStorageMode = 'json-object' | 'json-loose' | 'string-html';
 
 type ResourceFieldCondition = (
   values: Record<string, unknown>,
@@ -58,7 +65,12 @@ export type ResourceField = {
   accept?: string;
   previewable?: boolean;
   previewLabel?: string;
+  allowManualEntry?: boolean;
+  allowMultipleUploads?: boolean;
+  assetIdFieldName?: string;
+  assetTitleFieldName?: string;
   linkedFieldName?: string;
+  richContentStorageMode?: RichContentStorageMode;
   visible?: ResourceFieldCondition;
   requiredWhen?: ResourceFieldCondition;
   validate?: (

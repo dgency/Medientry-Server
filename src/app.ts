@@ -70,7 +70,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   '/uploads',
   express.static(uploadsRootDirectory, {
-    fallthrough: false,
+    fallthrough: true,
     index: false,
     immutable: env.NODE_ENV === 'production',
     maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
@@ -81,6 +81,9 @@ app.use(
     },
   }),
 );
+app.use('/uploads', (_req, res) => {
+  res.status(404).type('text/plain').send('Uploaded file not found.');
+});
 
 app.use('/api', apiRouter);
 // ==========================================================config for digital ocean

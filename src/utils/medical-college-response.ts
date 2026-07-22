@@ -51,12 +51,6 @@ export type PublicCollegeFeeItem = {
   isActive: boolean;
 };
 
-export type PublicMedicalCollegeFeeSettings = {
-  exchangeRateUsdToInr: number | null;
-  showExchangeRateNote: boolean;
-  feeNote: string | null;
-};
-
 export const publicMedicalCollegeSelect =
   Prisma.validator<Prisma.MedicalCollegeSelect>()({
     id: true,
@@ -71,9 +65,6 @@ export const publicMedicalCollegeSelect =
     tuitionFee: true,
     hostelFee: true,
     totalFee: true,
-    exchangeRateUsdToInr: true,
-    showExchangeRateNote: true,
-    feeNote: true,
     ranking: true,
     eligibility: true,
     admissionProcess: true,
@@ -116,9 +107,6 @@ export type PublicMedicalCollege = Omit<
   | 'tuitionFee'
   | 'hostelFee'
   | 'totalFee'
-  | 'exchangeRateUsdToInr'
-  | 'showExchangeRateNote'
-  | 'feeNote'
   | 'feeItems'
 > & {
   image: string | null;
@@ -127,7 +115,6 @@ export type PublicMedicalCollege = Omit<
   hostelFee: number | null;
   totalFee: number | null;
   feeStructure: PublicCollegeFeeItem[];
-  feeSettings: PublicMedicalCollegeFeeSettings;
   contentBlocks: RawMedicalCollege['content'];
 };
 
@@ -313,9 +300,6 @@ export const mapMedicalCollegeToApi = (
     tuitionFee,
     hostelFee,
     totalFee,
-    exchangeRateUsdToInr,
-    showExchangeRateNote,
-    feeNote,
     feeItems: _feeItems,
     ...restMedicalCollege
   } = medicalCollege;
@@ -340,11 +324,6 @@ export const mapMedicalCollegeToApi = (
     hostelFee: decimalToNumber(hostelFee),
     totalFee: decimalToNumber(totalFee),
     feeStructure: derivedFeeItems,
-    feeSettings: {
-      exchangeRateUsdToInr: decimalToNumber(exchangeRateUsdToInr),
-      showExchangeRateNote,
-      feeNote,
-    },
     contentBlocks: content,
   };
 };

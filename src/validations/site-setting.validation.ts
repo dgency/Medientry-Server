@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeGtmId, validateGtmId } from '../utils/google-tag-manager';
 
 const isRelativeAssetPath = (value: string) => /^\/[^\s]*$/.test(value);
 const isCssColor = (value: string) =>
@@ -65,6 +66,96 @@ const nullableEmailString = z
 
     return value.trim() === '' ? null : value.trim().toLowerCase();
   });
+const nullableExchangeRateSchema = z
+  .union([z.coerce.number(), z.literal(''), z.null()])
+  .transform((value, ctx) => {
+    if (value === '' || value === null) {
+      return null;
+    }
+
+    if (!Number.isFinite(value)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Exchange rate must be a finite number.',
+      });
+      return z.NEVER;
+    }
+
+    if (value <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Exchange rate must be greater than 0.',
+      });
+      return z.NEVER;
+    }
+
+    return value;
+  })
+  .optional();
+const nullableExchangeRateNoteString = z
+  .union([z.string(), z.null()])
+  .optional()
+  .transform((value) => {
+    if (typeof value !== 'string') {
+      return value ?? undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed === '' ? null : trimmed;
+  })
+  .refine((value) => value === undefined || value === null || value.length <= 1000, {
+    message: 'Custom exchange-rate note must be 1000 characters or fewer.',
+  });
+const booleanLikeSchema = z
+  .union([z.boolean(), z.literal('true'), z.literal('false')])
+  .optional()
+  .transform((value) => {
+    if (value === undefined) {
+      return undefined;
+    }
+
+    return value === true || value === 'true';
+  });
+const nullableGtmIdString = z
+  .union([z.string(), z.literal(''), z.null()])
+  .optional()
+  .transform((value) => {
+    if (value === null) {
+      return null;
+    }
+
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+
+    const normalizedValue = normalizeGtmId(value);
+    return normalizedValue ?? null;
+  })
+  .refine((value) => value === undefined || value === null || value.length <= 64, {
+    message: 'GTM Container ID must be 64 characters or fewer.',
+  })
+  .refine((value) => value === undefined || value === null || validateGtmId(value), {
+    message: 'GTM Container ID must look like GTM-ABC1234.',
+  });
+const nullableGtmCodeString = z
+  .union([z.string(), z.null()])
+  .optional()
+  .transform((value) => {
+    if (value === null) {
+      return null;
+    }
+
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+
+    return value.trim().length > 0 ? value.replace(/\r\n?/g, '\n') : null;
+  })
+  .refine((value) => value === undefined || value === null || value.length <= 20000, {
+    message: 'GTM code must be 20000 characters or fewer.',
+  });
+const gtmModeSchema = z.enum(['container-id', 'custom-code']).optional();
+const gtmEnvironmentSchema = z.enum(['production', 'all']).optional();
 
 const siteSettingBodySchema = z.preprocess(
   (input) => {
@@ -81,6 +172,8 @@ const siteSettingBodySchema = z.preprocess(
       instagram: value.instagram ?? value.instagramUrl,
       linkedin: value.linkedin ?? value.linkedinUrl,
       youtube: value.youtube ?? value.youtubeUrl,
+      customExchangeRateNote:
+        value.customExchangeRateNote ?? value.feeNote,
     };
   },
   z
@@ -99,6 +192,39 @@ const siteSettingBodySchema = z.preprocess(
       instagram: nullableUrlString,
       linkedin: nullableUrlString,
       youtube: nullableUrlString,
+      exchangeRateUsdToInr: nullableExchangeRateSchema,
+      showExchangeRateNote: booleanLikeSchema,
+      customExchangeRateNote: nullableExchangeRateNoteString,
+      googleTagManagerEnabled: booleanLikeSchema,
+      googleTagManagerMode: gtmModeSchema,
+      googleTagManagerId: nullableGtmIdString,
+      googleTagManagerHeadCode: nullableGtmCodeString,
+      googleTagManagerBodyCode: nullableGtmCodeString,
+      googleTagManagerEnvironment: gtmEnvironmentSchema,
+    })
+    .superRefine((value, ctx) => {
+      const enabled = value.googleTagManagerEnabled === true;
+      const mode = value.googleTagManagerMode ?? 'container-id';
+
+      if (!enabled) {
+        return;
+      }
+
+      if (mode === 'container-id' && !value.googleTagManagerId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['googleTagManagerId'],
+          message: 'A valid GTM Container ID is required when GTM is enabled in Container ID mode.',
+        });
+      }
+
+      if (mode === 'custom-code' && !value.googleTagManagerHeadCode) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['googleTagManagerHeadCode'],
+          message: 'Head code is required when GTM is enabled in Custom Code mode.',
+        });
+      }
     })
     .refine((value) => Object.keys(value).length > 0, {
       message: 'At least one site setting field is required.',
