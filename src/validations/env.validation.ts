@@ -24,7 +24,16 @@ export const envSchema = z.object({
   ADMIN_URL: z.url('ADMIN_URL must be a valid URL.'),
   EMAIL_PUBLIC_SITE_URL: z.url('EMAIL_PUBLIC_SITE_URL must be a valid URL.').optional(),
   CORS_ORIGINS: z.string().optional(),
+  SERVER_PUBLIC_URL: z.url('SERVER_PUBLIC_URL must be a valid URL.').optional(),
   PUBLIC_BASE_URL: z.url('PUBLIC_BASE_URL must be a valid URL.').optional(),
+  STORAGE_DRIVER: z.enum(['local', 'spaces']).default('local'),
+  LOCAL_UPLOAD_DIR: z.string().min(1).default('uploads'),
+  SPACES_REGION: z.string().optional(),
+  SPACES_ENDPOINT: z.url('SPACES_ENDPOINT must be a valid URL.').optional(),
+  SPACES_BUCKET: z.string().optional(),
+  SPACES_ACCESS_KEY: z.string().optional(),
+  SPACES_SECRET_KEY: z.string().optional(),
+  SPACES_PUBLIC_BASE_URL: z.url('SPACES_PUBLIC_BASE_URL must be a valid URL.').optional(),
   MAIL_ENABLED: booleanString(),
   MAIL_HOST: z.string().default('smtp.gmail.com'),
   MAIL_PORT: z.coerce.number().int().positive().default(587),
@@ -57,6 +66,56 @@ export const envSchema = z.object({
     .optional(),
 })
   .superRefine((value, context) => {
+    if (value.STORAGE_DRIVER === 'spaces') {
+      if (!value.SPACES_REGION?.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['SPACES_REGION'],
+          message: 'SPACES_REGION is required when STORAGE_DRIVER=spaces.',
+        });
+      }
+
+      if (!value.SPACES_ENDPOINT?.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['SPACES_ENDPOINT'],
+          message: 'SPACES_ENDPOINT is required when STORAGE_DRIVER=spaces.',
+        });
+      }
+
+      if (!value.SPACES_BUCKET?.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['SPACES_BUCKET'],
+          message: 'SPACES_BUCKET is required when STORAGE_DRIVER=spaces.',
+        });
+      }
+
+      if (!value.SPACES_ACCESS_KEY?.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['SPACES_ACCESS_KEY'],
+          message: 'SPACES_ACCESS_KEY is required when STORAGE_DRIVER=spaces.',
+        });
+      }
+
+      if (!value.SPACES_SECRET_KEY?.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['SPACES_SECRET_KEY'],
+          message: 'SPACES_SECRET_KEY is required when STORAGE_DRIVER=spaces.',
+        });
+      }
+
+      if (!value.SPACES_PUBLIC_BASE_URL?.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['SPACES_PUBLIC_BASE_URL'],
+          message: 'SPACES_PUBLIC_BASE_URL is required when STORAGE_DRIVER=spaces.',
+        });
+      }
+    }
+
     if (!value.MAIL_ENABLED) {
       return;
     }

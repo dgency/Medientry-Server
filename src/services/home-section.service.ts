@@ -7,14 +7,21 @@ import {
   type HomeSectionKey,
   HOME_SECTION_KEYS,
 } from '../utils/home-section';
-import { publicBlogSelect } from '../utils/blog-response';
+import { mapBlogToApi, publicBlogSelect } from '../utils/blog-response';
 import {
   mapMedicalCollegeToApi,
   publicMedicalCollegeSelect,
 } from '../utils/medical-college-response';
+import { normalizeMediaContentValue } from '../utils/media-path';
 import { mapNoticeToApi, publicNoticeSelect } from '../utils/notice-response';
-import { publicStudyDestinationSelect } from '../utils/study-destination-response';
-import { publicSuccessStorySelect } from '../utils/success-story-response';
+import {
+  mapStudyDestinationToApi,
+  publicStudyDestinationSelect,
+} from '../utils/study-destination-response';
+import {
+  mapSuccessStoryToApi,
+  publicSuccessStorySelect,
+} from '../utils/success-story-response';
 
 type StoredHomeSectionSetting = {
   id: string;
@@ -149,7 +156,9 @@ const buildSectionConfig = (
     eyebrow: storedSetting?.eyebrow ?? null,
     title: storedSetting?.title ?? null,
     subtitle: storedSetting?.subtitle ?? null,
-    content: isRecord(storedSetting?.content) ? storedSetting.content : null,
+    content: isRecord(storedSetting?.content)
+      ? normalizeMediaContentValue(storedSetting.content, 'content')
+      : null,
     selectedItemIds: isStringArray(storedSetting?.selectedItemIds)
       ? storedSetting.selectedItemIds
       : [],
@@ -223,7 +232,9 @@ const resolveChooseYourPathItems = async (
     orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
   });
 
-  return applyItemLimit(applySelectedOrder(studyDestinations, selectedItemIds), itemLimit);
+  return applyItemLimit(applySelectedOrder(studyDestinations, selectedItemIds), itemLimit).map(
+    mapStudyDestinationToApi,
+  );
 };
 
 const resolveFeaturedMedicalCollegeItems = async (
@@ -273,7 +284,9 @@ const resolveSuccessStoryItems = async (
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
   });
 
-  return applyItemLimit(applySelectedOrder(successStories, selectedItemIds), itemLimit);
+  return applyItemLimit(applySelectedOrder(successStories, selectedItemIds), itemLimit).map(
+    mapSuccessStoryToApi,
+  );
 };
 
 const resolveLatestBlogItems = async (
@@ -290,7 +303,9 @@ const resolveLatestBlogItems = async (
     orderBy: [{ createdAt: 'desc' }],
   });
 
-  return applyItemLimit(applySelectedOrder(blogs, selectedItemIds), itemLimit);
+  return applyItemLimit(applySelectedOrder(blogs, selectedItemIds), itemLimit).map(
+    mapBlogToApi,
+  );
 };
 
 const resolveNoticeItems = async (

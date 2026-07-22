@@ -13,7 +13,7 @@ const resolveProjectRoot = () => {
   return fs.existsSync(path.join(cwdRoot, 'package.json')) ? cwdRoot : runtimeRoot;
 };
 
-const projectRoot = resolveProjectRoot();
+export const projectRoot = resolveProjectRoot();
 const envFileCandidates = [path.join(projectRoot, '.env'), path.join(projectRoot, '.env.local')];
 const loadedEnvFiles: string[] = [];
 

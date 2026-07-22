@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
 
+import { normalizeMediaContentValue, resolvePublicMediaUrl } from './media-path';
+
 export const publicBlogSelect = Prisma.validator<Prisma.BlogSelect>()({
   id: true,
   title: true,
@@ -20,6 +22,19 @@ export const publicBlogSelect = Prisma.validator<Prisma.BlogSelect>()({
   updatedAt: true,
 });
 
-export type PublicBlog = Prisma.BlogGetPayload<{
+type RawPublicBlog = Prisma.BlogGetPayload<{
   select: typeof publicBlogSelect;
 }>;
+
+export type PublicBlog = Omit<RawPublicBlog, 'featuredImage' | 'content' | 'ogImage'> & {
+  featuredImage: string | null;
+  content: RawPublicBlog['content'];
+  ogImage: string | null;
+};
+
+export const mapBlogToApi = (blog: RawPublicBlog): PublicBlog => ({
+  ...blog,
+  featuredImage: resolvePublicMediaUrl(blog.featuredImage),
+  content: normalizeMediaContentValue(blog.content, 'content'),
+  ogImage: resolvePublicMediaUrl(blog.ogImage),
+});

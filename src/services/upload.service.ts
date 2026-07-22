@@ -81,14 +81,6 @@ const resolveMediaKind = (kind: UploadKind, mimeType: string) => {
   return MediaKind.IMAGE;
 };
 
-const buildPublicFileUrl = (request: Request, publicPath: string) => {
-  const configuredBaseUrl = process.env.PUBLIC_BASE_URL?.trim();
-  const requestBaseUrl = `${request.protocol}://${request.get('host')}`;
-  const baseUrl = configuredBaseUrl || requestBaseUrl;
-
-  return new URL(publicPath, `${baseUrl.replace(/\/$/, '')}/`).toString();
-};
-
 export const uploadFile = async ({ file, kind, request }: UploadFileInput) => {
   const resolvedKind = resolveUploadKind(kind, file);
   const rule = uploadRules[resolvedKind];
@@ -109,37 +101,76 @@ export const uploadFile = async ({ file, kind, request }: UploadFileInput) => {
     );
   }
 
+  const requestLabel = `${request.method.toUpperCase()} ${request.originalUrl}`;
+  console.info('[uploads] Upload started.', {
+    request: requestLabel,
+    kind: resolvedKind,
+    originalName: file.originalname,
+    mimeType: file.mimetype,
+    size: file.size,
+    storageDriver: storageAdapter.driver,
+  });
+
   const storedFile = await storageAdapter.save({
     buffer: file.buffer,
     folder: rule.targetFolder,
     extension,
+    mimeType: file.mimetype,
+    originalName: file.originalname,
   });
 
-  const mediaAsset = await prisma.mediaAsset.create({
-    data: {
-      id: randomUUID(),
-      title: deriveMediaAssetTitle(file.originalname, storedFile.filename),
+  try {
+    const mediaAsset = await prisma.mediaAsset.create({
+      data: {
+        id: randomUUID(),
+        title: deriveMediaAssetTitle(file.originalname, storedFile.filename),
+        filename: storedFile.filename,
+        originalName: file.originalname,
+        path: storedFile.relativePath,
+        url: storedFile.publicPath,
+        publicUrl: storedFile.publicPath,
+        storageKey: storedFile.storageKey,
+        mimeType: file.mimetype,
+        extension,
+        fileType: resolveMediaKind(resolvedKind, file.mimetype),
+        size: file.size,
+        status: SimpleStatus.ACTIVE,
+      },
+      select: publicMediaAssetSelect,
+    });
+    const serializedMediaAsset = serializeMediaAsset(mediaAsset);
+    const mediaAssetUrl = resolveMediaAssetUrl(serializedMediaAsset) ?? storedFile.publicPath;
+
+    console.info('[uploads] Upload completed.', {
+      request: requestLabel,
+      assetId: mediaAsset.id,
+      storageKey: storedFile.storageKey,
+      provider: storedFile.provider,
+      publicUrl: mediaAssetUrl,
+    });
+
+    return {
+      url: mediaAssetUrl,
+      fullUrl: mediaAssetUrl,
       filename: storedFile.filename,
-      originalName: file.originalname,
-      path: storedFile.relativePath,
-      url: storedFile.publicPath,
-      publicUrl: storedFile.publicPath,
-      storageKey: storedFile.relativePath,
-      mimeType: file.mimetype,
-      extension,
-      fileType: resolveMediaKind(resolvedKind, file.mimetype),
-      size: file.size,
-      status: SimpleStatus.ACTIVE,
-    },
-    select: publicMediaAssetSelect,
-  });
-  const serializedMediaAsset = serializeMediaAsset(mediaAsset);
-  const mediaAssetUrl = resolveMediaAssetUrl(serializedMediaAsset) ?? storedFile.publicPath;
+      asset: serializedMediaAsset,
+    };
+  } catch (error) {
+    try {
+      await storageAdapter.remove(storedFile.storageKey);
+    } catch (cleanupError) {
+      console.error('[uploads] Failed to remove orphaned upload after database failure.', {
+        storageKey: storedFile.storageKey,
+        reason:
+          cleanupError instanceof Error ? cleanupError.message : 'Unknown cleanup error.',
+      });
+    }
 
-  return {
-    url: mediaAssetUrl,
-    fullUrl: buildPublicFileUrl(request, mediaAssetUrl),
-    filename: storedFile.filename,
-    asset: serializedMediaAsset,
-  };
+    console.error('[uploads] Database write failed after upload.', {
+      request: requestLabel,
+      storageKey: storedFile.storageKey,
+      reason: error instanceof Error ? error.message : 'Unknown database error.',
+    });
+    throw error;
+  }
 };

@@ -2,7 +2,7 @@ import { Prisma, PublicationStatus } from '@prisma/client';
 
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
-import { publicBlogSelect } from '../utils/blog-response';
+import { mapBlogToApi, publicBlogSelect } from '../utils/blog-response';
 
 type CreateBlogInput = {
   title: string;
@@ -168,7 +168,7 @@ export const listBlogs = async ({
   ]);
 
   return {
-    items,
+    items: items.map(mapBlogToApi),
     meta: {
       total,
       page: normalizedPage,
@@ -196,16 +196,18 @@ export const getBlogBySlug = async (
     throw new ApiError(404, 'Blog not found.');
   }
 
-  return blog;
+  return mapBlogToApi(blog);
 };
 
 export const createBlog = async (input: CreateBlogInput) => {
   await ensureSlugAvailable(input.slug);
 
-  return prisma.blog.create({
+  const blog = await prisma.blog.create({
     data: buildBlogData(input) as Prisma.BlogUncheckedCreateInput,
     select: publicBlogSelect,
   });
+
+  return mapBlogToApi(blog);
 };
 
 export const updateBlog = async (id: string, input: UpdateBlogInput) => {
@@ -222,11 +224,13 @@ export const updateBlog = async (id: string, input: UpdateBlogInput) => {
     await ensureSlugAvailable(input.slug, id);
   }
 
-  return prisma.blog.update({
+  const blog = await prisma.blog.update({
     where: { id },
     data: buildBlogData(input) as Prisma.BlogUncheckedUpdateInput,
     select: publicBlogSelect,
   });
+
+  return mapBlogToApi(blog);
 };
 
 export const deleteBlog = async (id: string) => {

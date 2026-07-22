@@ -6,7 +6,10 @@ import {
   getHomeSectionLookupKeys,
   SUCCESS_STORIES_SECTION_KEY,
 } from '../utils/home-section';
-import { publicSuccessStorySelect } from '../utils/success-story-response';
+import {
+  mapSuccessStoryToApi,
+  publicSuccessStorySelect,
+} from '../utils/success-story-response';
 
 type CreateSuccessStoryInput = {
   studentName: string;
@@ -118,11 +121,13 @@ const buildSuccessStoryData = (
 };
 
 export const listSuccessStories = async (includeInactive = false) => {
-  return prisma.successStory.findMany({
+  const stories = await prisma.successStory.findMany({
     where: includeInactive ? undefined : { status: SimpleStatus.ACTIVE },
     select: publicSuccessStorySelect,
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
   });
+
+  return stories.map(mapSuccessStoryToApi);
 };
 
 export const listHomepageSuccessStories = async () => {
@@ -169,14 +174,18 @@ export const listHomepageSuccessStories = async () => {
           return aIndex - bIndex;
         });
 
-  return applyItemLimit(orderedStories, sectionSetting?.itemLimit ?? null);
+  return applyItemLimit(orderedStories, sectionSetting?.itemLimit ?? null).map(
+    mapSuccessStoryToApi,
+  );
 };
 
 export const createSuccessStory = async (input: CreateSuccessStoryInput) => {
-  return prisma.successStory.create({
+  const story = await prisma.successStory.create({
     data: buildSuccessStoryData(input) as Prisma.SuccessStoryUncheckedCreateInput,
     select: publicSuccessStorySelect,
   });
+
+  return mapSuccessStoryToApi(story);
 };
 
 export const updateSuccessStory = async (id: string, input: UpdateSuccessStoryInput) => {
@@ -189,11 +198,13 @@ export const updateSuccessStory = async (id: string, input: UpdateSuccessStoryIn
     throw new ApiError(404, 'Success story not found.');
   }
 
-  return prisma.successStory.update({
+  const story = await prisma.successStory.update({
     where: { id },
     data: buildSuccessStoryData(input) as Prisma.SuccessStoryUncheckedUpdateInput,
     select: publicSuccessStorySelect,
   });
+
+  return mapSuccessStoryToApi(story);
 };
 
 export const deleteSuccessStory = async (id: string) => {

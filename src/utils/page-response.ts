@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
 
+import { normalizeMediaContentValue, resolvePublicMediaUrl } from './media-path';
+
 export const publicPageSelect = Prisma.validator<Prisma.PageSelect>()({
   id: true,
   title: true,
@@ -20,6 +22,19 @@ export const publicPageSelect = Prisma.validator<Prisma.PageSelect>()({
   updatedAt: true,
 });
 
-export type PublicPage = Prisma.PageGetPayload<{
+type RawPublicPage = Prisma.PageGetPayload<{
   select: typeof publicPageSelect;
 }>;
+
+export type PublicPage = Omit<RawPublicPage, 'heroImage' | 'content' | 'ogImage'> & {
+  heroImage: string | null;
+  content: RawPublicPage['content'];
+  ogImage: string | null;
+};
+
+export const mapPageToApi = (page: RawPublicPage): PublicPage => ({
+  ...page,
+  heroImage: resolvePublicMediaUrl(page.heroImage),
+  content: normalizeMediaContentValue(page.content, 'content'),
+  ogImage: resolvePublicMediaUrl(page.ogImage),
+});

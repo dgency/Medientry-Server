@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
 
+import { normalizeMediaContentValue, resolvePublicMediaUrl } from './media-path';
+
 export const publicStudyDestinationSelect =
   Prisma.validator<Prisma.StudyDestinationSelect>()({
     id: true,
@@ -23,6 +25,24 @@ export const publicStudyDestinationSelect =
     updatedAt: true,
   });
 
-export type PublicStudyDestination = Prisma.StudyDestinationGetPayload<{
+type RawPublicStudyDestination = Prisma.StudyDestinationGetPayload<{
   select: typeof publicStudyDestinationSelect;
 }>;
+
+export type PublicStudyDestination = Omit<
+  RawPublicStudyDestination,
+  'featuredImage' | 'content' | 'ogImage'
+> & {
+  featuredImage: string | null;
+  content: RawPublicStudyDestination['content'];
+  ogImage: string | null;
+};
+
+export const mapStudyDestinationToApi = (
+  destination: RawPublicStudyDestination,
+): PublicStudyDestination => ({
+  ...destination,
+  featuredImage: resolvePublicMediaUrl(destination.featuredImage),
+  content: normalizeMediaContentValue(destination.content, 'content'),
+  ogImage: resolvePublicMediaUrl(destination.ogImage),
+});

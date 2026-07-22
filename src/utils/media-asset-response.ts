@@ -1,6 +1,6 @@
 import { MediaKind, Prisma, SimpleStatus } from '@prisma/client';
 
-import { normalizeStoredMediaValue } from './media-path';
+import { resolvePublicMediaUrl } from './media-path';
 
 const normalizeNullableString = (value?: string | null) => {
   if (typeof value !== 'string') {
@@ -68,7 +68,7 @@ export type PublicMediaAsset = {
 
 export const resolveMediaAssetUrl = (
   asset?: Pick<PublicMediaAsset, 'publicUrl' | 'url'> | null,
-) => normalizeStoredMediaValue(asset?.publicUrl) ?? normalizeStoredMediaValue(asset?.url);
+) => resolvePublicMediaUrl(asset?.publicUrl) ?? resolvePublicMediaUrl(asset?.url);
 
 export const serializeMediaAsset = (asset: PublicMediaAssetRecord): PublicMediaAsset => ({
   id: asset.id,
@@ -80,8 +80,8 @@ export const serializeMediaAsset = (asset: PublicMediaAssetRecord): PublicMediaA
   filename: asset.filename,
   originalName: normalizeNullableString(asset.originalName),
   path: normalizeNullableString(asset.path),
-  url: normalizeStoredMediaValue(asset.url),
-  publicUrl: normalizeStoredMediaValue(asset.publicUrl),
+  url: resolvePublicMediaUrl(asset.url),
+  publicUrl: resolvePublicMediaUrl(asset.publicUrl),
   storageKey: normalizeNullableString(asset.storageKey),
   mimeType: normalizeNullableString(asset.mimeType),
   extension: normalizeNullableString(asset.extension),

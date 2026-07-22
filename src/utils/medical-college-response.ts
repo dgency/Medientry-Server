@@ -1,5 +1,7 @@
 import { CollegeFeeBillingPeriod, Prisma } from '@prisma/client';
 
+import { normalizeMediaContentValue, resolvePublicMediaUrl } from './media-path';
+
 const billingPeriodToApiValue: Record<
   CollegeFeeBillingPeriod,
   PublicCollegeFeeItem['billingPeriod']
@@ -318,12 +320,14 @@ export const mapMedicalCollegeToApi = (
 
   return {
     ...restMedicalCollege,
-    image: featuredImage,
-    featuredImage,
+    gallery: normalizeMediaContentValue(restMedicalCollege.gallery, 'gallery'),
+    ogImage: resolvePublicMediaUrl(restMedicalCollege.ogImage),
+    image: resolvePublicMediaUrl(featuredImage),
+    featuredImage: resolvePublicMediaUrl(featuredImage),
     tuitionFee: decimalToNumber(tuitionFee),
     hostelFee: decimalToNumber(hostelFee),
     totalFee: decimalToNumber(totalFee),
     feeStructure: derivedFeeItems,
-    contentBlocks: content,
+    contentBlocks: normalizeMediaContentValue(content, 'content'),
   };
 };

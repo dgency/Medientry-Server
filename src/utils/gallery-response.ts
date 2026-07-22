@@ -6,7 +6,7 @@ import {
   serializeMediaAsset,
   type PublicMediaAsset,
 } from './media-asset-response';
-import { normalizeStoredMediaValue } from './media-path';
+import { resolvePublicMediaUrl } from './media-path';
 
 const normalizeNullableString = (value?: string | null) => {
   if (typeof value !== 'string') {
@@ -61,7 +61,7 @@ export type PublicGalleryItem = {
 };
 
 const resolveGalleryLegacyUrl = (item: Pick<PublicGalleryItemRecord, 'url' | 'thumbnail'>) =>
-  normalizeStoredMediaValue(item.url) ?? normalizeStoredMediaValue(item.thumbnail);
+  resolvePublicMediaUrl(item.url) ?? resolvePublicMediaUrl(item.thumbnail);
 
 export const serializeGalleryItem = (
   item: PublicGalleryItemRecord,
@@ -74,7 +74,7 @@ export const serializeGalleryItem = (
   const assetUrl = resolveMediaAssetUrl(item.mediaAsset);
   const legacyUrl = resolveGalleryLegacyUrl(item);
   const resolvedUrl = assetUrl ?? legacyUrl ?? '';
-  const legacyThumbnail = normalizeStoredMediaValue(item.thumbnail);
+  const legacyThumbnail = resolvePublicMediaUrl(item.thumbnail);
   const resolvedThumbnail =
     (preferAssetThumbnail ? assetUrl : null)
     ?? legacyThumbnail

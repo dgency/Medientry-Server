@@ -1,6 +1,21 @@
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 
-export const uploadsRootDirectory = path.resolve(__dirname, '..', '..', 'uploads');
+import { env, projectRoot } from './env';
+
+const resolveLocalUploadDirectory = () => {
+  const configuredDirectory = env.LOCAL_UPLOAD_DIR.trim();
+
+  if (path.isAbsolute(configuredDirectory)) {
+    return path.normalize(configuredDirectory);
+  }
+
+  return path.resolve(projectRoot, configuredDirectory);
+};
+
+export const uploadsRootDirectory = resolveLocalUploadDirectory();
+
+mkdirSync(uploadsRootDirectory, { recursive: true });
 
 export const uploadKinds = ['image', 'document', 'videoThumbnail'] as const;
 

@@ -11,6 +11,7 @@ import {
   normalizeGtmId,
   normalizeGtmMode,
 } from '../utils/google-tag-manager';
+import { resolvePublicMediaUrl } from '../utils/media-path';
 
 export type SiteSettingApiShape = {
   logoLight: string | null;
@@ -174,9 +175,9 @@ const mapSiteSettingToApi = (siteSetting: {
 
   return {
     ...getDefaultSiteSetting(),
-    logoLight: siteSetting?.logoLight ?? null,
-    logoDark: siteSetting?.logoDark ?? null,
-    favicon: siteSetting?.favicon ?? null,
+    logoLight: resolvePublicMediaUrl(siteSetting?.logoLight) ?? null,
+    logoDark: resolvePublicMediaUrl(siteSetting?.logoDark) ?? null,
+    favicon: resolvePublicMediaUrl(siteSetting?.favicon) ?? null,
     primaryColor: siteSetting?.primaryColor ?? null,
     secondaryColor: siteSetting?.secondaryColor ?? null,
     accentColor: siteSetting?.accentColor ?? null,

@@ -6,7 +6,10 @@ import {
 
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
-import { publicStudyDestinationSelect } from '../utils/study-destination-response';
+import {
+  mapStudyDestinationToApi,
+  publicStudyDestinationSelect,
+} from '../utils/study-destination-response';
 
 type CreateStudyDestinationInput = {
   title: string;
@@ -173,7 +176,7 @@ export const listStudyDestinations = async ({
   const resolvedStatus =
     status ?? (includeUnpublished ? undefined : PublicationStatus.PUBLISHED);
 
-  return prisma.studyDestination.findMany({
+  const destinations = await prisma.studyDestination.findMany({
     where: {
       ...(resolvedStatus ? { status: resolvedStatus } : {}),
       ...(showInMenu !== undefined ? { showInMenu } : {}),
@@ -181,6 +184,8 @@ export const listStudyDestinations = async ({
     select: publicStudyDestinationSelect,
     orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
   });
+
+  return destinations.map(mapStudyDestinationToApi);
 };
 
 export const getStudyDestinationBySlug = async (slug: string) => {
@@ -196,16 +201,18 @@ export const getStudyDestinationBySlug = async (slug: string) => {
     throw new ApiError(404, 'Published study destination not found.');
   }
 
-  return destination;
+  return mapStudyDestinationToApi(destination);
 };
 
 export const createStudyDestination = async (input: CreateStudyDestinationInput) => {
   await ensureSlugAvailable(input.slug);
 
-  return prisma.studyDestination.create({
+  const destination = await prisma.studyDestination.create({
     data: buildStudyDestinationData(input) as Prisma.StudyDestinationUncheckedCreateInput,
     select: publicStudyDestinationSelect,
   });
+
+  return mapStudyDestinationToApi(destination);
 };
 
 export const updateStudyDestination = async (
@@ -230,7 +237,7 @@ export const updateStudyDestination = async (
     await ensureSlugAvailable(input.slug, id);
   }
 
-  return prisma.studyDestination.update({
+  const destination = await prisma.studyDestination.update({
     where: { id },
     data: buildStudyDestinationData(input, {
       title: existingDestination.title,
@@ -239,6 +246,8 @@ export const updateStudyDestination = async (
     }) as Prisma.StudyDestinationUncheckedUpdateInput,
     select: publicStudyDestinationSelect,
   });
+
+  return mapStudyDestinationToApi(destination);
 };
 
 export const deleteStudyDestination = async (id: string) => {

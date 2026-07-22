@@ -2,7 +2,7 @@ import { PageType, Prisma, PublicationStatus } from '@prisma/client';
 
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
-import { publicPageSelect } from '../utils/page-response';
+import { mapPageToApi, publicPageSelect } from '../utils/page-response';
 
 type CreatePageInput = {
   title: string;
@@ -112,10 +112,12 @@ const ensureSlugAvailable = async (slug: string, excludeId?: string) => {
 };
 
 export const listPages = async () => {
-  return prisma.page.findMany({
+  const pages = await prisma.page.findMany({
     select: publicPageSelect,
     orderBy: [{ updatedAt: 'desc' }],
   });
+
+  return pages.map(mapPageToApi);
 };
 
 export const getPageBySlug = async (slug: string) => {
@@ -131,19 +133,21 @@ export const getPageBySlug = async (slug: string) => {
     throw new ApiError(404, 'Published page not found.');
   }
 
-  return page;
+  return mapPageToApi(page);
 };
 
 export const createPage = async (input: CreatePageInput) => {
   await ensureSlugAvailable(input.slug);
 
-  return prisma.page.create({
+  const page = await prisma.page.create({
     data: buildPageData({
       ...input,
       pageType: input.pageType ?? PageType.CUSTOM,
     }) as Prisma.PageUncheckedCreateInput,
     select: publicPageSelect,
   });
+
+  return mapPageToApi(page);
 };
 
 export const updatePage = async (id: string, input: UpdatePageInput) => {
@@ -160,11 +164,13 @@ export const updatePage = async (id: string, input: UpdatePageInput) => {
     await ensureSlugAvailable(input.slug, id);
   }
 
-  return prisma.page.update({
+  const page = await prisma.page.update({
     where: { id },
     data: buildPageData(input) as Prisma.PageUncheckedUpdateInput,
     select: publicPageSelect,
   });
+
+  return mapPageToApi(page);
 };
 
 export const deletePage = async (id: string) => {

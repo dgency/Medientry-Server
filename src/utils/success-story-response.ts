@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
 
+import { normalizeMediaContentValue, resolvePublicMediaUrl } from './media-path';
+
 export const publicSuccessStorySelect =
   Prisma.validator<Prisma.SuccessStorySelect>()({
     id: true,
@@ -21,6 +23,19 @@ export const publicSuccessStorySelect =
     updatedAt: true,
   });
 
-export type PublicSuccessStory = Prisma.SuccessStoryGetPayload<{
+type RawPublicSuccessStory = Prisma.SuccessStoryGetPayload<{
   select: typeof publicSuccessStorySelect;
 }>;
+
+export type PublicSuccessStory = Omit<RawPublicSuccessStory, 'image' | 'fullStory'> & {
+  image: string | null;
+  fullStory: string | null;
+};
+
+export const mapSuccessStoryToApi = (
+  successStory: RawPublicSuccessStory,
+): PublicSuccessStory => ({
+  ...successStory,
+  image: resolvePublicMediaUrl(successStory.image),
+  fullStory: normalizeMediaContentValue(successStory.fullStory, 'fullStory'),
+});
