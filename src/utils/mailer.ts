@@ -217,8 +217,12 @@ const renderRows = (fields: EmailTemplateField[]) => {
 
       return `
         <tr>
-          <td style="padding:11px 12px;font-weight:700;border:1px solid #dbe5df;background:#f6fbf8;vertical-align:top;width:34%;">${escapeHtml(field.label)}</td>
-          <td style="padding:11px 12px;border:1px solid #dbe5df;white-space:pre-wrap;word-break:break-word;">${renderedValue}</td>
+          <td style="padding:14px 16px;font-size:13px;line-height:1.6;font-weight:700;border-bottom:1px solid #e3ece6;border-right:1px solid #e3ece6;background:#f7fbf8;vertical-align:top;width:220px;color:#294137;">
+            ${escapeHtml(field.label)}
+          </td>
+          <td style="padding:14px 16px;font-size:14px;line-height:1.7;border-bottom:1px solid #e3ece6;vertical-align:top;color:#10261a;white-space:pre-wrap;word-break:break-word;">
+            ${renderedValue}
+          </td>
         </tr>
       `;
     })
@@ -280,13 +284,13 @@ const renderAdminEmailSection = (title: string, fields: EmailTemplateField[]) =>
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:24px;">
       <tr>
-        <td style="padding:0 0 12px;font-size:18px;line-height:1.3;font-weight:700;color:#10261a;">
+        <td style="padding:0 0 12px;font-size:20px;line-height:1.3;font-weight:700;color:#10261a;">
           ${escapeHtml(title)}
         </td>
       </tr>
       <tr>
         <td>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;border:1px solid #dbe5df;border-radius:14px;overflow:hidden;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;border-spacing:0;border:1px solid #dbe5df;border-radius:16px;overflow:hidden;background:#ffffff;">
             ${rows}
           </table>
         </td>
@@ -304,15 +308,23 @@ const renderCompactFooterSection = (title: string, fields: EmailTemplateField[])
     return '';
   }
 
-  const rows = normalizedFields
+  const blocks = normalizedFields
     .map(
       (field) => `
         <tr>
-          <td style="padding:0 0 6px;font-size:12px;line-height:1.6;color:#5f6d66;vertical-align:top;white-space:nowrap;">
-            <strong style="color:#42534a;">${escapeHtml(field.label)}:</strong>
-          </td>
-          <td style="padding:0 0 6px 10px;font-size:12px;line-height:1.6;color:#5f6d66;vertical-align:top;word-break:break-word;white-space:pre-wrap;">
-            ${renderFieldValue(field)}
+          <td style="padding:0 0 12px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e3ece6;border-radius:14px;background:#fbfdfb;">
+              <tr>
+                <td style="padding:14px 16px;">
+                  <div style="margin:0 0 6px;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5b7366;">
+                    ${escapeHtml(field.label)}
+                  </div>
+                  <div style="font-size:14px;line-height:1.7;color:#10261a;word-break:break-word;white-space:pre-wrap;">
+                    ${renderFieldValue(field)}
+                  </div>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
       `,
@@ -320,16 +332,16 @@ const renderCompactFooterSection = (title: string, fields: EmailTemplateField[])
     .join('');
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:20px;border-top:1px solid #dbe5df;padding-top:14px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:28px;">
       <tr>
-        <td style="padding:0 0 8px;font-size:12px;line-height:1.4;font-weight:700;color:#42534a;text-transform:uppercase;letter-spacing:0.06em;">
+        <td style="padding:0 0 12px;font-size:12px;line-height:1.4;font-weight:700;color:#42534a;text-transform:uppercase;letter-spacing:0.08em;">
           ${escapeHtml(title)}
         </td>
       </tr>
       <tr>
         <td>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
-            ${rows}
+            ${blocks}
           </table>
         </td>
       </tr>
@@ -354,10 +366,10 @@ const renderWhatsAppContactBlock = ({
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:22px;border:1px solid #d7e8dd;border-radius:16px;overflow:hidden;background:#f6fbf8;">
       <tr>
-        <td style="padding:18px 18px 16px;">
+        <td style="padding:20px 20px 18px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
             <tr>
-              <td style="padding:0 0 8px;font-size:18px;line-height:1.3;font-weight:700;color:#10261a;">
+              <td style="padding:0 0 8px;font-size:20px;line-height:1.3;font-weight:700;color:#10261a;">
                 Need Faster Assistance?
               </td>
             </tr>
@@ -370,7 +382,7 @@ const renderWhatsAppContactBlock = ({
               <td>
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
                   <tr>
-                    <td style="width:54px;vertical-align:middle;">
+                    <td style="width:58px;vertical-align:middle;">
                       <div style="width:42px;height:42px;border-radius:999px;background:#25d366;color:#ffffff;font-size:13px;line-height:42px;font-weight:700;text-align:center;">
                         WA
                       </div>
@@ -421,9 +433,9 @@ const renderAdminNotificationLayout = ({
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
         <tr>
           <td align="center">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:640px;background:#ffffff;border:1px solid #dbe5df;border-radius:20px;overflow:hidden;font-family:Arial,sans-serif;color:#10261a;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:680px;background:#ffffff;border:1px solid #dbe5df;border-radius:20px;overflow:hidden;font-family:Arial,sans-serif;color:#10261a;">
               <tr>
-                <td style="padding:24px 28px 22px;background:#146736;">
+                <td style="padding:28px 32px 26px;background:linear-gradient(135deg,#12552d 0%,#1c7740 100%);">
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="padding:0 0 8px;font-size:11px;line-height:1.5;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#dff4e7;">
@@ -431,12 +443,12 @@ const renderAdminNotificationLayout = ({
                       </td>
                     </tr>
                     <tr>
-                      <td style="padding:0 0 10px;font-size:30px;line-height:1.18;font-weight:700;color:#ffffff;">
+                      <td style="padding:0 0 10px;font-size:34px;line-height:1.16;font-weight:700;color:#ffffff;">
                         ${escapeHtml(title)}
                       </td>
                     </tr>
                     <tr>
-                      <td style="padding:0;font-size:15px;line-height:1.7;color:#ebf7ef;">
+                      <td style="padding:0;font-size:15px;line-height:1.75;color:#ecf8f0;">
                         ${escapeHtml(intro)}
                       </td>
                     </tr>
@@ -444,12 +456,12 @@ const renderAdminNotificationLayout = ({
                 </td>
               </tr>
               <tr>
-                <td style="padding:28px;">
+                <td style="padding:30px 32px 32px;">
                   ${content}
                   ${footerContent}
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:24px;">
                     <tr>
-                      <td style="padding:18px 20px;border-radius:16px;background:#f6fbf8;font-size:13px;line-height:1.7;color:#5f6d66;">
+                      <td style="padding:18px 20px;border-radius:16px;background:#f6fbf8;font-size:13px;line-height:1.75;color:#5f6d66;">
                         ${escapeHtml(footerNote)}
                       </td>
                     </tr>
