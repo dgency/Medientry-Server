@@ -3,6 +3,11 @@ import { Prisma, PublicationStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import { mapNoticeToApi, publicNoticeSelect } from '../utils/notice-response';
+import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
 
 type CreateNoticeInput = {
   title: string;
@@ -22,6 +27,14 @@ type CreateNoticeInput = {
 
 type UpdateNoticeInput = Partial<CreateNoticeInput>;
 
+type ListNoticesOptions = {
+  includeUnpublished?: boolean;
+  search?: string;
+  pagination?: PaginationInput | null;
+};
+
+type NoticeListItem = ReturnType<typeof mapNoticeToApi>;
+
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
     return undefined;
@@ -36,6 +49,24 @@ const normalizeNullableString = (value?: string | null) => {
 };
 
 const normalizeSlug = (slug: string) => slug.trim().toLowerCase();
+
+const buildNoticeSearchWhere = (search?: string): Prisma.NoticeWhereInput => {
+  const normalizedSearch = search?.trim();
+
+  if (!normalizedSearch) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { title: { contains: normalizedSearch, mode: 'insensitive' } },
+      { slug: { contains: normalizedSearch, mode: 'insensitive' } },
+      { description: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoTitle: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoDescription: { contains: normalizedSearch, mode: 'insensitive' } },
+    ],
+  };
+};
 
 const resolveNoticeBody = (input: { description?: string; content?: string }) => {
   if (input.content !== undefined) {
@@ -193,19 +224,53 @@ const buildNoticeData = async (
   return data;
 };
 
-export const listNotices = async (includeUnpublished = false) => {
-  const notices = await prisma.notice.findMany({
-    where: includeUnpublished ? undefined : { status: PublicationStatus.PUBLISHED },
-    select: publicNoticeSelect,
-    orderBy: [
-      { isPinned: 'desc' },
-      { pinnedOrder: 'asc' },
-      { publishedAt: 'desc' },
-      { createdAt: 'desc' },
-    ],
-  });
+export const listNotices = async ({
+  includeUnpublished = false,
+  search,
+  pagination,
+}: ListNoticesOptions = {}): Promise<NoticeListItem[] | PaginatedResult<NoticeListItem>> => {
+  const where: Prisma.NoticeWhereInput = {
+    ...(includeUnpublished ? {} : { status: PublicationStatus.PUBLISHED }),
+    ...buildNoticeSearchWhere(search),
+  };
 
-  return notices.map(mapNoticeToApi);
+  if (!pagination) {
+    const notices = await prisma.notice.findMany({
+      where,
+      select: publicNoticeSelect,
+      orderBy: [
+        { isPinned: 'desc' },
+        { pinnedOrder: 'asc' },
+        { publishedAt: 'desc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    return notices.map(mapNoticeToApi);
+  }
+
+  const [totalItems, notices] = await Promise.all([
+    prisma.notice.count({ where }),
+    prisma.notice.findMany({
+      where,
+      select: publicNoticeSelect,
+      orderBy: [
+        { isPinned: 'desc' },
+        { pinnedOrder: 'asc' },
+        { publishedAt: 'desc' },
+        { createdAt: 'desc' },
+      ],
+      skip: (pagination.page - 1) * pagination.limit,
+      take: pagination.limit,
+    }),
+  ]);
+
+  return buildPaginatedResult({
+    items: notices.map(mapNoticeToApi),
+    page: pagination.page,
+    limit: pagination.limit,
+    totalItems,
+  });
 };
 
 export const getNoticeBySlug = async (

@@ -3,6 +3,11 @@ import { Prisma, SimpleStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import { publicHomeReelSelect } from '../utils/home-reel-response';
+import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
 import { getYouTubeVideoDetails } from '../utils/youtube';
 
 type CreateHomeReelInput = {
@@ -15,6 +20,14 @@ type CreateHomeReelInput = {
 
 type UpdateHomeReelInput = Partial<CreateHomeReelInput>;
 
+type ListHomeReelsOptions = {
+  includeInactive?: boolean;
+  search?: string;
+  pagination?: PaginationInput | null;
+};
+
+type HomeReelListItem = Prisma.HomeReelGetPayload<{ select: typeof publicHomeReelSelect }>;
+
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
     return undefined;
@@ -26,6 +39,22 @@ const normalizeNullableString = (value?: string | null) => {
 
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
+};
+
+const buildHomeReelSearchWhere = (search?: string): Prisma.HomeReelWhereInput => {
+  const normalizedSearch = search?.trim();
+
+  if (!normalizedSearch) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { title: { contains: normalizedSearch, mode: 'insensitive' } },
+      { videoUrl: { contains: normalizedSearch, mode: 'insensitive' } },
+      { youtubeVideoId: { contains: normalizedSearch, mode: 'insensitive' } },
+    ],
+  };
 };
 
 const buildHomeReelData = (
@@ -65,11 +94,40 @@ const buildHomeReelData = (
   return data;
 };
 
-export const listHomeReels = async (includeInactive = false) => {
-  return prisma.homeReel.findMany({
-    where: includeInactive ? undefined : { status: SimpleStatus.ACTIVE },
-    select: publicHomeReelSelect,
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+export const listHomeReels = async ({
+  includeInactive = false,
+  search,
+  pagination,
+}: ListHomeReelsOptions = {}): Promise<HomeReelListItem[] | PaginatedResult<HomeReelListItem>> => {
+  const where: Prisma.HomeReelWhereInput = {
+    ...(includeInactive ? {} : { status: SimpleStatus.ACTIVE }),
+    ...buildHomeReelSearchWhere(search),
+  };
+
+  if (!pagination) {
+    return prisma.homeReel.findMany({
+      where,
+      select: publicHomeReelSelect,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  const [totalItems, items] = await Promise.all([
+    prisma.homeReel.count({ where }),
+    prisma.homeReel.findMany({
+      where,
+      select: publicHomeReelSelect,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      skip: (pagination.page - 1) * pagination.limit,
+      take: pagination.limit,
+    }),
+  ]);
+
+  return buildPaginatedResult({
+    items,
+    page: pagination.page,
+    limit: pagination.limit,
+    totalItems,
   });
 };
 

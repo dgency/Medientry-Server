@@ -15,6 +15,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner';
 
 import { DeleteConfirmDialog } from '../components/cms/delete-confirm-dialog';
+import { Pagination } from '../components/dashboard/pagination';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { buttonVariants } from '../components/ui/button-variants';
@@ -22,7 +23,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { EmptyState } from '../components/ui/empty-state';
 import { Input } from '../components/ui/input';
 import { Spinner } from '../components/ui/spinner';
-import { apiClient, extractApiData, getApiErrorMessage } from '../lib/api-client';
+import { apiClient, extractApiData, extractApiPagination, getApiErrorMessage } from '../lib/api-client';
+import { buildLocalPaginationMeta, dashboardPageSize, type PaginationMeta } from '../lib/pagination';
 import { cn, formatDateTime, formatLabel } from '../lib/utils';
 
 type ConsultationStatusFilter = 'all' | 'read' | 'unread';
@@ -53,6 +55,11 @@ type DetailFieldProps = {
   value: ReactNode;
 };
 
+type ConsultationLeadsQueryData = {
+  items: ConsultationLead[];
+  pagination: PaginationMeta | null;
+};
+
 const CONSULTATION_LEADS_QUERY_KEY = ['consultation-leads'] as const;
 const consultationLeadsEndpoint = '/consultation-leads';
 const statusFilters: Array<{ value: ConsultationStatusFilter; label: string }> = [
@@ -78,7 +85,11 @@ const useDebouncedValue = (value: string, delayMs = 300) => {
   return debouncedValue;
 };
 
-const buildListSearchParams = (search: string, status: ConsultationStatusFilter) => {
+const buildListSearchParams = (
+  search: string,
+  status: ConsultationStatusFilter,
+  page: number,
+) => {
   const params = new URLSearchParams();
   const trimmedSearch = search.trim();
 
@@ -88,6 +99,10 @@ const buildListSearchParams = (search: string, status: ConsultationStatusFilter)
 
   if (status !== 'all') {
     params.set('status', status);
+  }
+
+  if (page > 1) {
+    params.set('page', String(page));
   }
 
   return params;
@@ -160,26 +175,29 @@ const stopEventPropagation = (event: MouseEvent<HTMLElement>) => {
   event.stopPropagation();
 };
 
+const sortLeads = (firstLead: ConsultationLead, secondLead: ConsultationLead) => {
+  const firstIsUnread = firstLead.readAt === null;
+  const secondIsUnread = secondLead.readAt === null;
+
+  if (firstIsUnread !== secondIsUnread) {
+    return firstIsUnread ? -1 : 1;
+  }
+
+  return new Date(secondLead.createdAt).getTime() - new Date(firstLead.createdAt).getTime();
+};
+
 const syncLeadCaches = (
   queryClient: ReturnType<typeof useQueryClient>,
   lead: ConsultationLead,
 ) => {
   queryClient.setQueryData(['consultation-lead', lead.id], lead);
-  queryClient.setQueriesData<ConsultationLead[]>({ queryKey: CONSULTATION_LEADS_QUERY_KEY }, (items) =>
-    Array.isArray(items)
-      ? items
-          .map((item) => (item.id === lead.id ? lead : item))
-          .sort((firstLead, secondLead) => {
-            const firstIsUnread = firstLead.readAt === null;
-            const secondIsUnread = secondLead.readAt === null;
-
-            if (firstIsUnread !== secondIsUnread) {
-              return firstIsUnread ? -1 : 1;
-            }
-
-            return new Date(secondLead.createdAt).getTime() - new Date(firstLead.createdAt).getTime();
-          })
-      : items,
+  queryClient.setQueriesData<ConsultationLeadsQueryData>({ queryKey: CONSULTATION_LEADS_QUERY_KEY }, (data) =>
+    data
+      ? {
+          ...data,
+          items: data.items.map((item) => (item.id === lead.id ? lead : item)).sort(sortLeads),
+        }
+      : data,
   );
 };
 
@@ -187,8 +205,13 @@ const removeLeadFromCaches = (
   queryClient: ReturnType<typeof useQueryClient>,
   leadId: string,
 ) => {
-  queryClient.setQueriesData<ConsultationLead[]>({ queryKey: CONSULTATION_LEADS_QUERY_KEY }, (items) =>
-    Array.isArray(items) ? items.filter((item) => item.id !== leadId) : items,
+  queryClient.setQueriesData<ConsultationLeadsQueryData>({ queryKey: CONSULTATION_LEADS_QUERY_KEY }, (data) =>
+    data
+      ? {
+          ...data,
+          items: data.items.filter((item) => item.id !== leadId),
+        }
+      : data,
   );
   queryClient.removeQueries({ queryKey: ['consultation-lead', leadId] });
 };
@@ -248,36 +271,53 @@ export function ConsultationLeadsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const currentPageFromUrl = Number.parseInt(searchParams.get('page') ?? '1', 10);
+  const currentPage = Number.isFinite(currentPageFromUrl) && currentPageFromUrl > 0 ? currentPageFromUrl : 1;
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [status, setStatus] = useState<ConsultationStatusFilter>(getSanitizedStatusFilter(searchParams.get('status')));
   const [deletingLead, setDeletingLead] = useState<ConsultationLead | null>(null);
   const debouncedSearch = useDebouncedValue(search, 350);
   const normalizedSearch = debouncedSearch.trim();
-  const currentListSearchParams = useMemo(
-    () => buildListSearchParams(search, status).toString(),
-    [search, status],
-  );
+  const currentListSearchParams = searchParams.toString();
 
   useEffect(() => {
-    const nextSearchParams = buildListSearchParams(debouncedSearch, status);
+    const currentSearchValue = (searchParams.get('search') ?? '').trim();
+    const currentStatusValue = getSanitizedStatusFilter(searchParams.get('status'));
+    const nextPage =
+      normalizedSearch !== currentSearchValue || status !== currentStatusValue
+        ? 1
+        : currentPage;
+    const nextSearchParams = buildListSearchParams(debouncedSearch, status, nextPage);
     const nextSearchString = nextSearchParams.toString();
 
     if (nextSearchString !== searchParams.toString()) {
       setSearchParams(nextSearchParams, { replace: true });
     }
-  }, [debouncedSearch, searchParams, setSearchParams, status]);
+  }, [currentPage, debouncedSearch, normalizedSearch, searchParams, setSearchParams, status]);
 
   const leadsQuery = useQuery({
-    queryKey: [...CONSULTATION_LEADS_QUERY_KEY, { search: normalizedSearch, status }],
+    queryKey: [...CONSULTATION_LEADS_QUERY_KEY, { page: currentPage, search: normalizedSearch, status }],
     queryFn: async () => {
       const response = await apiClient.get(consultationLeadsEndpoint, {
         params: {
           ...(normalizedSearch ? { search: normalizedSearch } : {}),
           ...(status !== 'all' ? { status } : {}),
+          page: currentPage,
+          limit: dashboardPageSize,
         },
       });
+      const items = extractApiData<ConsultationLead[]>(response);
 
-      return extractApiData<ConsultationLead[]>(response);
+      return {
+        items,
+        pagination:
+          extractApiPagination(response)
+          ?? buildLocalPaginationMeta({
+            page: currentPage,
+            limit: dashboardPageSize,
+            totalItems: items.length,
+          }),
+      } satisfies ConsultationLeadsQueryData;
     },
     placeholderData: (previousData) => previousData,
   });
@@ -290,6 +330,11 @@ export function ConsultationLeadsPage() {
     onSuccess: (_data, leadId) => {
       toast.success('Consultation lead deleted successfully.');
       removeLeadFromCaches(queryClient, leadId);
+      if (currentPage > 1 && items.length === 1) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('page', String(currentPage - 1));
+        setSearchParams(nextSearchParams, { replace: true });
+      }
       void queryClient.invalidateQueries({ queryKey: CONSULTATION_LEADS_QUERY_KEY });
       setDeletingLead(null);
     },
@@ -315,7 +360,30 @@ export function ConsultationLeadsPage() {
   };
 
   const isFiltering = normalizedSearch.length > 0 || status !== 'all';
-  const items = leadsQuery.data ?? [];
+  const items = leadsQuery.data?.items ?? [];
+  const effectivePagination =
+    leadsQuery.data?.pagination
+    ?? buildLocalPaginationMeta({
+      page: currentPage,
+      limit: dashboardPageSize,
+      totalItems: items.length,
+    });
+
+  useEffect(() => {
+    if (currentPage <= effectivePagination.totalPages) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (effectivePagination.totalPages <= 1) {
+      nextSearchParams.delete('page');
+    } else {
+      nextSearchParams.set('page', String(effectivePagination.totalPages));
+    }
+
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [currentPage, effectivePagination.totalPages, searchParams, setSearchParams]);
 
   const emptyState = normalizedSearch
     ? {
@@ -575,6 +643,22 @@ export function ConsultationLeadsPage() {
         {isFiltering ? 'Showing filtered consultation leads.' : 'Showing all consultation leads.'} Last refreshed{' '}
         {formatDateTime(new Date().toISOString())}
       </div>
+
+      <Pagination
+        pagination={effectivePagination}
+        onPageChange={(page) => {
+          const nextSearchParams = new URLSearchParams(searchParams);
+
+          if (page <= 1) {
+            nextSearchParams.delete('page');
+          } else {
+            nextSearchParams.set('page', String(page));
+          }
+
+          setSearchParams(nextSearchParams);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
 
       <DeleteConfirmDialog
         open={Boolean(deletingLead)}

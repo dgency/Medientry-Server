@@ -2,6 +2,7 @@ import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
 import { ApiError } from '../utils/api-error';
+import { resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import { signThankYouToken, verifyThankYouToken } from '../utils/thank-you-token';
 import {
@@ -14,15 +15,21 @@ import {
 } from '../services/consultation-lead.service';
 
 export const getConsultationLeads = asyncHandler(async (req, res: Response) => {
-  const leads = await listConsultationLeads({
+  const result = await listConsultationLeads({
     search: typeof req.query.search === 'string' ? req.query.search : undefined,
     status: typeof req.query.status === 'string' ? (req.query.status as 'all' | 'read' | 'unread') : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+      enabledByDefault: true,
+    }),
   });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Consultation leads retrieved successfully.',
-    data: leads,
+    data: Array.isArray(result) ? result : result.items,
+    pagination: Array.isArray(result) ? undefined : result.pagination,
   });
 });
 

@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import { PublicationStatus } from '@prisma/client';
 
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createStudyDestination,
@@ -42,6 +43,11 @@ export const getStudyDestinations = asyncHandler(async (req, res: Response) => {
       includeUnpublished: Boolean(req.user),
       showInMenu: parseBooleanQuery(req.query.showInMenu),
       status: parsePublicationStatusQuery(req.query.status),
+      search: typeof req.query.search === 'string' ? req.query.search : undefined,
+      pagination: resolvePaginationInput({
+        page: req.query.page,
+        limit: req.query.limit,
+      }),
     });
   } catch (error) {
     const reason =
@@ -55,7 +61,8 @@ export const getStudyDestinations = asyncHandler(async (req, res: Response) => {
   sendResponse(res, 200, {
     success: true,
     message: 'Study destinations retrieved successfully.',
-    data: destinations,
+    data: isPaginatedResult(destinations) ? destinations.items : destinations,
+    pagination: isPaginatedResult(destinations) ? destinations.pagination : undefined,
   });
 });
 

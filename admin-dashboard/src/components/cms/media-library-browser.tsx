@@ -13,10 +13,18 @@ import {
   Trash2,
   UploadCloud,
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { apiClient, extractApiData, getApiErrorMessage } from '../../lib/api-client';
+import { Pagination } from '../dashboard/pagination';
+import {
+  apiClient,
+  extractApiData,
+  extractApiPagination,
+  getApiErrorMessage,
+} from '../../lib/api-client';
 import { resolveCmsAssetUrl } from '../../lib/media';
+import { dashboardPageSize, type PaginationMeta } from '../../lib/pagination';
 import { cn } from '../../lib/utils';
 import type { UploadKind } from '../../types/app';
 import { Button } from '../ui/button';
@@ -116,6 +124,73 @@ const formatStatusLabel = (value: string) =>
     .toLowerCase()
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (character) => character.toUpperCase());
+
+const useDebouncedValue = (value: string, delayMs = 300) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delayMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [delayMs, value]);
+
+  return debouncedValue;
+};
+
+const getSanitizedViewMode = (value: string | null): MediaViewMode =>
+  value === 'list' ? 'list' : 'grid';
+
+const getSanitizedMediaStatusFilter = (value: string | null): MediaStatusFilter =>
+  value === 'ACTIVE' || value === 'INACTIVE' ? value : 'ALL';
+
+const getSanitizedMediaFileTypeFilter = (
+  value: string | null,
+  availableFileTypes: MediaLibraryAsset['fileType'][],
+): MediaAssetFilterType =>
+  value && availableFileTypes.includes(value as MediaLibraryAsset['fileType'])
+    ? (value as MediaAssetFilterType)
+    : 'ALL';
+
+const buildMediaLibrarySearchParams = ({
+  search,
+  status,
+  fileType,
+  viewMode,
+  page,
+}: {
+  search: string;
+  status: MediaStatusFilter;
+  fileType: MediaAssetFilterType;
+  viewMode: MediaViewMode;
+  page: number;
+}) => {
+  const params = new URLSearchParams();
+  const trimmedSearch = search.trim();
+
+  if (trimmedSearch) {
+    params.set('search', trimmedSearch);
+  }
+
+  if (status !== 'ALL') {
+    params.set('status', status);
+  }
+
+  if (fileType !== 'ALL') {
+    params.set('fileType', fileType);
+  }
+
+  if (viewMode !== 'grid') {
+    params.set('view', viewMode);
+  }
+
+  if (page > 1) {
+    params.set('page', String(page));
+  }
+
+  return params;
+};
 
 type MediaPreviewProps = {
   src?: string | null;
@@ -231,6 +306,15 @@ export function MediaLibraryBrowser({
   showUploadControls = false,
   uploadKinds = ['image'],
 }: MediaLibraryBrowserProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const effectiveAssetTypes = useMemo(
+    () => (allowedAssetTypes && allowedAssetTypes.length > 0 ? allowedAssetTypes : null),
+    [allowedAssetTypes],
+  );
+  const fileTypeOptions = useMemo<MediaLibraryAsset['fileType'][]>(() => {
+    const sourceTypes = effectiveAssetTypes ?? ['IMAGE', 'SVG', 'DOCUMENT', 'VIDEO', 'UNKNOWN'];
+    return Array.from(new Set(sourceTypes));
+  }, [effectiveAssetTypes]);
   const inputRefs = useRef<Record<UploadKind, HTMLInputElement | null>>({
     image: null,
     document: null,
@@ -244,11 +328,14 @@ export function MediaLibraryBrowser({
   const [brokenPreviewUrls, setBrokenPreviewUrls] = useState<BrokenPreviewMap>({});
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
   const [libraryItems, setLibraryItems] = useState<MediaLibraryAsset[]>([]);
+  const [serverPagination, setServerPagination] = useState<PaginationMeta | null>(null);
   const [libraryError, setLibraryError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<MediaViewMode>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<MediaStatusFilter>('ALL');
-  const [fileTypeFilter, setFileTypeFilter] = useState<MediaAssetFilterType>('ALL');
+  const [viewMode, setViewMode] = useState<MediaViewMode>(getSanitizedViewMode(searchParams.get('view')));
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') ?? '');
+  const [statusFilter, setStatusFilter] = useState<MediaStatusFilter>(getSanitizedMediaStatusFilter(searchParams.get('status')));
+  const [fileTypeFilter, setFileTypeFilter] = useState<MediaAssetFilterType>(
+    getSanitizedMediaFileTypeFilter(searchParams.get('fileType'), fileTypeOptions),
+  );
   const [activeItem, setActiveItem] = useState<MediaLibraryAsset | null>(null);
   const [metadataValues, setMetadataValues] = useState<MediaMetadataFormValues>(
     buildMediaMetadataFormValues(null),
@@ -261,16 +348,62 @@ export function MediaLibraryBrowser({
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
   const [usageSummariesById, setUsageSummariesById] = useState<Record<string, MediaAssetUsageSummary>>({});
   const [usageLoadingIds, setUsageLoadingIds] = useState<Record<string, true>>({});
-
-  const effectiveAssetTypes = useMemo(
-    () => (allowedAssetTypes && allowedAssetTypes.length > 0 ? allowedAssetTypes : null),
-    [allowedAssetTypes],
-  );
-  const fileTypeOptions = useMemo<MediaLibraryAsset['fileType'][]>(() => {
-    const sourceTypes = effectiveAssetTypes ?? ['IMAGE', 'SVG', 'DOCUMENT', 'VIDEO', 'UNKNOWN'];
-    return Array.from(new Set(sourceTypes));
-  }, [effectiveAssetTypes]);
+  const [libraryReloadKey, setLibraryReloadKey] = useState(0);
   const allowSelection = Boolean(onSelectAsset);
+  const isPageVariant = variant === 'page' && effectiveAssetTypes === null;
+  const shouldUseServerPagination = isPageVariant;
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
+  const normalizedSearchQuery = debouncedSearchQuery.trim();
+  const currentPageFromUrl = Number.parseInt(searchParams.get('page') ?? '1', 10);
+  const currentPage =
+    shouldUseServerPagination && Number.isFinite(currentPageFromUrl) && currentPageFromUrl > 0
+      ? currentPageFromUrl
+      : 1;
+
+  useEffect(() => {
+    if (!isPageVariant) {
+      return;
+    }
+
+    const currentSearchValue = (searchParams.get('search') ?? '').trim();
+    const currentStatusValue = getSanitizedMediaStatusFilter(searchParams.get('status'));
+    const currentFileTypeValue = getSanitizedMediaFileTypeFilter(
+      searchParams.get('fileType'),
+      fileTypeOptions,
+    );
+    const nextPage =
+      normalizedSearchQuery !== currentSearchValue
+      || statusFilter !== currentStatusValue
+      || fileTypeFilter !== currentFileTypeValue
+        ? 1
+        : currentPage;
+    const nextSearchParams = buildMediaLibrarySearchParams({
+      search: debouncedSearchQuery,
+      status: statusFilter,
+      fileType: fileTypeFilter,
+      viewMode,
+      page: nextPage,
+    });
+
+    if (nextSearchParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [
+    currentPage,
+    debouncedSearchQuery,
+    fileTypeFilter,
+    fileTypeOptions,
+    isPageVariant,
+    normalizedSearchQuery,
+    searchParams,
+    setSearchParams,
+    statusFilter,
+    viewMode,
+  ]);
+
+  const reloadLibraryItems = () => {
+    setLibraryReloadKey((currentValue) => currentValue + 1);
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -280,15 +413,30 @@ export function MediaLibraryBrowser({
       setLibraryError(null);
 
       try {
-        const response = await apiClient.get('/media-assets');
+        const response = await apiClient.get('/media-assets', {
+          params: shouldUseServerPagination
+            ? {
+                ...(normalizedSearchQuery ? { search: normalizedSearchQuery } : {}),
+                ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
+                ...(fileTypeFilter !== 'ALL' ? { fileType: fileTypeFilter } : {}),
+                page: currentPage,
+                limit: dashboardPageSize,
+              }
+            : undefined,
+        });
         const payload = extractApiData<MediaLibraryAsset[]>(response);
 
         if (!isActive) {
           return;
         }
 
+        setServerPagination(
+          shouldUseServerPagination ? extractApiPagination(response) ?? null : null,
+        );
         setLibraryItems(
-          effectiveAssetTypes
+          shouldUseServerPagination
+            ? payload
+            : effectiveAssetTypes
             ? payload.filter((item) => effectiveAssetTypes.includes(item.fileType))
             : payload,
         );
@@ -297,6 +445,7 @@ export function MediaLibraryBrowser({
           return;
         }
 
+        setServerPagination(null);
         setLibraryError(getApiErrorMessage(error));
       } finally {
         if (isActive) {
@@ -310,13 +459,25 @@ export function MediaLibraryBrowser({
     return () => {
       isActive = false;
     };
-  }, [effectiveAssetTypes]);
+  }, [
+    currentPage,
+    effectiveAssetTypes,
+    fileTypeFilter,
+    libraryReloadKey,
+    normalizedSearchQuery,
+    shouldUseServerPagination,
+    statusFilter,
+  ]);
 
   useEffect(() => {
     setMetadataValues(buildMediaMetadataFormValues(activeItem));
   }, [activeItem]);
 
   const filteredLibraryItems = useMemo(() => {
+    if (shouldUseServerPagination) {
+      return libraryItems;
+    }
+
     const normalizedSearch = searchQuery.trim().toLowerCase();
 
     return libraryItems.filter((item) => {
@@ -347,7 +508,7 @@ export function MediaLibraryBrowser({
 
       return searchableText.includes(normalizedSearch);
     });
-  }, [fileTypeFilter, libraryItems, searchQuery, statusFilter]);
+  }, [fileTypeFilter, libraryItems, searchQuery, shouldUseServerPagination, statusFilter]);
 
   const visibleItemIds = useMemo(
     () => filteredLibraryItems.map((item) => item.id),
@@ -359,12 +520,44 @@ export function MediaLibraryBrowser({
   );
   const areAllVisibleSelected =
     visibleItemIds.length > 0 && selectedVisibleCount === visibleItemIds.length;
+  const totalFilteredAssetCount = shouldUseServerPagination
+    ? serverPagination?.totalItems ?? filteredLibraryItems.length
+    : filteredLibraryItems.length;
+  const totalAssetCount = shouldUseServerPagination
+    ? serverPagination?.totalItems ?? libraryItems.length
+    : libraryItems.length;
 
   useEffect(() => {
     setSelectedItemIds((currentIds) =>
       currentIds.filter((id) => libraryItems.some((item) => item.id === id)),
     );
   }, [libraryItems]);
+
+  useEffect(() => {
+    if (!shouldUseServerPagination || !serverPagination) {
+      return;
+    }
+
+    if (currentPage <= serverPagination.totalPages) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (serverPagination.totalPages <= 1) {
+      nextSearchParams.delete('page');
+    } else {
+      nextSearchParams.set('page', String(serverPagination.totalPages));
+    }
+
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [
+    currentPage,
+    searchParams,
+    serverPagination,
+    setSearchParams,
+    shouldUseServerPagination,
+  ]);
 
   useEffect(() => {
     if (!deleteTarget || usageSummariesById[deleteTarget.id] || usageLoadingIds[deleteTarget.id]) {
@@ -502,19 +695,26 @@ export function MediaLibraryBrowser({
         uploadedPayloads.push(extractApiData<UploadedFile>(response));
       }
 
-      setLibraryItems((currentItems) => {
-        const nextItems = [...currentItems];
+      if (shouldUseServerPagination) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.delete('page');
+        setSearchParams(nextSearchParams, { replace: true });
+        reloadLibraryItems();
+      } else {
+        setLibraryItems((currentItems) => {
+          const nextItems = [...currentItems];
 
-        for (const payload of uploadedPayloads) {
-          if (!effectiveAssetTypes || effectiveAssetTypes.includes(payload.asset.fileType)) {
-            if (!nextItems.some((item) => item.id === payload.asset.id)) {
-              nextItems.unshift(payload.asset);
+          for (const payload of uploadedPayloads) {
+            if (!effectiveAssetTypes || effectiveAssetTypes.includes(payload.asset.fileType)) {
+              if (!nextItems.some((item) => item.id === payload.asset.id)) {
+                nextItems.unshift(payload.asset);
+              }
             }
           }
-        }
 
-        return nextItems;
-      });
+          return nextItems;
+        });
+      }
 
       toast.success(
         uploadedPayloads.length === 1
@@ -626,7 +826,15 @@ export function MediaLibraryBrowser({
 
     try {
       await apiClient.delete(`/media-assets/${deleteTarget.id}`);
+      if (shouldUseServerPagination && currentPage > 1 && filteredLibraryItems.length === 1) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('page', String(currentPage - 1));
+        setSearchParams(nextSearchParams, { replace: true });
+      }
       removeDeletedAssetsFromState([deleteTarget.id]);
+      if (shouldUseServerPagination) {
+        reloadLibraryItems();
+      }
       toast.success('Media asset deleted successfully.');
       setDeleteTarget(null);
     } catch (error) {
@@ -649,7 +857,24 @@ export function MediaLibraryBrowser({
         ids: selectedItemIds,
       });
       const payload = extractApiData<{ deletedIds: string[]; deletedCount: number }>(response);
+      const deletedCurrentPageAssetCount = filteredLibraryItems.filter((item) =>
+        payload.deletedIds.includes(item.id),
+      ).length;
+
+      if (
+        shouldUseServerPagination
+        && currentPage > 1
+        && deletedCurrentPageAssetCount > 0
+        && deletedCurrentPageAssetCount === filteredLibraryItems.length
+      ) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('page', String(currentPage - 1));
+        setSearchParams(nextSearchParams, { replace: true });
+      }
       removeDeletedAssetsFromState(payload.deletedIds);
+      if (shouldUseServerPagination) {
+        reloadLibraryItems();
+      }
       toast.success(
         payload.deletedCount === 1
           ? '1 media asset deleted successfully.'
@@ -682,6 +907,9 @@ export function MediaLibraryBrowser({
       setLibraryItems((currentItems) =>
         currentItems.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
       );
+      if (shouldUseServerPagination) {
+        reloadLibraryItems();
+      }
       setActiveItem(updatedItem);
       onAssetUpdated?.(updatedItem);
 
@@ -850,7 +1078,10 @@ export function MediaLibraryBrowser({
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-semibold text-foreground">{filteredLibraryItems.length}</span> of{' '}
-              <span className="font-semibold text-foreground">{libraryItems.length}</span> assets
+              <span className="font-semibold text-foreground">{totalFilteredAssetCount}</span> assets
+              {shouldUseServerPagination && totalAssetCount !== totalFilteredAssetCount ? (
+                <> from <span className="font-semibold text-foreground">{totalAssetCount}</span> total</>
+              ) : null}
             </p>
 
             <div className="inline-flex rounded-xl border border-border/70 bg-white p-1 shadow-sm">
@@ -1161,6 +1392,26 @@ export function MediaLibraryBrowser({
           </div>
         )}
       </div>
+
+      {shouldUseServerPagination && serverPagination ? (
+        <div className="border-t border-border/70 px-6 py-5">
+          <Pagination
+            pagination={serverPagination}
+            onPageChange={(page) => {
+              const nextSearchParams = new URLSearchParams(searchParams);
+
+              if (page <= 1) {
+                nextSearchParams.delete('page');
+              } else {
+                nextSearchParams.set('page', String(page));
+              }
+
+              setSearchParams(nextSearchParams);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </div>
+      ) : null}
 
       <Dialog open={Boolean(activeItem)} onOpenChange={(open) => !open && setActiveItem(null)}>
         <DialogContent className="max-h-[88vh] max-w-5xl overflow-y-auto">

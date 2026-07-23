@@ -20,6 +20,16 @@ import {
   resolveOfficialWhatsAppContact,
   type OfficialWhatsAppContact,
 } from '../utils/official-whatsapp';
+import {
+  normalizeOptionalPublicEmailAddress,
+  normalizePublicFormText,
+  normalizePublicPhoneNumber,
+} from '../utils/public-form-validation';
+import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
 import { resolvePublicWebsiteUrl } from '../utils/public-site-url';
 
 type CreateCollegeFeeInquiryInput = {
@@ -41,6 +51,7 @@ type CollegeFeeInquiryStatusFilter = 'all' | 'read' | 'unread';
 type ListCollegeFeeInquiriesInput = {
   search?: string;
   status?: CollegeFeeInquiryStatusFilter;
+  pagination?: PaginationInput | null;
 };
 
 const collegeFeeInquirySelect = {
@@ -100,18 +111,6 @@ const defaultDependencies: CollegeFeeInquiryServiceDependencies = {
   resolveOfficialWhatsAppContact,
 };
 
-const recentInquiryWindowMs = 2 * 60 * 1000;
-const duplicateInquiryWindowMs = 24 * 60 * 60 * 1000;
-
-const normalizeRequiredString = (value: string) => value.trim();
-const normalizePhoneNumber = (value: string) => {
-  const trimmed = value.trim();
-  const hasLeadingPlus = trimmed.startsWith('+');
-  const digits = trimmed.replace(/\D/g, '');
-
-  return hasLeadingPlus ? `+${digits}` : digits;
-};
-
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
     return undefined;
@@ -126,7 +125,7 @@ const normalizeNullableString = (value?: string | null) => {
 };
 
 const normalizeNullableEmail = (value?: string | null) =>
-  normalizeNullableString(value)?.toLowerCase() ?? null;
+  normalizeOptionalPublicEmailAddress(normalizeNullableString(value)) ?? null;
 
 const normalizeSearch = (value?: string) => {
   const trimmed = value?.trim();
@@ -161,7 +160,7 @@ const getCollegeFeeInquirySourceContext = (source: string) => {
 };
 
 const buildPhoneLink = (value: string) => {
-  const normalizedPhone = normalizePhoneNumber(value);
+  const normalizedPhone = normalizePublicPhoneNumber(value);
   return normalizedPhone ? `tel:${normalizedPhone}` : undefined;
 };
 
@@ -185,11 +184,11 @@ const buildCollegeFeeInquiryData = (
   }
 
   if ('fullName' in input && input.fullName !== undefined) {
-    data.fullName = normalizeRequiredString(input.fullName);
+    data.fullName = normalizePublicFormText(input.fullName);
   }
 
   if ('phoneNumber' in input && input.phoneNumber !== undefined) {
-    data.phoneNumber = normalizePhoneNumber(input.phoneNumber);
+    data.phoneNumber = normalizePublicPhoneNumber(input.phoneNumber);
   }
 
   if ('emailAddress' in input) {
@@ -205,7 +204,7 @@ const buildCollegeFeeInquiryData = (
   }
 
   if ('interestedCollegeName' in input && input.interestedCollegeName !== undefined) {
-    data.interestedCollegeName = normalizeRequiredString(input.interestedCollegeName);
+    data.interestedCollegeName = normalizePublicFormText(input.interestedCollegeName);
   }
 
   if ('message' in input) {
@@ -225,53 +224,10 @@ const buildCollegeFeeInquiryData = (
 
 const assertNoSpamIndicators = async (
   input: CreateCollegeFeeInquiryInput,
-  collegeFeeInquiryModel: CollegeFeeInquiryServiceDependencies['collegeFeeInquiryModel'],
+  _collegeFeeInquiryModel: CollegeFeeInquiryServiceDependencies['collegeFeeInquiryModel'],
 ) => {
   if (input.website?.trim()) {
     throw new ApiError(400, 'Spam submission detected.');
-  }
-
-  const normalizedPhoneNumber = normalizePhoneNumber(input.phoneNumber);
-  const normalizedEmailAddress = normalizeNullableEmail(input.emailAddress);
-  const createdAfter = new Date(Date.now() - recentInquiryWindowMs);
-  const recentSubmissionMatchers: Prisma.CollegeFeeInquiryWhereInput[] = [
-    { phoneNumber: normalizedPhoneNumber },
-  ];
-
-  if (normalizedEmailAddress) {
-    recentSubmissionMatchers.push({ emailAddress: normalizedEmailAddress });
-  }
-
-  const recentSubmission = await collegeFeeInquiryModel.findFirst({
-    where: {
-      createdAt: { gte: createdAfter },
-      OR: recentSubmissionMatchers,
-    },
-    select: { id: true },
-  });
-
-  if (recentSubmission) {
-    throw new ApiError(429, 'Please wait a moment before submitting another inquiry.');
-  }
-
-  const duplicateSubmission = await collegeFeeInquiryModel.findFirst({
-    where: {
-      createdAt: { gte: new Date(Date.now() - duplicateInquiryWindowMs) },
-      phoneNumber: normalizedPhoneNumber,
-      fullName: {
-        equals: normalizeRequiredString(input.fullName),
-        mode: 'insensitive',
-      },
-      interestedCollegeName: {
-        equals: normalizeRequiredString(input.interestedCollegeName),
-        mode: 'insensitive',
-      },
-    },
-    select: { id: true },
-  });
-
-  if (duplicateSubmission) {
-    throw new ApiError(409, 'This inquiry has already been submitted recently.');
   }
 };
 
@@ -474,8 +430,31 @@ const sendInquiryEmails = async (
 };
 
 export const listCollegeFeeInquiries = async (input: ListCollegeFeeInquiriesInput = {}) => {
+  const where = buildCollegeFeeInquiryWhere(input);
+  const pagination = input.pagination;
+
+  if (pagination) {
+    const [inquiries, totalItems] = await Promise.all([
+      defaultDependencies.collegeFeeInquiryModel.findMany({
+        where,
+        select: collegeFeeInquirySelect,
+        orderBy: [{ createdAt: 'desc' }],
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      }),
+      prisma.collegeFeeInquiry.count({ where }),
+    ]);
+
+    return buildPaginatedResult({
+      items: sortCollegeFeeInquiries(inquiries),
+      page: pagination.page,
+      limit: pagination.limit,
+      totalItems,
+    }) satisfies PaginatedResult<CollegeFeeInquiryRecord>;
+  }
+
   const inquiries = await defaultDependencies.collegeFeeInquiryModel.findMany({
-    where: buildCollegeFeeInquiryWhere(input),
+    where,
     select: collegeFeeInquirySelect,
     orderBy: [{ createdAt: 'desc' }],
   });

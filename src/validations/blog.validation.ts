@@ -2,6 +2,7 @@ import { PublicationStatus } from '@prisma/client';
 import { z } from 'zod';
 
 import { nullableAbsoluteUrlString, nullableAssetUrlString } from './asset-url.validation';
+import { normalizeOptionalQueryString, paginationQueryFields } from './pagination.validation';
 
 const nullableTrimmedString = z.string().trim().nullable().optional();
 const nullableJsonSchema = z
@@ -69,9 +70,9 @@ export const blogSlugParamSchema = z.object({
 
 export const listBlogsQuerySchema = z.object({
   query: z.object({
-    search: z.string().trim().optional(),
-    category: z.string().trim().optional(),
-    page: z.coerce.number().int().positive().optional(),
+    search: normalizeOptionalQueryString,
+    category: normalizeOptionalQueryString,
+    ...paginationQueryFields,
     pageSize: z.coerce.number().int().positive().max(100).optional(),
   }),
 });

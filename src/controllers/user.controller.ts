@@ -2,6 +2,7 @@ import type { Response } from 'express';
 
 import { ApiError } from '../utils/api-error';
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createUser,
@@ -10,13 +11,20 @@ import {
   updateUser,
 } from '../services/user.service';
 
-export const getUsers = asyncHandler(async (_req, res: Response) => {
-  const users = await listUsers();
+export const getUsers = asyncHandler(async (req, res: Response) => {
+  const users = await listUsers({
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+    }),
+  });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Users retrieved successfully.',
-    data: users,
+    data: isPaginatedResult(users) ? users.items : users,
+    pagination: isPaginatedResult(users) ? users.pagination : undefined,
   });
 });
 

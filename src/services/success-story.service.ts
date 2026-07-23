@@ -7,6 +7,11 @@ import {
   SUCCESS_STORIES_SECTION_KEY,
 } from '../utils/home-section';
 import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
+import {
   mapSuccessStoryToApi,
   publicSuccessStorySelect,
 } from '../utils/success-story-response';
@@ -29,6 +34,14 @@ type CreateSuccessStoryInput = {
 };
 
 type UpdateSuccessStoryInput = Partial<CreateSuccessStoryInput>;
+
+type ListSuccessStoriesOptions = {
+  includeInactive?: boolean;
+  search?: string;
+  pagination?: PaginationInput | null;
+};
+
+type SuccessStoryListItem = ReturnType<typeof mapSuccessStoryToApi>;
 
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
@@ -120,14 +133,57 @@ const buildSuccessStoryData = (
   return data;
 };
 
-export const listSuccessStories = async (includeInactive = false) => {
-  const stories = await prisma.successStory.findMany({
-    where: includeInactive ? undefined : { status: SimpleStatus.ACTIVE },
-    select: publicSuccessStorySelect,
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-  });
+export const listSuccessStories = async ({
+  includeInactive = false,
+  search,
+  pagination,
+}: ListSuccessStoriesOptions = {}): Promise<
+  SuccessStoryListItem[] | PaginatedResult<SuccessStoryListItem>
+> => {
+  const normalizedSearch = search?.trim();
+  const where: Prisma.SuccessStoryWhereInput = {
+    ...(includeInactive ? {} : { status: SimpleStatus.ACTIVE }),
+    ...(normalizedSearch
+      ? {
+          OR: [
+            { studentName: { contains: normalizedSearch, mode: 'insensitive' } },
+            { roleType: { contains: normalizedSearch, mode: 'insensitive' } },
+            { university: { contains: normalizedSearch, mode: 'insensitive' } },
+            { batch: { contains: normalizedSearch, mode: 'insensitive' } },
+            { city: { contains: normalizedSearch, mode: 'insensitive' } },
+            { country: { contains: normalizedSearch, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  };
 
-  return stories.map(mapSuccessStoryToApi);
+  if (!pagination) {
+    const stories = await prisma.successStory.findMany({
+      where,
+      select: publicSuccessStorySelect,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    });
+
+    return stories.map(mapSuccessStoryToApi);
+  }
+
+  const [totalItems, stories] = await Promise.all([
+    prisma.successStory.count({ where }),
+    prisma.successStory.findMany({
+      where,
+      select: publicSuccessStorySelect,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      skip: (pagination.page - 1) * pagination.limit,
+      take: pagination.limit,
+    }),
+  ]);
+
+  return buildPaginatedResult({
+    items: stories.map(mapSuccessStoryToApi),
+    page: pagination.page,
+    limit: pagination.limit,
+    totalItems,
+  });
 };
 
 export const listHomepageSuccessStories = async () => {

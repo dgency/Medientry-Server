@@ -37,10 +37,12 @@ export const errorHandler = (
     statusCode = 400;
     const zodErrorDetails = buildZodErrorDetails(error);
     const fieldNames = Object.keys(zodErrorDetails.fieldErrors);
+    const firstIssueMessage = error.issues.find((issue) => issue.message?.trim())?.message?.trim();
     message =
-      fieldNames.length > 0
+      firstIssueMessage ||
+      (fieldNames.length > 0
         ? `Validation failed for: ${fieldNames.join(', ')}.`
-        : 'Validation failed.';
+        : 'Validation failed.');
     errors = zodErrorDetails;
     code = 'VALIDATION_FAILED';
   } else {

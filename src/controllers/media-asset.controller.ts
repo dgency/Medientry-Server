@@ -8,19 +8,26 @@ import {
   updateMediaAsset,
 } from '../services/media-asset.service';
 import { asyncHandler } from '../utils/async-handler';
+import { resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 
 export const getMediaAssets = asyncHandler(async (req, res: Response) => {
-  const mediaAssets = await listMediaAssets({
+  const result = await listMediaAssets({
     fileType: typeof req.query.fileType === 'string' ? (req.query.fileType as never) : undefined,
     status: typeof req.query.status === 'string' ? (req.query.status as never) : undefined,
     search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+      enabledByDefault: true,
+    }),
   });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Media assets retrieved successfully.',
-    data: mediaAssets,
+    data: Array.isArray(result) ? result : result.items,
+    pagination: Array.isArray(result) ? undefined : result.pagination,
   });
 });
 

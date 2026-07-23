@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createSuccessStory,
@@ -11,12 +12,20 @@ import {
 } from '../services/success-story.service';
 
 export const getSuccessStories = asyncHandler(async (req, res: Response) => {
-  const successStories = await listSuccessStories(Boolean(req.user));
+  const successStories = await listSuccessStories({
+    includeInactive: Boolean(req.user),
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+    }),
+  });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Success stories retrieved successfully.',
-    data: successStories,
+    data: isPaginatedResult(successStories) ? successStories.items : successStories,
+    pagination: isPaginatedResult(successStories) ? successStories.pagination : undefined,
   });
 });
 

@@ -26,13 +26,21 @@ export const getBlogs = asyncHandler(async (req, res: Response) => {
     category:
       typeof req.query.category === 'string' ? req.query.category : undefined,
     page: parsePositiveIntegerQuery(req.query.page, 1),
-    pageSize: parsePositiveIntegerQuery(req.query.pageSize, 10),
+    pageSize: parsePositiveIntegerQuery(req.query.limit ?? req.query.pageSize, 15),
   });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Blogs retrieved successfully.',
     data: result,
+    pagination: {
+      page: result.meta.page,
+      limit: result.meta.pageSize,
+      totalItems: result.meta.total,
+      totalPages: result.meta.totalPages,
+      hasNextPage: result.meta.page < result.meta.totalPages,
+      hasPreviousPage: result.meta.page > 1,
+    },
   });
 });
 

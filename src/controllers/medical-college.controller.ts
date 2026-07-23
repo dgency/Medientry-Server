@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createMedicalCollege,
@@ -32,12 +33,18 @@ export const getMedicalColleges = asyncHandler(async (req, res: Response) => {
         ? req.query.sectionKey
         : undefined,
     limit: parsePositiveIntegerQuery(req.query.limit),
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+    }),
   });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Medical colleges retrieved successfully.',
-    data: medicalColleges,
+    data: isPaginatedResult(medicalColleges) ? medicalColleges.items : medicalColleges,
+    pagination: isPaginatedResult(medicalColleges) ? medicalColleges.pagination : undefined,
   });
 });
 

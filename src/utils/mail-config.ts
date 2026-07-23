@@ -82,21 +82,28 @@ export const resolveReplyToEmail = (primary?: string | null, legacy?: string | n
   return validateEmailAddress(preferredValue, 'reply-to email');
 };
 
-export const buildMailRuntimeConfig = (source: MailConfigSource): MailRuntimeConfig => ({
-  enabled: source.MAIL_ENABLED,
-  host: source.MAIL_HOST.trim(),
-  port: source.MAIL_PORT,
-  secure: source.MAIL_SECURE,
-  requireTls: source.MAIL_REQUIRE_TLS,
-  user: source.MAIL_USER?.trim() || undefined,
-  pass: source.MAIL_PASS?.trim() || undefined,
-  fromName: sanitizeHeaderValue(source.MAIL_FROM_NAME),
-  fromEmail: source.MAIL_FROM_EMAIL?.trim()
-    ? validateEmailAddress(source.MAIL_FROM_EMAIL, 'sender email')
-    : undefined,
-  replyToEmail: resolveReplyToEmail(source.MAIL_REPLY_TO_EMAIL, source.MAIL_REPLY_TO),
-  adminNotificationEmails: parseAdminNotificationEmails(source.ADMIN_NOTIFICATION_EMAILS),
-  connectionTimeoutMs: source.MAIL_CONNECTION_TIMEOUT_MS,
-  greetingTimeoutMs: source.MAIL_GREETING_TIMEOUT_MS,
-  socketTimeoutMs: source.MAIL_SOCKET_TIMEOUT_MS,
-});
+export const buildMailRuntimeConfig = (source: MailConfigSource): MailRuntimeConfig => {
+  const normalizedPort = source.MAIL_PORT;
+  const normalizedSecure =
+    normalizedPort === 465 ? true : normalizedPort === 587 ? false : source.MAIL_SECURE;
+  const normalizedRequireTls = normalizedPort === 587 ? true : source.MAIL_REQUIRE_TLS;
+
+  return {
+    enabled: source.MAIL_ENABLED,
+    host: source.MAIL_HOST.trim(),
+    port: normalizedPort,
+    secure: normalizedSecure,
+    requireTls: normalizedRequireTls,
+    user: source.MAIL_USER?.trim() || undefined,
+    pass: source.MAIL_PASS?.trim() || undefined,
+    fromName: sanitizeHeaderValue(source.MAIL_FROM_NAME),
+    fromEmail: source.MAIL_FROM_EMAIL?.trim()
+      ? validateEmailAddress(source.MAIL_FROM_EMAIL, 'sender email')
+      : undefined,
+    replyToEmail: resolveReplyToEmail(source.MAIL_REPLY_TO_EMAIL, source.MAIL_REPLY_TO),
+    adminNotificationEmails: parseAdminNotificationEmails(source.ADMIN_NOTIFICATION_EMAILS),
+    connectionTimeoutMs: source.MAIL_CONNECTION_TIMEOUT_MS,
+    greetingTimeoutMs: source.MAIL_GREETING_TIMEOUT_MS,
+    socketTimeoutMs: source.MAIL_SOCKET_TIMEOUT_MS,
+  };
+};

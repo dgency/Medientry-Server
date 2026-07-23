@@ -79,6 +79,24 @@ const getConfiguredServerOrigin = () => {
   }
 };
 
+const getConfiguredMediaOrigin = () => {
+  const configuredBaseUrl =
+    env.SPACES_PUBLIC_BASE_URL?.trim()
+    || env.SERVER_PUBLIC_URL?.trim()
+    || env.PUBLIC_BASE_URL?.trim()
+    || '';
+
+  if (!configuredBaseUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(configuredBaseUrl).origin;
+  } catch {
+    return null;
+  }
+};
+
 const looksLikeStandaloneMediaValue = (value: string, fieldName?: string | null) => {
   const trimmedValue = value.trim();
 
@@ -191,17 +209,18 @@ export const resolvePublicMediaUrl = (value?: string | null) => {
   }
 
   const configuredServerOrigin = getConfiguredServerOrigin();
+  const configuredMediaOrigin = getConfiguredMediaOrigin();
 
   if (normalizedValue.startsWith('/uploads/')) {
-    return configuredServerOrigin
-      ? `${configuredServerOrigin}${normalizedValue}`
+    return configuredMediaOrigin
+      ? `${configuredMediaOrigin}${normalizedValue}`
       : normalizedValue;
   }
 
   if (normalizedValue.startsWith('uploads/')) {
     const normalizedUploadsPath = `/${normalizedValue.replace(/^\/+/, '')}`;
-    return configuredServerOrigin
-      ? `${configuredServerOrigin}${normalizedUploadsPath}`
+    return configuredMediaOrigin
+      ? `${configuredMediaOrigin}${normalizedUploadsPath}`
       : normalizedUploadsPath;
   }
 

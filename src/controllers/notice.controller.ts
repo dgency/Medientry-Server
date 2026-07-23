@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createNotice,
@@ -11,12 +12,20 @@ import {
 } from '../services/notice.service';
 
 export const getNotices = asyncHandler(async (req, res: Response) => {
-  const notices = await listNotices(Boolean(req.user));
+  const notices = await listNotices({
+    includeUnpublished: Boolean(req.user),
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+    }),
+  });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Notices retrieved successfully.',
-    data: notices,
+    data: isPaginatedResult(notices) ? notices.items : notices,
+    pagination: isPaginatedResult(notices) ? notices.pagination : undefined,
   });
 });
 

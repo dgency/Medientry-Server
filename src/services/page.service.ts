@@ -2,6 +2,11 @@ import { PageType, Prisma, PublicationStatus } from '@prisma/client';
 
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
+import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
 import { mapPageToApi, publicPageSelect } from '../utils/page-response';
 
 type CreatePageInput = {
@@ -23,6 +28,13 @@ type CreatePageInput = {
 
 type UpdatePageInput = Partial<CreatePageInput>;
 
+type PageListItem = ReturnType<typeof mapPageToApi>;
+
+type ListPagesOptions = {
+  search?: string;
+  pagination?: PaginationInput | null;
+};
+
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
     return undefined;
@@ -37,6 +49,25 @@ const normalizeNullableString = (value?: string | null) => {
 };
 
 const normalizeSlug = (slug: string) => slug.trim().toLowerCase();
+
+const buildPageSearchWhere = (search?: string): Prisma.PageWhereInput => {
+  const normalizedSearch = search?.trim();
+
+  if (!normalizedSearch) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { title: { contains: normalizedSearch, mode: 'insensitive' } },
+      { slug: { contains: normalizedSearch, mode: 'insensitive' } },
+      { heroTitle: { contains: normalizedSearch, mode: 'insensitive' } },
+      { heroSubtitle: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoTitle: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoDescription: { contains: normalizedSearch, mode: 'insensitive' } },
+    ],
+  };
+};
 
 const buildPageData = (input: CreatePageInput | UpdatePageInput): Prisma.PageUncheckedCreateInput | Prisma.PageUncheckedUpdateInput => {
   const data: Prisma.PageUncheckedCreateInput | Prisma.PageUncheckedUpdateInput = {};
@@ -111,13 +142,39 @@ const ensureSlugAvailable = async (slug: string, excludeId?: string) => {
   }
 };
 
-export const listPages = async () => {
-  const pages = await prisma.page.findMany({
-    select: publicPageSelect,
-    orderBy: [{ updatedAt: 'desc' }],
-  });
+export const listPages = async ({
+  search,
+  pagination,
+}: ListPagesOptions = {}): Promise<PageListItem[] | PaginatedResult<PageListItem>> => {
+  const where = buildPageSearchWhere(search);
 
-  return pages.map(mapPageToApi);
+  if (!pagination) {
+    const pages = await prisma.page.findMany({
+      where,
+      select: publicPageSelect,
+      orderBy: [{ updatedAt: 'desc' }],
+    });
+
+    return pages.map(mapPageToApi);
+  }
+
+  const [totalItems, pages] = await Promise.all([
+    prisma.page.count({ where }),
+    prisma.page.findMany({
+      where,
+      select: publicPageSelect,
+      orderBy: [{ updatedAt: 'desc' }],
+      skip: (pagination.page - 1) * pagination.limit,
+      take: pagination.limit,
+    }),
+  ]);
+
+  return buildPaginatedResult({
+    items: pages.map(mapPageToApi),
+    page: pagination.page,
+    limit: pagination.limit,
+    totalItems,
+  });
 };
 
 export const getPageBySlug = async (slug: string) => {

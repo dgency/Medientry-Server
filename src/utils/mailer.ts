@@ -711,6 +711,7 @@ export const createMailer = (
   const transportFactory = dependencies.createTransport ?? nodemailer.createTransport;
   let transporterCache: ReturnType<typeof nodemailer.createTransport> | null = null;
   let transporterVerificationPromise: Promise<void> | null = null;
+  let hasLoggedVerificationSuccess = false;
 
   const normalizeRecipients = (input: string | string[]) => {
     const recipients = Array.isArray(input) ? input : [input];
@@ -775,11 +776,21 @@ export const createMailer = (
     try {
       await transporterVerificationPromise;
 
+      if (!hasLoggedVerificationSuccess) {
+        console.log('SMTP connection verified successfully.');
+        hasLoggedVerificationSuccess = true;
+      }
+
       return {
         skipped: false,
       } satisfies MailSendResult;
     } catch (error) {
-      console.error('[mailer] Email transport verification failed.', getSafeMailErrorSummary(error, config));
+      const safeErrorSummary = getSafeMailErrorSummary(error, config);
+
+      console.error(
+        `SMTP connection verification failed: ${safeErrorSummary.message ?? 'Unknown SMTP verification error.'}`,
+      );
+      console.error('[mailer] Email transport verification failed.', safeErrorSummary);
       throw new ApiError(503, 'Email delivery failed. Please try again later.');
     }
   };
@@ -818,6 +829,10 @@ export const createMailer = (
         html,
         text,
       });
+
+      if (!Array.isArray(response.accepted) || response.accepted.length === 0) {
+        throw new Error('SMTP server did not accept any recipients.');
+      }
 
       return {
         skipped: false,

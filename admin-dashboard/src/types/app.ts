@@ -108,6 +108,12 @@ export type ResourceConfig<TItem extends { id: string }> = {
     activeValue: string;
     inactiveValue: string;
   };
+  loadItems?: () => Promise<TItem[]>;
+  getItemEditHref?: (item: TItem) => string | null;
+  getItemUpdatePath?: (item: TItem) => string | null;
+  canDeleteItem?: (item: TItem) => boolean;
+  allowCreate?: boolean;
+  allowDelete?: boolean;
   createButtonLabel: string;
   emptyTitle: string;
   emptyDescription: string;

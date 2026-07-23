@@ -153,6 +153,14 @@ export const envSchema = z.object({
       });
     }
 
+    if (value.MAIL_PORT === 25) {
+      context.addIssue({
+        code: 'custom',
+        path: ['MAIL_PORT'],
+        message: 'MAIL_PORT=25 is not supported. Use 465 for SSL or 587 for STARTTLS.',
+      });
+    }
+
     try {
       const recipients = parseAdminNotificationEmails(value.ADMIN_NOTIFICATION_EMAILS);
 

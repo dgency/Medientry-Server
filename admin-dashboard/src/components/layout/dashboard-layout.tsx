@@ -49,6 +49,7 @@ function SidebarContent({
             <NavLink
               key={item.href}
               to={item.href}
+              end
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(

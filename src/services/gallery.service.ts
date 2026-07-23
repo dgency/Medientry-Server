@@ -4,6 +4,11 @@ import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import { publicGalleryItemSelect, serializeGalleryItem } from '../utils/gallery-response';
 import { publicMediaAssetSelect, resolveMediaAssetUrl } from '../utils/media-asset-response';
+import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
 
 type CreateGalleryItemInput = {
   mediaAssetId?: string | null;
@@ -21,6 +26,14 @@ type CreateGalleryItemInput = {
 
 type UpdateGalleryItemInput = Partial<CreateGalleryItemInput>;
 
+type ListGalleryItemsOptions = {
+  includeInactive?: boolean;
+  search?: string;
+  pagination?: PaginationInput | null;
+};
+
+type GalleryListItem = ReturnType<typeof serializeGalleryItem>;
+
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
     return undefined;
@@ -32,6 +45,25 @@ const normalizeNullableString = (value?: string | null) => {
 
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
+};
+
+const buildGallerySearchWhere = (search?: string): Prisma.GalleryItemWhereInput => {
+  const normalizedSearch = search?.trim();
+
+  if (!normalizedSearch) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { title: { contains: normalizedSearch, mode: 'insensitive' } },
+      { category: { contains: normalizedSearch, mode: 'insensitive' } },
+      { url: { contains: normalizedSearch, mode: 'insensitive' } },
+      { altText: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoTitle: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoDescription: { contains: normalizedSearch, mode: 'insensitive' } },
+    ],
+  };
 };
 
 const normalizeRequiredTitle = (value?: string | null) => {
@@ -184,14 +216,43 @@ const buildGalleryItemData = ({
   return data;
 };
 
-export const listGalleryItems = async (includeInactive = false) => {
-  const items = await prisma.galleryItem.findMany({
-    where: includeInactive ? undefined : { status: SimpleStatus.ACTIVE },
-    select: publicGalleryItemSelect,
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-  });
+export const listGalleryItems = async ({
+  includeInactive = false,
+  search,
+  pagination,
+}: ListGalleryItemsOptions = {}): Promise<GalleryListItem[] | PaginatedResult<GalleryListItem>> => {
+  const where: Prisma.GalleryItemWhereInput = {
+    ...(includeInactive ? {} : { status: SimpleStatus.ACTIVE }),
+    ...buildGallerySearchWhere(search),
+  };
 
-  return items.map((item) => serializeGalleryItem(item));
+  if (!pagination) {
+    const items = await prisma.galleryItem.findMany({
+      where,
+      select: publicGalleryItemSelect,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    });
+
+    return items.map((item) => serializeGalleryItem(item));
+  }
+
+  const [totalItems, items] = await Promise.all([
+    prisma.galleryItem.count({ where }),
+    prisma.galleryItem.findMany({
+      where,
+      select: publicGalleryItemSelect,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      skip: (pagination.page - 1) * pagination.limit,
+      take: pagination.limit,
+    }),
+  ]);
+
+  return buildPaginatedResult({
+    items: items.map((item) => serializeGalleryItem(item)),
+    page: pagination.page,
+    limit: pagination.limit,
+    totalItems,
+  });
 };
 
 export const listHomepageGalleryItems = async () => {

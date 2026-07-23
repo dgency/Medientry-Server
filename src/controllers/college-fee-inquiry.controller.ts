@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
+import { resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createCollegeFeeInquiry,
@@ -13,15 +14,21 @@ import {
 } from '../services/college-fee-inquiry.service';
 
 export const getCollegeFeeInquiries = asyncHandler(async (req, res: Response) => {
-  const inquiries = await listCollegeFeeInquiries({
+  const result = await listCollegeFeeInquiries({
     search: typeof req.query.search === 'string' ? req.query.search : undefined,
     status: typeof req.query.status === 'string' ? req.query.status as 'all' | 'read' | 'unread' : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+      enabledByDefault: true,
+    }),
   });
 
   sendResponse(res, 200, {
     success: true,
     message: 'College fee inquiries retrieved successfully.',
-    data: inquiries,
+    data: Array.isArray(result) ? result : result.items,
+    pagination: Array.isArray(result) ? undefined : result.pagination,
   });
 });
 

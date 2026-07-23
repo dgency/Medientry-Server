@@ -62,7 +62,12 @@ export const getApiBaseUrl = () =>
     '',
   );
 
-export const getMediaBaseUrl = () => getApiBaseUrl().replace(/\/api\/?$/, '');
+export const getMediaBaseUrl = () =>
+  (
+    import.meta.env.VITE_MEDIA_BASE_URL?.trim() ||
+    import.meta.env.VITE_SPACES_PUBLIC_BASE_URL?.trim() ||
+    getApiBaseUrl().replace(/\/api\/?$/, '')
+  ).replace(/\/$/, '');
 export const getSiteBaseUrl = () =>
   (import.meta.env.VITE_CLIENT_URL?.trim() || getBrowserFallbackSiteUrl() || '').replace(
     /\/$/,

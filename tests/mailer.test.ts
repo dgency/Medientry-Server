@@ -95,7 +95,7 @@ test('admin notifications use the configured sender, reply-to, and all unique ad
         verify: async () => true,
         sendMail: async (message: Record<string, unknown>) => {
           sentMessages.push(message);
-          return { messageId: 'message-1' };
+          return { messageId: 'message-1', accepted: ['medientry@gmail.com'] };
         },
       }) as never,
   });
@@ -125,7 +125,7 @@ test('customer confirmations use the Medientry sender and configured reply-to', 
         verify: async () => true,
         sendMail: async (message: Record<string, unknown>) => {
           sentMessages.push(message);
-          return { messageId: 'message-2' };
+          return { messageId: 'message-2', accepted: ['student@example.com'] };
         },
       }) as never,
   });

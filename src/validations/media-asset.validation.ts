@@ -1,5 +1,6 @@
 import { MediaKind, SimpleStatus } from '@prisma/client';
 import { z } from 'zod';
+import { normalizeOptionalQueryString, paginationQueryFields } from './pagination.validation';
 
 const nullableLimitedString = (maxLength: number, message: string) =>
   z
@@ -13,7 +14,11 @@ export const listMediaAssetsQuerySchema = z.object({
   query: z.object({
     fileType: z.union([z.literal('ALL'), z.nativeEnum(MediaKind)]).optional(),
     status: z.union([z.literal('ALL'), z.nativeEnum(SimpleStatus)]).optional(),
-    search: z.string().trim().max(255, 'Search must be 255 characters or fewer.').optional(),
+    search: normalizeOptionalQueryString.refine(
+      (value) => !value || value.length <= 255,
+      'Search must be 255 characters or fewer.',
+    ),
+    ...paginationQueryFields,
   }),
 });
 

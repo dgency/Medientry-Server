@@ -15,6 +15,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner';
 
 import { DeleteConfirmDialog } from '../components/cms/delete-confirm-dialog';
+import { Pagination } from '../components/dashboard/pagination';
 import { ResourceFormDialog } from '../components/cms/resource-form-dialog';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -24,7 +25,8 @@ import { EmptyState } from '../components/ui/empty-state';
 import { Input } from '../components/ui/input';
 import { Spinner } from '../components/ui/spinner';
 import { resourceConfigs } from '../config/resource-configs';
-import { apiClient, extractApiData, getApiErrorMessage } from '../lib/api-client';
+import { apiClient, extractApiData, extractApiPagination, getApiErrorMessage } from '../lib/api-client';
+import { buildLocalPaginationMeta, dashboardPageSize, type PaginationMeta } from '../lib/pagination';
 import { cn, formatDateTime, formatLabel } from '../lib/utils';
 
 type InquiryStatusFilter = 'all' | 'read' | 'unread';
@@ -52,6 +54,11 @@ type DetailFieldProps = {
   value: ReactNode;
 };
 
+type CollegeFeeInquiriesQueryData = {
+  items: CollegeFeeInquiry[];
+  pagination: PaginationMeta | null;
+};
+
 const COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY = ['college-fee-inquiries'] as const;
 const collegeFeeInquiryConfig = resourceConfigs['college-fee-inquiries'];
 const statusFilters: Array<{ value: InquiryStatusFilter; label: string }> = [
@@ -77,7 +84,11 @@ const useDebouncedValue = (value: string, delayMs = 300) => {
   return debouncedValue;
 };
 
-const buildListSearchParams = (search: string, status: InquiryStatusFilter) => {
+const buildListSearchParams = (
+  search: string,
+  status: InquiryStatusFilter,
+  page: number,
+) => {
   const params = new URLSearchParams();
   const trimmedSearch = search.trim();
 
@@ -87,6 +98,10 @@ const buildListSearchParams = (search: string, status: InquiryStatusFilter) => {
 
   if (status !== 'all') {
     params.set('status', status);
+  }
+
+  if (page > 1) {
+    params.set('page', String(page));
   }
 
   return params;
@@ -168,26 +183,32 @@ const stopEventPropagation = (event: MouseEvent<HTMLElement>) => {
   event.stopPropagation();
 };
 
+const sortInquiries = (
+  firstItem: CollegeFeeInquiry,
+  secondItem: CollegeFeeInquiry,
+) => {
+  const firstIsUnread = firstItem.readAt === null;
+  const secondIsUnread = secondItem.readAt === null;
+
+  if (firstIsUnread !== secondIsUnread) {
+    return firstIsUnread ? -1 : 1;
+  }
+
+  return new Date(secondItem.createdAt).getTime() - new Date(firstItem.createdAt).getTime();
+};
+
 const syncInquiryCaches = (
   queryClient: ReturnType<typeof useQueryClient>,
   inquiry: CollegeFeeInquiry,
 ) => {
   queryClient.setQueryData(['college-fee-inquiry', inquiry.id], inquiry);
-  queryClient.setQueriesData<CollegeFeeInquiry[]>({ queryKey: COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY }, (items) =>
-    Array.isArray(items)
-      ? items
-          .map((item) => (item.id === inquiry.id ? inquiry : item))
-          .sort((firstItem, secondItem) => {
-            const firstIsUnread = firstItem.readAt === null;
-            const secondIsUnread = secondItem.readAt === null;
-
-            if (firstIsUnread !== secondIsUnread) {
-              return firstIsUnread ? -1 : 1;
-            }
-
-            return new Date(secondItem.createdAt).getTime() - new Date(firstItem.createdAt).getTime();
-          })
-      : items,
+  queryClient.setQueriesData<CollegeFeeInquiriesQueryData>({ queryKey: COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY }, (data) =>
+    data
+      ? {
+          ...data,
+          items: data.items.map((item) => (item.id === inquiry.id ? inquiry : item)).sort(sortInquiries),
+        }
+      : data,
   );
 };
 
@@ -195,8 +216,13 @@ const removeInquiryFromListCaches = (
   queryClient: ReturnType<typeof useQueryClient>,
   inquiryId: string,
 ) => {
-  queryClient.setQueriesData<CollegeFeeInquiry[]>({ queryKey: COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY }, (items) =>
-    Array.isArray(items) ? items.filter((item) => item.id !== inquiryId) : items,
+  queryClient.setQueriesData<CollegeFeeInquiriesQueryData>({ queryKey: COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY }, (data) =>
+    data
+      ? {
+          ...data,
+          items: data.items.filter((item) => item.id !== inquiryId),
+        }
+      : data,
   );
   queryClient.removeQueries({ queryKey: ['college-fee-inquiry', inquiryId] });
 };
@@ -256,37 +282,54 @@ export function CollegeFeeInquiriesPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const currentPageFromUrl = Number.parseInt(searchParams.get('page') ?? '1', 10);
+  const currentPage = Number.isFinite(currentPageFromUrl) && currentPageFromUrl > 0 ? currentPageFromUrl : 1;
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [status, setStatus] = useState<InquiryStatusFilter>(getSanitizedStatusFilter(searchParams.get('status')));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState<CollegeFeeInquiry | null>(null);
   const debouncedSearch = useDebouncedValue(search, 350);
   const normalizedSearch = debouncedSearch.trim();
-  const currentListSearchParams = useMemo(
-    () => buildListSearchParams(search, status).toString(),
-    [search, status],
-  );
+  const currentListSearchParams = searchParams.toString();
 
   useEffect(() => {
-    const nextSearchParams = buildListSearchParams(debouncedSearch, status);
+    const currentSearchValue = (searchParams.get('search') ?? '').trim();
+    const currentStatusValue = getSanitizedStatusFilter(searchParams.get('status'));
+    const nextPage =
+      normalizedSearch !== currentSearchValue || status !== currentStatusValue
+        ? 1
+        : currentPage;
+    const nextSearchParams = buildListSearchParams(debouncedSearch, status, nextPage);
     const nextSearchString = nextSearchParams.toString();
 
     if (nextSearchString !== searchParams.toString()) {
       setSearchParams(nextSearchParams, { replace: true });
     }
-  }, [debouncedSearch, searchParams, setSearchParams, status]);
+  }, [currentPage, debouncedSearch, normalizedSearch, searchParams, setSearchParams, status]);
 
   const inquiriesQuery = useQuery({
-    queryKey: [...COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY, { search: normalizedSearch, status }],
+    queryKey: [...COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY, { page: currentPage, search: normalizedSearch, status }],
     queryFn: async () => {
       const response = await apiClient.get(collegeFeeInquiryConfig.endpoint, {
         params: {
           ...(normalizedSearch ? { search: normalizedSearch } : {}),
           ...(status !== 'all' ? { status } : {}),
+          page: currentPage,
+          limit: dashboardPageSize,
         },
       });
+      const items = extractApiData<CollegeFeeInquiry[]>(response);
 
-      return extractApiData<CollegeFeeInquiry[]>(response);
+      return {
+        items,
+        pagination:
+          extractApiPagination(response)
+          ?? buildLocalPaginationMeta({
+            page: currentPage,
+            limit: dashboardPageSize,
+            totalItems: items.length,
+          }),
+      } satisfies CollegeFeeInquiriesQueryData;
     },
     placeholderData: (previousData) => previousData,
   });
@@ -315,6 +358,11 @@ export function CollegeFeeInquiriesPage() {
     onSuccess: (_data, id) => {
       toast.success('College fee inquiry deleted successfully.');
       removeInquiryFromListCaches(queryClient, id);
+      if (currentPage > 1 && items.length === 1) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('page', String(currentPage - 1));
+        setSearchParams(nextSearchParams, { replace: true });
+      }
       void queryClient.invalidateQueries({ queryKey: COLLEGE_FEE_INQUIRY_LIST_QUERY_KEY });
       setDeletingItem(null);
     },
@@ -340,7 +388,30 @@ export function CollegeFeeInquiriesPage() {
   };
 
   const isFiltering = normalizedSearch.length > 0 || status !== 'all';
-  const items = inquiriesQuery.data ?? [];
+  const items = inquiriesQuery.data?.items ?? [];
+  const effectivePagination =
+    inquiriesQuery.data?.pagination
+    ?? buildLocalPaginationMeta({
+      page: currentPage,
+      limit: dashboardPageSize,
+      totalItems: items.length,
+    });
+
+  useEffect(() => {
+    if (currentPage <= effectivePagination.totalPages) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (effectivePagination.totalPages <= 1) {
+      nextSearchParams.delete('page');
+    } else {
+      nextSearchParams.set('page', String(effectivePagination.totalPages));
+    }
+
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [currentPage, effectivePagination.totalPages, searchParams, setSearchParams]);
 
   const emptyState = normalizedSearch
     ? {
@@ -595,6 +666,22 @@ export function CollegeFeeInquiriesPage() {
         {isFiltering ? 'Showing filtered inquiry results.' : 'Showing all inquiries.'} Last refreshed{' '}
         {formatDateTime(new Date().toISOString())}
       </div>
+
+      <Pagination
+        pagination={effectivePagination}
+        onPageChange={(page) => {
+          const nextSearchParams = new URLSearchParams(searchParams);
+
+          if (page <= 1) {
+            nextSearchParams.delete('page');
+          } else {
+            nextSearchParams.set('page', String(page));
+          }
+
+          setSearchParams(nextSearchParams);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
 
       <ResourceFormDialog
         config={collegeFeeInquiryConfig}

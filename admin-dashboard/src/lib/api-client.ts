@@ -7,6 +7,14 @@ export type ApiResponse<T> = {
   success: boolean;
   message: string;
   data: T;
+  pagination?: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 };
 
 export const apiClient = axios.create({
@@ -43,6 +51,7 @@ apiClient.interceptors.response.use(
 );
 
 export const extractApiData = <T,>(response: { data: ApiResponse<T> }) => response.data.data;
+export const extractApiPagination = <T,>(response: { data: ApiResponse<T> }) => response.data.pagination;
 
 export const getApiErrorMessage = (error: unknown) => {
   if (axios.isAxiosError(error)) {

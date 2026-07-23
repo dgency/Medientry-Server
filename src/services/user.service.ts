@@ -3,6 +3,11 @@ import { Prisma, UserStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import { hashPassword } from '../utils/password';
+import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
 import { publicUserSelect } from '../utils/user-response';
 
 type CreateUserInput = {
@@ -21,10 +26,58 @@ type UpdateUserInput = {
   status?: Prisma.UserUpdateInput['status'];
 };
 
-export const listUsers = async () => {
-  return prisma.user.findMany({
-    select: publicUserSelect,
-    orderBy: [{ createdAt: 'desc' }],
+type ListUsersOptions = {
+  search?: string;
+  pagination?: PaginationInput | null;
+};
+
+type UserListItem = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
+
+const buildUserSearchWhere = (search?: string): Prisma.UserWhereInput => {
+  const normalizedSearch = search?.trim();
+
+  if (!normalizedSearch) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { name: { contains: normalizedSearch, mode: 'insensitive' } },
+      { email: { contains: normalizedSearch, mode: 'insensitive' } },
+    ],
+  };
+};
+
+export const listUsers = async ({
+  search,
+  pagination,
+}: ListUsersOptions = {}): Promise<UserListItem[] | PaginatedResult<UserListItem>> => {
+  const where = buildUserSearchWhere(search);
+
+  if (!pagination) {
+    return prisma.user.findMany({
+      where,
+      select: publicUserSelect,
+      orderBy: [{ createdAt: 'desc' }],
+    });
+  }
+
+  const [totalItems, users] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({
+      where,
+      select: publicUserSelect,
+      orderBy: [{ createdAt: 'desc' }],
+      skip: (pagination.page - 1) * pagination.limit,
+      take: pagination.limit,
+    }),
+  ]);
+
+  return buildPaginatedResult({
+    items: users,
+    page: pagination.page,
+    limit: pagination.limit,
+    totalItems,
   });
 };
 

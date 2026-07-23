@@ -12,6 +12,11 @@ import {
   mapMedicalCollegeToApi,
   publicMedicalCollegeSelect,
 } from '../utils/medical-college-response';
+import {
+  buildPaginatedResult,
+  paginateArray,
+  type PaginationInput,
+} from '../utils/pagination';
 
 type CreateMedicalCollegeInput = {
   studyDestinationId?: string | null;
@@ -48,6 +53,8 @@ type ListMedicalCollegesOptions = {
   featuredOnly?: boolean;
   sectionKey?: string;
   limit?: number;
+  search?: string;
+  pagination?: PaginationInput | null;
 };
 
 type HomeSectionSettingShape = {
@@ -71,6 +78,26 @@ const normalizeNullableString = (value?: string | null) => {
 
 const normalizeSlug = (slug: string) => slug.trim().toLowerCase();
 const normalizeRequiredString = (value: string) => value.trim();
+
+const buildMedicalCollegeSearchWhere = (search?: string): Prisma.MedicalCollegeWhereInput => {
+  const normalizedSearch = search?.trim();
+
+  if (!normalizedSearch) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { name: { contains: normalizedSearch, mode: 'insensitive' } },
+      { slug: { contains: normalizedSearch, mode: 'insensitive' } },
+      { country: { contains: normalizedSearch, mode: 'insensitive' } },
+      { city: { contains: normalizedSearch, mode: 'insensitive' } },
+      { shortDescription: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoTitle: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoDescription: { contains: normalizedSearch, mode: 'insensitive' } },
+    ],
+  };
+};
 
 const normalizeNullableDecimal = (value?: number | null) => {
   if (value === undefined) {
@@ -259,6 +286,8 @@ export const listMedicalColleges = async ({
   featuredOnly = false,
   sectionKey,
   limit,
+  search,
+  pagination,
 }: ListMedicalCollegesOptions = {}) => {
   const homeSectionSetting = await getHomeSectionConfig(sectionKey);
   const selectedItemIds = isStringArray(homeSectionSetting?.selectedItemIds)
@@ -277,7 +306,32 @@ export const listMedicalColleges = async ({
     ...(includeUnpublished ? {} : { status: PublicationStatus.PUBLISHED }),
     ...(shouldUseManualSelection ? { id: { in: selectedItemIds } } : {}),
     ...(featuredOnly && !shouldUseManualSelection ? { isFeatured: true } : {}),
+    ...buildMedicalCollegeSearchWhere(search),
   };
+
+  if (pagination && !shouldUseManualSelection) {
+    const [totalItems, rawMedicalColleges] = await Promise.all([
+      prisma.medicalCollege.count({ where }),
+      prisma.medicalCollege.findMany({
+        where,
+        select: publicMedicalCollegeSelect,
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      }),
+    ]);
+
+    return buildPaginatedResult({
+      items: rawMedicalColleges.map((medicalCollege) =>
+        mapMedicalCollegeToApi(medicalCollege, {
+          includeInactiveFeeItems: includeUnpublished,
+        }),
+      ),
+      page: pagination.page,
+      limit: pagination.limit,
+      totalItems,
+    });
+  }
 
   const rawMedicalColleges = await prisma.medicalCollege.findMany({
     where,
@@ -297,11 +351,13 @@ export const listMedicalColleges = async ({
       ? orderedMedicalColleges.slice(0, resolvedLimit)
       : orderedMedicalColleges;
 
-  return slicedMedicalColleges.map((medicalCollege) =>
+  const mappedMedicalColleges = slicedMedicalColleges.map((medicalCollege) =>
     mapMedicalCollegeToApi(medicalCollege, {
       includeInactiveFeeItems: includeUnpublished,
     }),
   );
+
+  return paginateArray(mappedMedicalColleges, pagination ?? null);
 };
 
 export const getFeaturedMedicalCollegesForHomepage = async () =>

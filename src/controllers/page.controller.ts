@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createPage,
@@ -10,13 +11,20 @@ import {
   updatePage,
 } from '../services/page.service';
 
-export const getPages = asyncHandler(async (_req, res: Response) => {
-  const pages = await listPages();
+export const getPages = asyncHandler(async (req, res: Response) => {
+  const pages = await listPages({
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+    }),
+  });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Pages retrieved successfully.',
-    data: pages,
+    data: isPaginatedResult(pages) ? pages.items : pages,
+    pagination: isPaginatedResult(pages) ? pages.pagination : undefined,
   });
 });
 

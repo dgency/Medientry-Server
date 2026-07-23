@@ -7,6 +7,10 @@ import {
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import {
+  buildPaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
+import {
   mapStudyDestinationToApi,
   publicStudyDestinationSelect,
 } from '../utils/study-destination-response';
@@ -35,6 +39,8 @@ type ListStudyDestinationsOptions = {
   includeUnpublished?: boolean;
   showInMenu?: boolean;
   status?: PublicationStatus;
+  search?: string;
+  pagination?: PaginationInput | null;
 };
 
 const normalizeNullableString = (value?: string | null) => {
@@ -52,6 +58,25 @@ const normalizeNullableString = (value?: string | null) => {
 
 const normalizeSlug = (slug: string) => slug.trim().toLowerCase();
 const normalizeCountry = (country: string) => country.trim();
+
+const buildStudyDestinationSearchWhere = (search?: string): Prisma.StudyDestinationWhereInput => {
+  const normalizedSearch = search?.trim();
+
+  if (!normalizedSearch) {
+    return {};
+  }
+
+  return {
+    OR: [
+      { title: { contains: normalizedSearch, mode: 'insensitive' } },
+      { slug: { contains: normalizedSearch, mode: 'insensitive' } },
+      { country: { contains: normalizedSearch, mode: 'insensitive' } },
+      { shortDescription: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoTitle: { contains: normalizedSearch, mode: 'insensitive' } },
+      { seoDescription: { contains: normalizedSearch, mode: 'insensitive' } },
+    ],
+  };
+};
 
 const resolveTemplateType = (input: {
   title?: string;
@@ -172,20 +197,44 @@ export const listStudyDestinations = async ({
   includeUnpublished = false,
   showInMenu,
   status,
+  search,
+  pagination,
 }: ListStudyDestinationsOptions = {}) => {
   const resolvedStatus =
     status ?? (includeUnpublished ? undefined : PublicationStatus.PUBLISHED);
+  const where: Prisma.StudyDestinationWhereInput = {
+    ...(resolvedStatus ? { status: resolvedStatus } : {}),
+    ...(showInMenu !== undefined ? { showInMenu } : {}),
+    ...buildStudyDestinationSearchWhere(search),
+  };
 
-  const destinations = await prisma.studyDestination.findMany({
-    where: {
-      ...(resolvedStatus ? { status: resolvedStatus } : {}),
-      ...(showInMenu !== undefined ? { showInMenu } : {}),
-    },
-    select: publicStudyDestinationSelect,
-    orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
+  if (!pagination) {
+    const destinations = await prisma.studyDestination.findMany({
+      where,
+      select: publicStudyDestinationSelect,
+      orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
+    });
+
+    return destinations.map(mapStudyDestinationToApi);
+  }
+
+  const [totalItems, destinations] = await Promise.all([
+    prisma.studyDestination.count({ where }),
+    prisma.studyDestination.findMany({
+      where,
+      select: publicStudyDestinationSelect,
+      orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
+      skip: (pagination.page - 1) * pagination.limit,
+      take: pagination.limit,
+    }),
+  ]);
+
+  return buildPaginatedResult({
+    items: destinations.map(mapStudyDestinationToApi),
+    page: pagination.page,
+    limit: pagination.limit,
+    totalItems,
   });
-
-  return destinations.map(mapStudyDestinationToApi);
 };
 
 export const getStudyDestinationBySlug = async (slug: string) => {

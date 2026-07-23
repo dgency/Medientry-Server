@@ -1,4 +1,5 @@
 import { Badge } from '../components/ui/badge';
+import { apiClient, extractApiData } from '../lib/api-client';
 import {
   formatDateTime,
   formatLabel,
@@ -11,6 +12,9 @@ import type { ResourceConfig } from '../types/app';
 
 type ResourceItem = { id: string; [key: string]: unknown };
 const siteBaseUrl = getSiteBaseUrl();
+const shortcutPageEditHrefKey = '__editHref';
+const shortcutPageUpdatePathKey = '__updatePath';
+const shortcutPageDeleteDisabledKey = '__deleteDisabled';
 
 const defaultCollegeFeeManagementValue = () => ({
   feeStructure: [
@@ -1239,6 +1243,175 @@ const defaultSeoFields = [
   },
 ] as const;
 
+const studyDestinationPageShortcutFields = [
+  { name: 'title', label: 'Title', type: 'text', required: true },
+  { name: 'country', label: 'Country', type: 'text', required: true },
+  { name: 'shortDescription', label: 'Short Description', type: 'textarea', rows: 4, colSpan: 2 },
+  { name: 'featuredImage', label: 'Featured Image URL', type: 'url', colSpan: 2, uploadKind: 'image', previewLabel: 'Preview featured image' },
+  {
+    name: 'heroOverlayColor',
+    label: 'Hero Overlay Color',
+    type: 'text',
+    colSpan: 1,
+    description: 'Hex color like #052118 used on destination hero image.',
+  },
+  {
+    name: 'heroOverlayOpacity',
+    label: 'Hero Overlay Opacity',
+    type: 'number',
+    colSpan: 1,
+    min: 0.35,
+    max: 0.96,
+  },
+  {
+    name: 'homepageHighlights',
+    label: 'Homepage Features',
+    type: 'keywords',
+    colSpan: 2,
+    description: 'Comma-separated feature list shown inside the homepage destination card.',
+  },
+  {
+    name: 'homepageButtonText',
+    label: 'Homepage Button Text',
+    type: 'text',
+    colSpan: 2,
+  },
+  {
+    name: 'homepageButtonUrl',
+    label: 'Homepage Button URL',
+    type: 'text',
+    colSpan: 2,
+    description: 'Supports internal paths like /mbbs-bangladesh or full external URLs.',
+  },
+  { name: 'status', label: 'Active Status', type: 'select', required: true, options: publicationStatusOptions },
+  { name: 'sortOrder', label: 'Display Order', type: 'number', min: 0, required: true },
+  { name: 'isFeatured', label: 'Featured', type: 'switch' },
+  { name: 'showInMenu', label: 'Show In Menu', type: 'switch' },
+  {
+    name: 'content',
+    label: 'Page Content',
+    type: 'rich-content',
+    richContentStorageMode: 'json-object',
+    rows: 12,
+    colSpan: 2,
+  },
+  ...defaultSeoFields,
+] as const;
+
+const getStudyDestinationShortcutItemsBySlug = (payload: unknown, slug: string) =>
+  (Array.isArray(payload) ? payload : []).filter(
+    (item): item is ResourceItem =>
+      Boolean(item) &&
+      typeof item === 'object' &&
+      'slug' in item &&
+      String((item as ResourceItem).slug ?? '').trim().toLowerCase() === slug,
+  );
+
+const getStudyDestinationShortcutEditValues = (item: ResourceItem) => ({
+  ...item,
+  homepageHighlights: toKeywordsValue(
+    Array.isArray((item.content as Record<string, unknown> | null)?.highlights)
+      ? ((item.content as Record<string, unknown>).highlights as string[])
+      : [],
+  ),
+  homepageButtonText: readContentString(
+    isRecord(item.content) ? item.content : {},
+    'ctaText',
+  ) ?? '',
+  homepageButtonUrl: readContentString(
+    isRecord(item.content) ? item.content : {},
+    'ctaUrl',
+  ) ?? '',
+  heroOverlayColor:
+    readContentString(isRecord(item.content) ? item.content : {}, 'heroOverlayColor') ??
+    defaultPageHeroOverlayColor,
+  heroOverlayOpacity:
+    readContentNumber(isRecord(item.content) ? item.content : {}, 'heroOverlayOpacity') ??
+    defaultPageHeroOverlayOpacity,
+  content: item.content,
+  seoKeywords: toKeywordsValue(item.seoKeywords),
+});
+
+const buildStudyDestinationShortcutPayload = (values: Record<string, unknown>) => {
+  const {
+    homepageHighlights: _homepageHighlights,
+    homepageButtonText: _homepageButtonText,
+    homepageButtonUrl: _homepageButtonUrl,
+    heroOverlayColor: _heroOverlayColor,
+    heroOverlayOpacity: _heroOverlayOpacity,
+    ...baseValues
+  } = values;
+  const existingContent =
+    baseValues.content && typeof baseValues.content === 'object' && !Array.isArray(baseValues.content)
+      ? { ...(baseValues.content as Record<string, unknown>) }
+      : {};
+  const homepageHighlights = Array.isArray(_homepageHighlights)
+    ? _homepageHighlights.filter(
+        (item): item is string => typeof item === 'string' && item.trim().length > 0,
+      )
+    : [];
+  const homepageButtonText = normalizeString(_homepageButtonText);
+  const homepageButtonUrl = normalizeString(_homepageButtonUrl);
+  const heroOverlayColor =
+    normalizeString(_heroOverlayColor) || defaultPageHeroOverlayColor;
+  const rawHeroOverlayOpacity =
+    typeof _heroOverlayOpacity === 'number'
+      ? _heroOverlayOpacity
+      : Number.parseFloat(String(_heroOverlayOpacity ?? ''));
+
+  const content = {
+    ...existingContent,
+    highlights: homepageHighlights,
+    ctaText: homepageButtonText,
+    ctaUrl: homepageButtonUrl,
+    heroOverlayColor: isValidHexColor(heroOverlayColor)
+      ? heroOverlayColor
+      : defaultPageHeroOverlayColor,
+    heroOverlayOpacity: Number.isFinite(rawHeroOverlayOpacity)
+      ? clampNumber(rawHeroOverlayOpacity, 0.35, 0.96)
+      : defaultPageHeroOverlayOpacity,
+  };
+
+  return {
+    ...baseValues,
+    content,
+  };
+};
+
+const toResourceItems = (payload: unknown) =>
+  (Array.isArray(payload) ? payload : []).filter(
+    (item): item is ResourceItem =>
+      Boolean(item) && typeof item === 'object' && 'id' in item,
+  );
+
+const buildStudyDestinationPageListItem = (item: ResourceItem, editHref: string) => ({
+  ...item,
+  templateType: String(item.templateType ?? 'FIXED_FRONTEND_CONTENT'),
+  updatedAt: String(item.updatedAt ?? item.createdAt ?? ''),
+  [shortcutPageEditHrefKey]: editHref,
+  [shortcutPageUpdatePathKey]: `/study-destinations/${item.id}`,
+  [shortcutPageDeleteDisabledKey]: true,
+});
+
+const loadPagesResourceItems = async () => {
+  const [pagesResponse, studyDestinationsResponse] = await Promise.all([
+    apiClient.get('/pages'),
+    apiClient.get('/study-destinations'),
+  ]);
+  const pageItems = toResourceItems(extractApiData<unknown>(pagesResponse));
+  const studyDestinationItems = extractApiData<unknown>(studyDestinationsResponse);
+  const shortcutItems = [
+    ...getStudyDestinationShortcutItemsBySlug(studyDestinationItems, 'mbbs-bangladesh').map((item) =>
+      buildStudyDestinationPageListItem(item, '/pages/mbbs-bangladesh'),
+    ),
+    ...getStudyDestinationShortcutItemsBySlug(studyDestinationItems, 'mbbs-georgia').map((item) =>
+      buildStudyDestinationPageListItem(item, '/pages/mbbs-georgia'),
+    ),
+  ];
+
+  return [...pageItems, ...shortcutItems];
+};
+
 export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
   pages: {
     key: 'pages',
@@ -1246,6 +1419,16 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     singular: 'Page',
     description: 'Manage content pages, hero sections, reusable blocks, and SEO metadata.',
     endpoint: '/pages',
+    loadItems: loadPagesResourceItems,
+    getItemEditHref: (item) =>
+      typeof item[shortcutPageEditHrefKey] === 'string'
+        ? String(item[shortcutPageEditHrefKey])
+        : null,
+    getItemUpdatePath: (item) =>
+      typeof item[shortcutPageUpdatePathKey] === 'string'
+        ? String(item[shortcutPageUpdatePathKey])
+        : null,
+    canDeleteItem: (item) => item[shortcutPageDeleteDisabledKey] !== true,
     slugSourceField: 'title',
     slugField: 'slug',
     previewUrlBuilder: (item) => {
@@ -4548,6 +4731,126 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       };
     },
   },
+  'page-mbbs-bangladesh': {
+    key: 'page-mbbs-bangladesh',
+    title: 'MBBS in Bangladesh Page',
+    singular: 'Page',
+    description:
+      'Edit the fixed /mbbs-bangladesh page using the linked Study Destination record.',
+    endpoint: '/study-destinations',
+    listEndpoint: '/study-destinations',
+    slugSourceField: 'title',
+    slugField: 'slug',
+    previewUrlBuilder: (item) => {
+      const slug = String(item.slug ?? '').trim();
+      return slug ? `${siteBaseUrl}${getStudyDestinationPreviewPath(slug)}` : null;
+    },
+    statusToggle: {
+      fieldName: 'status',
+      activeValue: 'PUBLISHED',
+      inactiveValue: 'DRAFT',
+    },
+    allowCreate: false,
+    allowDelete: false,
+    createButtonLabel: 'New destination',
+    emptyTitle: 'MBBS in Bangladesh page not found',
+    emptyDescription:
+      'The linked study destination record is missing. Recreate it from Study Destinations if needed.',
+    defaultValues: {
+      title: '',
+      country: '',
+      shortDescription: '',
+      featuredImage: '',
+      heroOverlayColor: defaultPageHeroOverlayColor,
+      heroOverlayOpacity: defaultPageHeroOverlayOpacity,
+      homepageHighlights: '',
+      homepageButtonText: '',
+      homepageButtonUrl: '',
+      content: '',
+      isFeatured: false,
+      showInMenu: false,
+      sortOrder: 0,
+      status: 'DRAFT',
+      seoTitle: '',
+      seoDescription: '',
+      seoKeywords: '',
+      ogImage: '',
+      canonicalUrl: '',
+    },
+    fields: [...studyDestinationPageShortcutFields],
+    columns: [
+      { key: 'title', label: 'Title', render: (item) => <div className="font-semibold">{String(item.title ?? '-')}</div> },
+      { key: 'country', label: 'Country', render: (item) => String(item.country ?? '-') },
+      { key: 'showInMenu', label: 'Menu', render: (item) => <Badge variant={item.showInMenu ? 'success' : 'outline'}>{item.showInMenu ? 'Visible' : 'Hidden'}</Badge> },
+      { key: 'status', label: 'Status', render: (item) => badgeForStatus(item.status) },
+      { key: 'sortOrder', label: 'Order', render: (item) => String(item.sortOrder ?? 0) },
+    ],
+    getSearchText: (item) =>
+      `${String(item.title ?? '')} ${String(item.country ?? '')} ${String(item.slug ?? '')}`,
+    getEditValues: getStudyDestinationShortcutEditValues,
+    buildPayload: (values) => buildStudyDestinationShortcutPayload(values),
+    getListItems: (payload) => getStudyDestinationShortcutItemsBySlug(payload, 'mbbs-bangladesh'),
+  },
+  'page-mbbs-georgia': {
+    key: 'page-mbbs-georgia',
+    title: 'MBBS in Georgia Page',
+    singular: 'Page',
+    description:
+      'Edit the fixed /mbbs-georgia page using the linked Study Destination record.',
+    endpoint: '/study-destinations',
+    listEndpoint: '/study-destinations',
+    slugSourceField: 'title',
+    slugField: 'slug',
+    previewUrlBuilder: (item) => {
+      const slug = String(item.slug ?? '').trim();
+      return slug ? `${siteBaseUrl}${getStudyDestinationPreviewPath(slug)}` : null;
+    },
+    statusToggle: {
+      fieldName: 'status',
+      activeValue: 'PUBLISHED',
+      inactiveValue: 'DRAFT',
+    },
+    allowCreate: false,
+    allowDelete: false,
+    createButtonLabel: 'New destination',
+    emptyTitle: 'MBBS in Georgia page not found',
+    emptyDescription:
+      'The linked study destination record is missing. Recreate it from Study Destinations if needed.',
+    defaultValues: {
+      title: '',
+      country: '',
+      shortDescription: '',
+      featuredImage: '',
+      heroOverlayColor: defaultPageHeroOverlayColor,
+      heroOverlayOpacity: defaultPageHeroOverlayOpacity,
+      homepageHighlights: '',
+      homepageButtonText: '',
+      homepageButtonUrl: '',
+      content: '',
+      isFeatured: false,
+      showInMenu: false,
+      sortOrder: 0,
+      status: 'DRAFT',
+      seoTitle: '',
+      seoDescription: '',
+      seoKeywords: '',
+      ogImage: '',
+      canonicalUrl: '',
+    },
+    fields: [...studyDestinationPageShortcutFields],
+    columns: [
+      { key: 'title', label: 'Title', render: (item) => <div className="font-semibold">{String(item.title ?? '-')}</div> },
+      { key: 'country', label: 'Country', render: (item) => String(item.country ?? '-') },
+      { key: 'showInMenu', label: 'Menu', render: (item) => <Badge variant={item.showInMenu ? 'success' : 'outline'}>{item.showInMenu ? 'Visible' : 'Hidden'}</Badge> },
+      { key: 'status', label: 'Status', render: (item) => badgeForStatus(item.status) },
+      { key: 'sortOrder', label: 'Order', render: (item) => String(item.sortOrder ?? 0) },
+    ],
+    getSearchText: (item) =>
+      `${String(item.title ?? '')} ${String(item.country ?? '')} ${String(item.slug ?? '')}`,
+    getEditValues: getStudyDestinationShortcutEditValues,
+    buildPayload: (values) => buildStudyDestinationShortcutPayload(values),
+    getListItems: (payload) => getStudyDestinationShortcutItemsBySlug(payload, 'mbbs-georgia'),
+  },
   'study-destinations': {
     key: 'study-destinations',
     title: 'Study Destinations',
@@ -5045,7 +5348,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     singular: 'Blog',
     description: 'Publish knowledge hub articles with pinned sorting and SEO metadata.',
     endpoint: '/blogs',
-    listEndpoint: '/blogs?pageSize=50',
     slugSourceField: 'title',
     slugField: 'slug',
     previewUrlBuilder: (item) => {

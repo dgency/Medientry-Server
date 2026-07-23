@@ -3,6 +3,11 @@ import { MediaKind, Prisma, SimpleStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
 import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
+import {
   publicMediaAssetSelect,
   serializeMediaAsset,
 } from '../utils/media-asset-response';
@@ -12,6 +17,7 @@ type ListMediaAssetsInput = {
   fileType?: MediaKind | 'ALL';
   status?: SimpleStatus | 'ALL';
   search?: string;
+  pagination?: PaginationInput | null;
 };
 
 type UpdateMediaAssetInput = {
@@ -312,6 +318,7 @@ export const listMediaAssets = async ({
   fileType,
   status,
   search,
+  pagination,
 }: ListMediaAssetsInput = {}) => {
   const normalizedSearch = normalizeNullableString(search);
   const where: Prisma.MediaAssetWhereInput = {};
@@ -334,6 +341,26 @@ export const listMediaAssets = async ({
       { seoTitle: { contains: normalizedSearch, mode: 'insensitive' } },
       { seoDescription: { contains: normalizedSearch, mode: 'insensitive' } },
     ];
+  }
+
+  if (pagination) {
+    const [items, totalItems] = await Promise.all([
+      prisma.mediaAsset.findMany({
+        where,
+        select: publicMediaAssetSelect,
+        orderBy: [{ createdAt: 'desc' }, { filename: 'asc' }],
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      }),
+      prisma.mediaAsset.count({ where }),
+    ]);
+
+    return buildPaginatedResult({
+      items: items.map((item) => serializeMediaAsset(item)),
+      page: pagination.page,
+      limit: pagination.limit,
+      totalItems,
+    }) satisfies PaginatedResult<ReturnType<typeof serializeMediaAsset>>;
   }
 
   const items = await prisma.mediaAsset.findMany({

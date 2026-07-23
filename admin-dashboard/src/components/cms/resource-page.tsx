@@ -1,9 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Eye, PencilLine, Plus, Search, Trash2 } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { apiClient, extractApiData, getApiErrorMessage } from '../../lib/api-client';
+import { Pagination } from '../dashboard/pagination';
+import {
+  apiClient,
+  extractApiData,
+  extractApiPagination,
+  getApiErrorMessage,
+} from '../../lib/api-client';
+import { buildLocalPaginationMeta, clampPage, dashboardPageSize } from '../../lib/pagination';
 import { formatDateTime, parseJsonTextareaValue, parseKeywordsValue } from '../../lib/utils';
 import { normalizeContentValue } from '../../lib/rich-content';
 import type { ResourceConfig } from '../../types/app';
@@ -22,6 +30,20 @@ type ResourceItem = { id: string; [key: string]: unknown };
 
 type ResourcePageProps = {
   config: ResourceConfig<ResourceItem>;
+};
+
+const useDebouncedValue = (value: string, delayMs = 300) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delayMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [delayMs, value]);
+
+  return debouncedValue;
 };
 
 const normalizePayload = (
@@ -85,17 +107,59 @@ const extractItems = (
 
 export function ResourcePage({ config }: ResourcePageProps) {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPageFromUrl = Number.parseInt(searchParams.get('page') ?? '1', 10);
+  const currentPage = Number.isFinite(currentPageFromUrl) && currentPageFromUrl > 0 ? currentPageFromUrl : 1;
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ResourceItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ResourceItem | null>(null);
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const normalizedSearch = debouncedSearch.trim();
+
+  useEffect(() => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (normalizedSearch) {
+      nextSearchParams.set('search', normalizedSearch);
+    } else {
+      nextSearchParams.delete('search');
+    }
+
+    const normalizedPage = normalizedSearch !== (searchParams.get('search') ?? '').trim()
+      ? 1
+      : currentPage;
+    nextSearchParams.set('page', String(normalizedPage));
+
+    if (nextSearchParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [currentPage, normalizedSearch, searchParams, setSearchParams]);
 
   const resourceQuery = useQuery({
-    queryKey: ['resource', config.key],
+    queryKey: ['resource', config.key, { page: currentPage, search: normalizedSearch }],
     queryFn: async () => {
-      const response = await apiClient.get(config.listEndpoint ?? config.endpoint);
-      return extractItems(config, extractApiData<unknown>(response));
+      if (config.loadItems) {
+        return {
+          items: await config.loadItems(),
+          pagination: null,
+        };
+      }
+
+      const response = await apiClient.get(config.listEndpoint ?? config.endpoint, {
+        params: {
+          ...(normalizedSearch ? { search: normalizedSearch } : {}),
+          page: currentPage,
+          limit: dashboardPageSize,
+        },
+      });
+
+      return {
+        items: extractItems(config, extractApiData<unknown>(response)),
+        pagination: extractApiPagination(response) ?? null,
+      };
     },
+    placeholderData: (previousData) => previousData,
   });
 
   const createMutation = useMutation({
@@ -142,6 +206,11 @@ export function ResourcePage({ config }: ResourcePageProps) {
     },
     onSuccess: () => {
       toast.success(`${config.singular} deleted successfully.`);
+      if (currentPage > 1 && pagedItems.length === 1) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('page', String(currentPage - 1));
+        setSearchParams(nextSearchParams, { replace: true });
+      }
       void queryClient.invalidateQueries({ queryKey: ['resource', config.key] });
     },
     onError: (error) => {
@@ -151,14 +220,15 @@ export function ResourcePage({ config }: ResourcePageProps) {
 
   const statusToggleMutation = useMutation({
     mutationFn: async ({
-      id,
+      updatePath,
       payload,
     }: {
       id: string;
+      updatePath: string;
       payload: Record<string, unknown>;
     }) => {
       const method = config.updateMethod ?? 'put';
-      const response = await apiClient[method](`${config.endpoint}/${id}`, payload);
+      const response = await apiClient[method](updatePath, payload);
       return extractApiData(response);
     },
     onSuccess: () => {
@@ -170,9 +240,14 @@ export function ResourcePage({ config }: ResourcePageProps) {
     },
   });
 
-  const items = useMemo(() => resourceQuery.data ?? [], [resourceQuery.data]);
+  const items = useMemo(() => resourceQuery.data?.items ?? [], [resourceQuery.data?.items]);
+  const serverPagination = resourceQuery.data?.pagination ?? null;
 
   const filteredItems = useMemo(() => {
+    if (serverPagination) {
+      return items;
+    }
+
     const query = search.trim().toLowerCase();
 
     if (!query) {
@@ -180,9 +255,34 @@ export function ResourcePage({ config }: ResourcePageProps) {
     }
 
     return items.filter((item) => config.getSearchText(item).toLowerCase().includes(query));
-  }, [config, items, search]);
-  const normalizedSearch = search.trim();
+  }, [config, items, search, serverPagination]);
+  const localPagination = useMemo(
+    () =>
+      buildLocalPaginationMeta({
+        page: currentPage,
+        limit: dashboardPageSize,
+        totalItems: filteredItems.length,
+      }),
+    [currentPage, filteredItems.length],
+  );
+  const effectivePagination = serverPagination ?? localPagination;
+  const pagedItems = serverPagination
+    ? filteredItems
+    : filteredItems.slice(
+        (effectivePagination.page - 1) * effectivePagination.limit,
+        (effectivePagination.page - 1) * effectivePagination.limit + effectivePagination.limit,
+      );
   const hasSearchFilter = normalizedSearch.length > 0;
+
+  useEffect(() => {
+    const clampedPage = clampPage(currentPage, effectivePagination.totalPages);
+
+    if (clampedPage !== currentPage) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.set('page', String(clampedPage));
+      setSearchParams(nextSearchParams, { replace: true });
+    }
+  }, [currentPage, effectivePagination.totalPages, searchParams, setSearchParams]);
 
   const editValues = editingItem && config.getEditValues ? config.getEditValues(editingItem) : editingItem ?? undefined;
 
@@ -228,6 +328,8 @@ export function ResourcePage({ config }: ResourcePageProps) {
       return null;
     }
 
+    const updatePath = config.getItemUpdatePath?.(item) ?? `${config.endpoint}/${item.id}`;
+
     return (
       <div
         className={cn(
@@ -241,6 +343,7 @@ export function ResourcePage({ config }: ResourcePageProps) {
           onCheckedChange={(checked) => {
             statusToggleMutation.mutate({
               id: item.id,
+              updatePath,
               payload: {
                 [config.statusToggle?.fieldName ?? 'status']: checked
                   ? config.statusToggle?.activeValue
@@ -261,31 +364,46 @@ export function ResourcePage({ config }: ResourcePageProps) {
         compact ? '[&>*]:min-h-10' : 'justify-end',
       )}
     >
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className={compact ? 'flex-1 justify-center sm:flex-none' : ''}
-        onClick={() => openEditDialog(item)}
-      >
-        <PencilLine className="h-4 w-4" />
-        Edit
-      </Button>
+      {config.getItemEditHref?.(item) ? (
+        <Link
+          to={config.getItemEditHref(item) ?? '#'}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'sm' }),
+            compact ? 'flex-1 justify-center sm:flex-none' : '',
+          )}
+        >
+          <PencilLine className="h-4 w-4" />
+          Edit
+        </Link>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={compact ? 'flex-1 justify-center sm:flex-none' : ''}
+          onClick={() => openEditDialog(item)}
+        >
+          <PencilLine className="h-4 w-4" />
+          Edit
+        </Button>
+      )}
       {renderPreviewAction(item, compact)}
       {renderStatusToggle(item, compact)}
-      <Button
-        type="button"
-        variant="destructive"
-        size="sm"
-        className={compact ? 'flex-1 justify-center sm:flex-none' : ''}
-        disabled={deleteMutation.isPending}
-        onClick={() => {
-          setDeletingItem(item);
-        }}
-      >
-        <Trash2 className="h-4 w-4" />
-        Delete
-      </Button>
+      {config.allowDelete !== false && (config.canDeleteItem ? config.canDeleteItem(item) : true) ? (
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          className={compact ? 'flex-1 justify-center sm:flex-none' : ''}
+          disabled={deleteMutation.isPending}
+          onClick={() => {
+            setDeletingItem(item);
+          }}
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </Button>
+      ) : null}
     </div>
   );
 
@@ -307,14 +425,16 @@ export function ResourcePage({ config }: ResourcePageProps) {
                 placeholder={`Search ${config.title.toLowerCase()}...`}
               />
             </div>
-            <Button
-              type="button"
-              className="w-full sm:w-auto"
-              onClick={openCreateDialog}
-            >
-              <Plus className="h-4 w-4" />
-              {config.createButtonLabel}
-            </Button>
+            {config.allowCreate !== false ? (
+              <Button
+                type="button"
+                className="w-full sm:w-auto"
+                onClick={openCreateDialog}
+              >
+                <Plus className="h-4 w-4" />
+                {config.createButtonLabel}
+              </Button>
+            ) : null}
           </div>
         </CardHeader>
       </Card>
@@ -327,7 +447,7 @@ export function ResourcePage({ config }: ResourcePageProps) {
         </Card>
       ) : resourceQuery.isError ? (
         <EmptyState title={`Could not load ${config.title.toLowerCase()}`} description={getApiErrorMessage(resourceQuery.error)} />
-      ) : items.length > 0 && filteredItems.length === 0 ? (
+      ) : items.length > 0 && (serverPagination ? effectivePagination.totalItems === 0 : filteredItems.length === 0) ? (
         <EmptyState
           title={`No matching ${config.title.toLowerCase()}`}
           description={
@@ -336,13 +456,13 @@ export function ResourcePage({ config }: ResourcePageProps) {
               : `No ${config.title.toLowerCase()} matched the current filters.`
           }
         />
-      ) : filteredItems.length === 0 ? (
+      ) : pagedItems.length === 0 ? (
         <EmptyState title={config.emptyTitle} description={config.emptyDescription} />
       ) : (
         <>
           <Card className="xl:hidden">
             <CardContent className="space-y-4 p-4 sm:p-6">
-              {filteredItems.map((item) => (
+              {pagedItems.map((item) => (
                 <article key={item.id} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
                   <div className="space-y-3">
                     {config.columns.map((column) => (
@@ -384,7 +504,7 @@ export function ResourcePage({ config }: ResourcePageProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-white">
-                  {filteredItems.map((item) => (
+                  {pagedItems.map((item) => (
                     <tr key={item.id} className="align-top">
                       {config.columns.map((column) => (
                         <td key={column.key} className="max-w-0 px-4 py-4 text-sm text-foreground [overflow-wrap:anywhere]">
@@ -402,6 +522,16 @@ export function ResourcePage({ config }: ResourcePageProps) {
           </Card>
         </>
       )}
+
+      <Pagination
+        pagination={effectivePagination}
+        onPageChange={(page) => {
+          const nextSearchParams = new URLSearchParams(searchParams);
+          nextSearchParams.set('page', String(page));
+          setSearchParams(nextSearchParams);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
 
       <div className="rounded-2xl border border-border/70 bg-white/70 px-4 py-3 text-xs text-muted-foreground">
         Last refreshed {formatDateTime(new Date().toISOString())}

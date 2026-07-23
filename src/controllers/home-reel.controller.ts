@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createHomeReel,
@@ -11,12 +12,20 @@ import {
 } from '../services/home-reel.service';
 
 export const getHomeReels = asyncHandler(async (req, res: Response) => {
-  const homeReels = await listHomeReels(Boolean(req.user));
+  const homeReels = await listHomeReels({
+    includeInactive: Boolean(req.user),
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+    }),
+  });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Home reels retrieved successfully.',
-    data: homeReels,
+    data: isPaginatedResult(homeReels) ? homeReels.items : homeReels,
+    pagination: isPaginatedResult(homeReels) ? homeReels.pagination : undefined,
   });
 });
 

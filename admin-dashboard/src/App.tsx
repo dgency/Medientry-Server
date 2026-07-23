@@ -22,6 +22,8 @@ export function App() {
         <Route element={<DashboardLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="/site-settings" element={<SiteSettingsPage />} />
+          <Route path="/pages/mbbs-bangladesh" element={<ResourceScreenPage configKey="page-mbbs-bangladesh" />} />
+          <Route path="/pages/mbbs-georgia" element={<ResourceScreenPage configKey="page-mbbs-georgia" />} />
           <Route path="/home-sections" element={<HomeSectionsPage />} />
           <Route path="/media-library" element={<MediaLibraryPage />} />
           <Route path="/consultation-leads" element={<ConsultationLeadsPage />} />

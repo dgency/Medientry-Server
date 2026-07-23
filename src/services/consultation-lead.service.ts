@@ -20,6 +20,16 @@ import {
   resolveOfficialWhatsAppContact,
   type OfficialWhatsAppContact,
 } from '../utils/official-whatsapp';
+import {
+  normalizeOptionalPublicEmailAddress,
+  normalizePublicFormText,
+  normalizePublicPhoneNumber,
+} from '../utils/public-form-validation';
+import {
+  buildPaginatedResult,
+  type PaginatedResult,
+  type PaginationInput,
+} from '../utils/pagination';
 import { resolvePublicWebsiteUrl } from '../utils/public-site-url';
 
 type CreateConsultationLeadInput = {
@@ -44,6 +54,7 @@ type ConsultationLeadStatusFilter = 'all' | 'read' | 'unread';
 type ListConsultationLeadsInput = {
   search?: string;
   status?: ConsultationLeadStatusFilter;
+  pagination?: PaginationInput | null;
 };
 
 const consultationLeadSelect = {
@@ -103,18 +114,6 @@ const defaultDependencies: ConsultationLeadServiceDependencies = {
   resolveOfficialWhatsAppContact,
 };
 
-const recentLeadWindowMs = 2 * 60 * 1000;
-const duplicateLeadWindowMs = 24 * 60 * 60 * 1000;
-
-const normalizeRequiredString = (value: string) => value.trim();
-const normalizePhoneNumber = (value: string) => {
-  const trimmed = value.trim();
-  const hasLeadingPlus = trimmed.startsWith('+');
-  const digits = trimmed.replace(/\D/g, '');
-
-  return hasLeadingPlus ? `+${digits}` : digits;
-};
-
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
     return undefined;
@@ -129,7 +128,7 @@ const normalizeNullableString = (value?: string | null) => {
 };
 
 const normalizeNullableEmail = (value?: string | null) =>
-  normalizeNullableString(value)?.toLowerCase() ?? null;
+  normalizeOptionalPublicEmailAddress(normalizeNullableString(value)) ?? null;
 
 const normalizeSearch = (value?: string | null) => {
   const trimmed = value?.trim();
@@ -137,7 +136,7 @@ const normalizeSearch = (value?: string | null) => {
 };
 
 const buildPhoneLink = (value?: string | null) => {
-  const normalizedValue = value ? normalizePhoneNumber(value) : '';
+  const normalizedValue = value ? normalizePublicPhoneNumber(value) : '';
   return normalizedValue ? `tel:${normalizedValue}` : undefined;
 };
 
@@ -154,14 +153,14 @@ type ConsultationLeadCreateData = Omit<
 const buildConsultationLeadData = (
   input: CreateConsultationLeadInput,
 ): ConsultationLeadCreateData => ({
-  fullName: normalizeRequiredString(input.fullName),
-  userRole: normalizeRequiredString(input.userRole),
-  whatsappNumber: normalizePhoneNumber(input.whatsappNumber),
-  phoneNumber: normalizePhoneNumber(input.phoneNumber),
+  fullName: normalizePublicFormText(input.fullName),
+  userRole: normalizePublicFormText(input.userRole),
+  whatsappNumber: normalizePublicPhoneNumber(input.whatsappNumber),
+  phoneNumber: normalizePublicPhoneNumber(input.phoneNumber),
   emailAddress: normalizeNullableEmail(input.emailAddress),
-  passingYear: normalizeRequiredString(input.passingYear),
+  passingYear: normalizePublicFormText(input.passingYear),
   neetScore: normalizeNullableString(input.neetScore),
-  stateName: normalizeRequiredString(input.stateName),
+  stateName: normalizePublicFormText(input.stateName),
   preferredCollege: normalizeNullableString(input.preferredCollege),
   message: normalizeNullableString(input.message),
   sourcePage: resolvePublicWebsiteUrl(normalizeNullableString(input.sourcePage)) ?? null,
@@ -237,54 +236,10 @@ const sortConsultationLeads = <
 
 const assertNoSpamIndicators = async (
   input: CreateConsultationLeadInput,
-  consultationLeadModel: ConsultationLeadServiceDependencies['consultationLeadModel'],
+  _consultationLeadModel: ConsultationLeadServiceDependencies['consultationLeadModel'],
 ) => {
   if (input.website?.trim()) {
     throw new ApiError(400, 'Spam submission detected.');
-  }
-
-  const normalizedPhoneNumber = normalizePhoneNumber(input.phoneNumber);
-  const normalizedWhatsAppNumber = normalizePhoneNumber(input.whatsappNumber);
-  const normalizedEmailAddress = normalizeNullableEmail(input.emailAddress);
-  const recentSubmissionMatchers: Prisma.ConsultationLeadWhereInput[] = [
-    { phoneNumber: normalizedPhoneNumber },
-    { whatsappNumber: normalizedWhatsAppNumber },
-  ];
-
-  if (normalizedEmailAddress) {
-    recentSubmissionMatchers.push({ emailAddress: normalizedEmailAddress });
-  }
-
-  const recentSubmission = await consultationLeadModel.findFirst({
-    where: {
-      createdAt: { gte: new Date(Date.now() - recentLeadWindowMs) },
-      OR: recentSubmissionMatchers,
-    },
-    select: { id: true },
-  });
-
-  if (recentSubmission) {
-    throw new ApiError(429, 'Please wait a moment before submitting another consultation request.');
-  }
-
-  const duplicateSubmission = await consultationLeadModel.findFirst({
-    where: {
-      createdAt: { gte: new Date(Date.now() - duplicateLeadWindowMs) },
-      phoneNumber: normalizedPhoneNumber,
-      fullName: {
-        equals: normalizeRequiredString(input.fullName),
-        mode: 'insensitive',
-      },
-      stateName: {
-        equals: normalizeRequiredString(input.stateName),
-        mode: 'insensitive',
-      },
-    },
-    select: { id: true },
-  });
-
-  if (duplicateSubmission) {
-    throw new ApiError(409, 'This consultation request has already been submitted recently.');
   }
 };
 
@@ -413,8 +368,31 @@ const sendConsultationLeadCustomerConfirmation = async (
 };
 
 export const listConsultationLeads = async (input: ListConsultationLeadsInput = {}) => {
+  const where = buildConsultationLeadWhere(input);
+  const pagination = input.pagination;
+
+  if (pagination) {
+    const [leads, totalItems] = await Promise.all([
+      defaultDependencies.consultationLeadModel.findMany({
+        where,
+        select: consultationLeadSelect,
+        orderBy: [{ createdAt: 'desc' }],
+        skip: (pagination.page - 1) * pagination.limit,
+        take: pagination.limit,
+      }),
+      prisma.consultationLead.count({ where }),
+    ]);
+
+    return buildPaginatedResult({
+      items: sortConsultationLeads(leads),
+      page: pagination.page,
+      limit: pagination.limit,
+      totalItems,
+    }) satisfies PaginatedResult<ConsultationLeadRecord>;
+  }
+
   const leads = await defaultDependencies.consultationLeadModel.findMany({
-    where: buildConsultationLeadWhere(input),
+    where,
     select: consultationLeadSelect,
     orderBy: [{ createdAt: 'desc' }],
   });

@@ -136,30 +136,67 @@ test('consultation lead save still succeeds when email delivery fails', async ()
   assert.equal(lead.id, 'lead-2');
 });
 
-test('consultation lead duplicate protection rejects rapid repeats', async () => {
-  await assert.rejects(
-    () =>
-      createConsultationLeadWithDependencies(createConsultationLeadInput(), {
-        consultationLeadModel: {
-          findFirst: async () => ({ id: 'existing-lead' }),
-          create: async () => {
-            throw new Error('should not create');
-          },
-          findMany: async () => [],
-          findUnique: async () => null,
-          delete: async () => ({ id: 'existing-lead' }),
+test('consultation lead allows repeated submissions from the same user data', async () => {
+  const createdLeadIds: string[] = [];
+
+  const createLead = (trackingNumber: number) =>
+    createConsultationLeadWithDependencies(createConsultationLeadInput(), {
+      consultationLeadModel: {
+        findFirst: async () => null,
+        create: async ({ data }) => {
+          const record = data as {
+            trackingId: string;
+            fullName: string;
+            userRole: string;
+            whatsappNumber: string;
+            phoneNumber: string;
+            emailAddress?: string | null;
+            passingYear: string;
+            neetScore?: string | null;
+            stateName: string;
+            preferredCollege?: string | null;
+            message?: string | null;
+            sourcePage?: string | null;
+            submissionDate?: Date | null;
+          };
+
+          createdLeadIds.push(record.trackingId);
+
+          return {
+            id: `lead-${trackingNumber}`,
+            trackingNumber,
+            trackingId: record.trackingId,
+            fullName: record.fullName,
+            userRole: record.userRole,
+            whatsappNumber: record.whatsappNumber,
+            phoneNumber: record.phoneNumber,
+            emailAddress: record.emailAddress ?? null,
+            passingYear: record.passingYear,
+            neetScore: record.neetScore ?? null,
+            stateName: record.stateName,
+            preferredCollege: record.preferredCollege ?? null,
+            message: record.message ?? null,
+            sourcePage: record.sourcePage ?? null,
+            submissionDate: record.submissionDate ?? null,
+            createdAt: new Date('2026-07-19T10:00:00.000Z'),
+            updatedAt: new Date('2026-07-19T10:00:00.000Z'),
+          };
         },
-        allocateTrackingNumber: async () => 3,
-        sendAdminFormNotification: async () => ({ skipped: false, messageId: 'unused' }),
-        sendCustomerConfirmation: async () => ({ skipped: false, messageId: 'unused-customer' }),
-        resolveOfficialWhatsAppContact: async () => null,
-      }),
-    (error: unknown) => {
-      assert.ok(error instanceof ApiError);
-      assert.equal(error.statusCode, 429);
-      return true;
-    },
-  );
+        findMany: async () => [],
+        findUnique: async () => null,
+        delete: async () => ({ id: `lead-${trackingNumber}` }),
+      },
+      allocateTrackingNumber: async () => trackingNumber,
+      sendAdminFormNotification: async () => ({ skipped: false, messageId: `admin-${trackingNumber}` }),
+      sendCustomerConfirmation: async () => ({ skipped: false, messageId: `customer-${trackingNumber}` }),
+      resolveOfficialWhatsAppContact: async () => null,
+    });
+
+  const [firstLead, secondLead] = await Promise.all([createLead(3), createLead(4)]);
+
+  assert.equal(firstLead.id, 'lead-3');
+  assert.equal(secondLead.id, 'lead-4');
+  assert.deepEqual(createdLeadIds.sort(), ['MBD-003', 'MBD-004']);
 });
 
 test('consultation lead flow keeps unique MBD tracking IDs across near-simultaneous submissions', async () => {
@@ -459,4 +496,70 @@ test('college fee inquiry flow keeps unique INQ tracking IDs across near-simulta
   assert.equal(inquiryOne.trackingId, 'INQ-010');
   assert.equal(inquiryTwo.trackingId, 'INQ-011');
   assert.deepEqual(createdTrackingIds.sort(), ['INQ-010', 'INQ-011']);
+});
+
+test('college fee inquiry allows repeated submissions from the same user data', async () => {
+  const createdInquiryIds: string[] = [];
+
+  const createInquiry = (trackingNumber: number) =>
+    createCollegeFeeInquiryWithDependencies(createCollegeFeeInquiryInput(), {
+      collegeFeeInquiryModel: {
+        findFirst: async () => null,
+        create: async ({ data }) => {
+          const record = data as {
+            trackingId: string;
+            medicalCollegeId?: string | null;
+            fullName: string;
+            phoneNumber: string;
+            emailAddress?: string | null;
+            country?: string | null;
+            preferredStudyDestination?: string | null;
+            interestedCollegeName: string;
+            message?: string | null;
+            source?: string | null;
+            sourcePage?: string | null;
+          };
+
+          createdInquiryIds.push(record.trackingId);
+
+          return {
+            id: `inq-${trackingNumber}`,
+            trackingNumber,
+            trackingId: record.trackingId,
+            medicalCollegeId: record.medicalCollegeId ?? null,
+            fullName: record.fullName,
+            phoneNumber: record.phoneNumber,
+            emailAddress: record.emailAddress ?? null,
+            country: record.country ?? null,
+            preferredStudyDestination: record.preferredStudyDestination ?? null,
+            interestedCollegeName: record.interestedCollegeName,
+            message: record.message ?? null,
+            source: record.source ?? 'College Enquiry Popup | colleges-grid-card',
+            sourcePage: record.sourcePage ?? 'https://www.medientrybd.com/colleges',
+            readAt: null,
+            createdAt: new Date('2026-07-19T10:30:00.000Z'),
+            updatedAt: new Date('2026-07-19T10:30:00.000Z'),
+          };
+        },
+        delete: async () => ({ id: `inq-${trackingNumber}` }),
+        findMany: async () => [],
+        findUnique: async () => null,
+        update: async () => {
+          throw new Error('not used');
+        },
+      },
+      medicalCollegeModel: {
+        findUnique: async () => ({ id: '4fd955b7-7f6f-44c8-9259-24fcb18e98f5' }),
+      },
+      allocateTrackingNumber: async () => trackingNumber,
+      sendAdminFormNotification: async () => ({ skipped: false, messageId: `admin-${trackingNumber}` }),
+      sendCustomerConfirmation: async () => ({ skipped: false, messageId: `customer-${trackingNumber}` }),
+      resolveOfficialWhatsAppContact: async () => null,
+    });
+
+  const [firstInquiry, secondInquiry] = await Promise.all([createInquiry(12), createInquiry(13)]);
+
+  assert.equal(firstInquiry.id, 'inq-12');
+  assert.equal(secondInquiry.id, 'inq-13');
+  assert.deepEqual(createdInquiryIds.sort(), ['INQ-012', 'INQ-013']);
 });

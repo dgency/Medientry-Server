@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+import {
+  isValidPublicPhoneNumber,
+  normalizeOptionalPublicEmailAddress,
+  normalizePublicPhoneNumber,
+} from '../utils/public-form-validation';
+import { normalizeOptionalQueryString, paginationQueryFields } from './pagination.validation';
+
 const normalizeOptionalString = z
   .union([z.string(), z.null()])
   .optional()
@@ -12,26 +19,37 @@ const normalizeOptionalString = z
     return trimmed ? trimmed : undefined;
   });
 
-const phoneNumberSchema = z
-  .string()
-  .trim()
-  .min(7, 'Phone number must be at least 7 characters long.')
-  .max(25, 'Phone number must be at most 25 characters long.')
-  .refine(
-    (value) => /^[+]?[\d\s\-()]+$/.test(value) && value.replace(/\D/g, '').length >= 7,
-    'Phone number must be a valid international phone number.',
-  );
+const createPhoneNumberSchema = (message: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, message)
+    .refine(isValidPublicPhoneNumber, message)
+    .transform(normalizePublicPhoneNumber);
+
+const emailAddressSchema = z.string().trim().email('Please enter a valid email address.');
 
 const normalizeOptionalEmail = z
-  .union([z.string().trim().email(), z.literal(''), z.null()])
+  .union([z.string(), z.literal(''), z.null()])
   .optional()
-  .transform((value) => {
-    if (typeof value !== 'string') {
+  .transform((value, context) => {
+    const normalizedValue = normalizeOptionalPublicEmailAddress(value);
+
+    if (!normalizedValue) {
       return undefined;
     }
 
-    const trimmed = value.trim().toLowerCase();
-    return trimmed ? trimmed : undefined;
+    const parsedEmail = emailAddressSchema.safeParse(normalizedValue);
+
+    if (!parsedEmail.success) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Please enter a valid email address.',
+      });
+      return z.NEVER;
+    }
+
+    return parsedEmail.data;
   });
 
 const normalizeOptionalUuid = z
@@ -39,17 +57,9 @@ const normalizeOptionalUuid = z
   .optional()
   .transform((value) => (typeof value === 'string' && value.trim() ? value.trim() : undefined));
 
-const normalizeOptionalQueryString = z.preprocess((value) => {
-  if (Array.isArray(value)) {
-    return typeof value[0] === 'string' ? value[0] : undefined;
-  }
-
-  return typeof value === 'string' ? value : undefined;
-}, z.string().trim().optional().transform((value) => (value ? value : undefined)));
-
 const baseCollegeFeeInquiryBodySchema = z.object({
   fullName: z.string().trim().min(2, 'Full name must be at least 2 characters long.'),
-  phoneNumber: phoneNumberSchema,
+  phoneNumber: createPhoneNumberSchema('Please enter a valid phone number.'),
   emailAddress: normalizeOptionalEmail,
   country: normalizeOptionalString,
   preferredStudyDestination: normalizeOptionalString,
@@ -72,6 +82,7 @@ export const createCollegeFeeInquirySchema = z.object({
 export const listCollegeFeeInquiryQuerySchema = z.object({
   query: z.object({
     search: normalizeOptionalQueryString,
+    ...paginationQueryFields,
     status: z
       .preprocess((value) => {
         if (Array.isArray(value)) {

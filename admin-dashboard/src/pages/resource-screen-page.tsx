@@ -4,16 +4,21 @@ import { ResourcePage } from '../components/cms/resource-page';
 import { resourceConfigs } from '../config/resource-configs';
 import { useAuth } from '../hooks/use-auth';
 
-export function ResourceScreenPage() {
+type ResourceScreenPageProps = {
+  configKey?: string;
+};
+
+export function ResourceScreenPage({ configKey }: ResourceScreenPageProps = {}) {
   const { resourceKey = '' } = useParams();
   const { user } = useAuth();
-  const config = resourceConfigs[resourceKey];
+  const resolvedResourceKey = configKey ?? resourceKey;
+  const config = resourceConfigs[resolvedResourceKey];
 
   if (!config) {
     return <Navigate to="/" replace />;
   }
 
-  if (resourceKey === 'users' && user?.role !== 'SUPER_ADMIN') {
+  if (resolvedResourceKey === 'users' && user?.role !== 'SUPER_ADMIN') {
     return <Navigate to="/" replace />;
   }
 

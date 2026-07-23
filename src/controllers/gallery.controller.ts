@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
+import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
 import {
   createGalleryItem,
@@ -11,12 +12,20 @@ import {
 } from '../services/gallery.service';
 
 export const getGalleryItems = asyncHandler(async (req, res: Response) => {
-  const galleryItems = await listGalleryItems(Boolean(req.user));
+  const galleryItems = await listGalleryItems({
+    includeInactive: Boolean(req.user),
+    search: typeof req.query.search === 'string' ? req.query.search : undefined,
+    pagination: resolvePaginationInput({
+      page: req.query.page,
+      limit: req.query.limit,
+    }),
+  });
 
   sendResponse(res, 200, {
     success: true,
     message: 'Gallery items retrieved successfully.',
-    data: galleryItems,
+    data: isPaginatedResult(galleryItems) ? galleryItems.items : galleryItems,
+    pagination: isPaginatedResult(galleryItems) ? galleryItems.pagination : undefined,
   });
 });
 
