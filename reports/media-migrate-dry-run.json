@@ -1,0 +1,163 @@
+{
+  "generatedAt": "2026-07-23T10:52:09.445Z",
+  "mode": "dry-run",
+  "storageDriver": "local",
+  "spacesPublicBaseUrl": null,
+  "uploadsRootDirectory": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads",
+  "filters": {
+    "limit": null,
+    "models": null,
+    "categories": null
+  },
+  "counts": {
+    "scannedCandidates": 6,
+    "selectedCandidates": 6,
+    "ready": 4,
+    "alreadyPresentInSpaces": 0,
+    "migrated": 0,
+    "dbUpdatedOnly": 0,
+    "missingSourceFiles": 2,
+    "failed": 0
+  },
+  "missingSourceRecords": [
+    {
+      "table": "study_destinations",
+      "id": "c0e817da-f4f0-4e5c-a2a3-972957485f74",
+      "field": "featuredImage",
+      "currentValue": "/uploads/images/1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "normalizedPath": "/uploads/images/1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": null,
+      "checksumSha256": null,
+      "status": "missing-source-file",
+      "notes": [
+        "Legacy source file was not found in the configured upload directory."
+      ]
+    },
+    {
+      "table": "study_destinations",
+      "id": "0d1e12e5-0f93-42e0-9607-b001c2a639d8",
+      "field": "featuredImage",
+      "currentValue": "/uploads/images/1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "normalizedPath": "/uploads/images/1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": null,
+      "checksumSha256": null,
+      "status": "missing-source-file",
+      "notes": [
+        "Legacy source file was not found in the configured upload directory."
+      ]
+    }
+  ],
+  "items": [
+    {
+      "table": "media_assets",
+      "id": "3961e4a8-c106-4785-9138-bccfb420f370",
+      "field": "storageKey",
+      "currentValue": "images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp",
+      "normalizedPath": "/uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": {
+        "before": "{\"storageKey\":\"images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\",\"path\":\"images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\",\"publicUrl\":\"/uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\",\"url\":\"/uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\"}",
+        "after": "{\"storageKey\":\"uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\",\"path\":\"uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\",\"publicUrl\":\"/uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\",\"url\":\"/uploads/images/1784634583618-0e22adc1-b423-4e74-a2ea-3368499ae337.webp\"}"
+      },
+      "checksumSha256": "31eeacb90aed7c8b986cf3f56a6febc0b777a39fae1c979672a3e2fccc47108f",
+      "status": "ready",
+      "notes": []
+    },
+    {
+      "table": "media_assets",
+      "id": "2ae86623-13a4-477c-af46-7616c4ad747d",
+      "field": "storageKey",
+      "currentValue": "images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp",
+      "normalizedPath": "/uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": {
+        "before": "{\"storageKey\":\"images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\",\"path\":\"images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\",\"publicUrl\":\"/uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\",\"url\":\"/uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\"}",
+        "after": "{\"storageKey\":\"uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\",\"path\":\"uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\",\"publicUrl\":\"/uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\",\"url\":\"/uploads/images/1784634604362-7b750d06-dfd3-400a-9294-c3a35cb0732e.webp\"}"
+      },
+      "checksumSha256": "c23d7c6fa16643f1982c3f0f5ef16cdc1dd8087025d9911b427f4991856f4de9",
+      "status": "ready",
+      "notes": []
+    },
+    {
+      "table": "media_assets",
+      "id": "c9e126b9-1632-49e1-a5e9-b1860ae13709",
+      "field": "storageKey",
+      "currentValue": "images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp",
+      "normalizedPath": "/uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": {
+        "before": "{\"storageKey\":\"images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\",\"path\":\"images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\",\"publicUrl\":\"http://localhost:5000/uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\",\"url\":\"http://localhost:5000/uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\"}",
+        "after": "{\"storageKey\":\"uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\",\"path\":\"uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\",\"publicUrl\":\"http://localhost:5000/uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\",\"url\":\"http://localhost:5000/uploads/images/1784799332229-298dde3f-40ae-49e0-bfdc-401e9ae0d200-hero.webp\"}"
+      },
+      "checksumSha256": "9914ad9740c5c55b257a046c73812fa68df4f17dfe1152301f2ddfe0a3fa3d63",
+      "status": "ready",
+      "notes": []
+    },
+    {
+      "table": "study_destinations",
+      "id": "c0e817da-f4f0-4e5c-a2a3-972957485f74",
+      "field": "featuredImage",
+      "currentValue": "/uploads/images/1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "normalizedPath": "/uploads/images/1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784727599143-870ebb01-c609-4ff2-858d-59e84ab3a6b9.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": null,
+      "checksumSha256": null,
+      "status": "missing-source-file",
+      "notes": [
+        "Legacy source file was not found in the configured upload directory."
+      ]
+    },
+    {
+      "table": "study_destinations",
+      "id": "0d1e12e5-0f93-42e0-9607-b001c2a639d8",
+      "field": "featuredImage",
+      "currentValue": "/uploads/images/1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "normalizedPath": "/uploads/images/1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784727615488-c8048b69-b5f6-4c5d-88a2-0042c28400eb.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": null,
+      "checksumSha256": null,
+      "status": "missing-source-file",
+      "notes": [
+        "Legacy source file was not found in the configured upload directory."
+      ]
+    },
+    {
+      "table": "medical_colleges",
+      "id": "976daa09-0d88-48b3-a0d0-defe0e8c98b1",
+      "field": "featuredImage",
+      "currentValue": "/uploads/images/1784630714703-d83216a3-ae36-4cc0-8834-3b00022ae777.webp",
+      "normalizedPath": "/uploads/images/1784630714703-d83216a3-ae36-4cc0-8834-3b00022ae777.webp",
+      "category": "images",
+      "storageKey": "uploads/images/1784630714703-d83216a3-ae36-4cc0-8834-3b00022ae777.webp",
+      "sourceAbsolutePath": "F:\\Custom Coding Project\\Medientry LiveSite\\Medientry-Server\\uploads\\images\\1784630714703-d83216a3-ae36-4cc0-8834-3b00022ae777.webp",
+      "targetPublicUrl": null,
+      "plannedDatabaseUpdate": null,
+      "checksumSha256": "31eeacb90aed7c8b986cf3f56a6febc0b777a39fae1c979672a3e2fccc47108f",
+      "status": "ready",
+      "notes": []
+    }
+  ]
+}

@@ -7,13 +7,16 @@ import { sendResponse } from '../utils/send-response';
 export const getHealth = asyncHandler(async (_req: Request, res: Response) => {
   const health = await getHealthStatus();
   const statusCode = health.status === 'ok' ? 200 : 503;
+  const message =
+    health.database === 'down'
+      ? 'API is running but the database is unavailable.'
+      : health.storage.status === 'down'
+        ? 'API is running but storage is unavailable.'
+        : 'API, database, and storage are healthy.';
 
   sendResponse(res, statusCode, {
     success: health.status === 'ok',
-    message:
-      health.status === 'ok'
-        ? 'API and database are healthy.'
-        : 'API is running but the database is unavailable.',
+    message,
     data: health,
   });
 });
