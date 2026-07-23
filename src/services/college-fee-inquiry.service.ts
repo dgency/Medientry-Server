@@ -393,6 +393,7 @@ const sendInquiryEmails = async (
     await dependencies.sendCustomerConfirmation({
       to: inquiry.emailAddress,
       subject: `Your College Fee Inquiry Has Been Received — ${inquiry.trackingId}`,
+      trackingId: inquiry.trackingId,
       heading: 'Your College Fee Inquiry Has Been Received',
       intro:
         'Thank you for contacting MediEntry. We have received your information successfully. Our counselling team will review your request and contact you as soon as possible.',

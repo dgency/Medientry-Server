@@ -69,6 +69,7 @@ export type CustomerConfirmationInput = {
   subject: string;
   heading: string;
   intro: string;
+  trackingId?: string;
   eyebrow?: string;
   summaryFields?: EmailTemplateField[];
   fields?: EmailTemplateField[];
@@ -151,24 +152,6 @@ const normalizeField = (field: EmailTemplateField) => {
   };
 };
 
-const formatSubmittedAt = (value: string | Date) => {
-  const date = value instanceof Date ? value : new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return {
-      date: null,
-      time: null,
-      iso: null,
-    };
-  }
-
-  return {
-    date: date.toISOString().slice(0, 10),
-    time: `${date.toISOString().slice(11, 19)} UTC`,
-    iso: date.toISOString(),
-  };
-};
-
 const formatSubmittedAtForDisplay = (
   value: string | Date,
   timeZone = 'UTC',
@@ -205,52 +188,38 @@ const isSafeHttpUrl = (value?: string | null) => Boolean(value && /^https?:\/\//
 const isSafeFieldHref = (value?: string | null) =>
   Boolean(value && /^(https?:\/\/|mailto:|tel:)/i.test(value));
 
-const renderRows = (fields: EmailTemplateField[]) => {
-  return fields
+const normalizeTemplateFields = (fields: EmailTemplateField[]) =>
+  fields
     .map(normalizeField)
-    .filter((field): field is NonNullable<ReturnType<typeof normalizeField>> => Boolean(field))
-    .map((field) => {
-      const renderedValue =
-        field.href && isSafeFieldHref(field.href)
-          ? `<a href="${escapeHtml(field.href)}" style="color:#146736;text-decoration:underline;word-break:break-word;">${escapeHtml(field.value)}</a>`
-          : escapeHtml(field.value);
+    .filter((field): field is NonNullable<ReturnType<typeof normalizeField>> => Boolean(field));
+
+const renderFieldValue = (field: NonNullable<ReturnType<typeof normalizeField>>) =>
+  field.href && isSafeFieldHref(field.href)
+    ? `<a href="${escapeHtml(field.href)}" style="color:#146736;text-decoration:underline;word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(field.value)}</a>`
+    : escapeHtml(field.value);
+
+const renderTableRows = (
+  fields: Array<NonNullable<ReturnType<typeof normalizeField>>>,
+) =>
+  fields
+    .map((field, index) => {
+      const borderStyle = index === fields.length - 1 ? '' : 'border-bottom:1px solid #dbe5df;';
 
       return `
         <tr>
-          <td style="padding:14px 16px;font-size:13px;line-height:1.6;font-weight:700;border-bottom:1px solid #e3ece6;border-right:1px solid #e3ece6;background:#f7fbf8;vertical-align:top;width:220px;color:#294137;">
+          <td width="34%" valign="top" style="width:34%;padding:12px 12px;font-size:13px;line-height:1.45;font-weight:700;color:#22352d;background:#f3f8f5;border-right:1px solid #dbe5df;${borderStyle}">
             ${escapeHtml(field.label)}
           </td>
-          <td style="padding:14px 16px;font-size:14px;line-height:1.7;border-bottom:1px solid #e3ece6;vertical-align:top;color:#10261a;white-space:pre-wrap;word-break:break-word;">
-            ${renderedValue}
+          <td width="66%" valign="top" style="width:66%;padding:12px 12px;font-size:13px;line-height:1.45;font-weight:400;color:#10261a;background:#ffffff;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;${borderStyle}">
+            ${renderFieldValue(field)}
           </td>
         </tr>
       `;
     })
     .join('');
-};
-
-const renderSection = (title: string, fields: EmailTemplateField[]) => {
-  const rows = renderRows(fields);
-
-  if (!rows) {
-    return '';
-  }
-
-  return `
-    <section style="margin-top:24px;">
-      <h2 style="margin:0 0 12px;font-size:16px;line-height:1.3;color:#0f3d27;">${escapeHtml(title)}</h2>
-      <table style="width:100%;border-collapse:collapse;">
-        ${rows}
-      </table>
-    </section>
-  `;
-};
 
 const renderTextSection = (title: string, fields: EmailTemplateField[]) => {
-  const lines = fields
-    .map(normalizeField)
-    .filter((field): field is NonNullable<ReturnType<typeof normalizeField>> => Boolean(field))
-    .map((field) => `${field.label}: ${field.value}`);
+  const lines = normalizeTemplateFields(fields).map((field) => `${field.label}: ${field.value}`);
 
   if (lines.length === 0) {
     return '';
@@ -259,39 +228,32 @@ const renderTextSection = (title: string, fields: EmailTemplateField[]) => {
   return [title, ...lines].join('\n');
 };
 
-const renderFooter = (footer?: string | null) => {
-  const safeFooter = footer ? escapeHtml(footer) : '';
+const renderDataSection = ({
+  title,
+  fields,
+  marginTop = 20,
+}: {
+  title: string;
+  fields: EmailTemplateField[];
+  marginTop?: number;
+}) => {
+  const normalizedFields = normalizeTemplateFields(fields);
 
-  return `
-    <div style="padding:0 28px 28px;color:#5f6d66;font-size:13px;line-height:1.7;">
-      ${safeFooter}
-    </div>
-  `;
-};
-
-const renderFieldValue = (field: NonNullable<ReturnType<typeof normalizeField>>) =>
-  field.href && isSafeFieldHref(field.href)
-    ? `<a href="${escapeHtml(field.href)}" style="color:#146736;text-decoration:underline;word-break:break-word;">${escapeHtml(field.value)}</a>`
-    : escapeHtml(field.value);
-
-const renderAdminEmailSection = (title: string, fields: EmailTemplateField[]) => {
-  const rows = renderRows(fields);
-
-  if (!rows) {
+  if (normalizedFields.length === 0) {
     return '';
   }
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:24px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:${marginTop}px;">
       <tr>
-        <td style="padding:0 0 12px;font-size:20px;line-height:1.3;font-weight:700;color:#10261a;">
+        <td style="padding:0 0 10px;font-size:18px;line-height:1.3;font-weight:700;color:#10261a;">
           ${escapeHtml(title)}
         </td>
       </tr>
       <tr>
         <td>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;border-spacing:0;border:1px solid #dbe5df;border-radius:16px;overflow:hidden;background:#ffffff;">
-            ${rows}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;border:1px solid #dbe5df;background:#ffffff;">
+            ${renderTableRows(normalizedFields)}
           </table>
         </td>
       </tr>
@@ -299,50 +261,44 @@ const renderAdminEmailSection = (title: string, fields: EmailTemplateField[]) =>
   `;
 };
 
-const renderCompactFooterSection = (title: string, fields: EmailTemplateField[]) => {
-  const normalizedFields = fields
-    .map(normalizeField)
-    .filter((field): field is NonNullable<ReturnType<typeof normalizeField>> => Boolean(field));
+const renderPrimaryButton = ({
+  href,
+  label,
+}: {
+  href?: string | null;
+  label: string;
+}) => {
+  const safeHref = href && isSafeHttpUrl(href) ? href : null;
 
-  if (normalizedFields.length === 0) {
+  if (!safeHref) {
     return '';
   }
 
-  const blocks = normalizedFields
-    .map(
-      (field) => `
-        <tr>
-          <td style="padding:0 0 12px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e3ece6;border-radius:14px;background:#fbfdfb;">
-              <tr>
-                <td style="padding:14px 16px;">
-                  <div style="margin:0 0 6px;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#5b7366;">
-                    ${escapeHtml(field.label)}
-                  </div>
-                  <div style="font-size:14px;line-height:1.7;color:#10261a;word-break:break-word;white-space:pre-wrap;">
-                    ${renderFieldValue(field)}
-                  </div>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      `,
-    )
-    .join('');
-
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:28px;">
-      <tr>
-        <td style="padding:0 0 12px;font-size:12px;line-height:1.4;font-weight:700;color:#42534a;text-transform:uppercase;letter-spacing:0.08em;">
-          ${escapeHtml(title)}
-        </td>
-      </tr>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:20px;">
       <tr>
         <td>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
-            ${blocks}
-          </table>
+          <a href="${escapeHtml(safeHref)}" style="display:inline-block;padding:11px 18px;border-radius:999px;background:#d71920;color:#ffffff;text-decoration:none;font-size:14px;line-height:1.2;font-weight:700;">
+            ${escapeHtml(label)}
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+};
+
+const renderTrackingBadge = (value?: string | null) => {
+  const safeValue = sanitizeHeaderValue(value || '');
+
+  if (!safeValue) {
+    return '';
+  }
+
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right" style="margin-left:12px;">
+      <tr>
+        <td style="padding:8px 14px;border-radius:999px;background:#ffffff;color:#146736;font-size:13px;line-height:1.2;font-weight:700;white-space:nowrap;">
+          ${escapeHtml(safeValue)}
         </td>
       </tr>
     </table>
@@ -364,17 +320,17 @@ const renderWhatsAppContactBlock = ({
   }
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:22px;border:1px solid #d7e8dd;border-radius:16px;overflow:hidden;background:#f6fbf8;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:20px;border:1px solid #dbe5df;background:#f8fbf9;">
       <tr>
-        <td style="padding:20px 20px 18px;">
+        <td style="padding:16px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
             <tr>
-              <td style="padding:0 0 8px;font-size:20px;line-height:1.3;font-weight:700;color:#10261a;">
+              <td style="padding:0 0 6px;font-size:18px;line-height:1.3;font-weight:700;color:#10261a;">
                 Need Faster Assistance?
               </td>
             </tr>
             <tr>
-              <td style="padding:0 0 14px;font-size:14px;line-height:1.7;color:#42534a;">
+              <td style="padding:0 0 12px;font-size:13px;line-height:1.55;color:#42534a;">
                 For faster communication, contact the MediEntry counselling team directly on WhatsApp.
               </td>
             </tr>
@@ -382,8 +338,8 @@ const renderWhatsAppContactBlock = ({
               <td>
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
                   <tr>
-                    <td style="width:58px;vertical-align:middle;">
-                      <div style="width:42px;height:42px;border-radius:999px;background:#25d366;color:#ffffff;font-size:13px;line-height:42px;font-weight:700;text-align:center;">
+                    <td style="width:54px;vertical-align:middle;">
+                      <div style="width:40px;height:40px;border-radius:999px;background:#25d366;color:#ffffff;font-size:13px;line-height:40px;font-weight:700;text-align:center;">
                         WA
                       </div>
                     </td>
@@ -391,14 +347,14 @@ const renderWhatsAppContactBlock = ({
                       <div style="font-size:12px;line-height:1.4;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#146736;">
                         WhatsApp
                       </div>
-                      <div style="font-size:16px;line-height:1.5;font-weight:700;color:#10261a;word-break:break-word;">
+                      <div style="font-size:15px;line-height:1.45;font-weight:700;color:#10261a;word-break:break-word;overflow-wrap:anywhere;">
                         ${escapeHtml(safeDisplayNumber)}
                       </div>
                     </td>
                   </tr>
                   <tr>
-                    <td colspan="2" style="padding-top:14px;">
-                      <a href="${escapeHtml(safeActionUrl)}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#25d366;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">
+                    <td colspan="2" style="padding-top:12px;">
+                      <a href="${escapeHtml(safeActionUrl)}" style="display:inline-block;padding:11px 18px;border-radius:999px;background:#25d366;color:#ffffff;text-decoration:none;font-size:14px;line-height:1.2;font-weight:700;">
                         Chat With Us on WhatsApp
                       </a>
                     </td>
@@ -417,6 +373,7 @@ const renderAdminNotificationLayout = ({
   eyebrow,
   title,
   intro,
+  trackingBadge,
   content,
   footerContent,
   footerNote,
@@ -424,6 +381,7 @@ const renderAdminNotificationLayout = ({
   eyebrow: string;
   title: string;
   intro: string;
+  trackingBadge?: string;
   content: string;
   footerContent: string;
   footerNote: string;
@@ -433,22 +391,27 @@ const renderAdminNotificationLayout = ({
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
         <tr>
           <td align="center">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:680px;background:#ffffff;border:1px solid #dbe5df;border-radius:20px;overflow:hidden;font-family:Arial,sans-serif;color:#10261a;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:660px;background:#ffffff;border:1px solid #dbe5df;border-radius:12px;overflow:hidden;font-family:Arial,sans-serif;color:#10261a;">
               <tr>
-                <td style="padding:28px 32px 26px;background:linear-gradient(135deg,#12552d 0%,#1c7740 100%);">
+                <td style="padding:22px 24px;background:#146736;">
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="right" style="padding:0 0 8px;">
+                        ${trackingBadge ?? ''}
+                      </td>
+                    </tr>
                     <tr>
                       <td style="padding:0 0 8px;font-size:11px;line-height:1.5;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#dff4e7;">
                         ${escapeHtml(eyebrow)}
                       </td>
                     </tr>
                     <tr>
-                      <td style="padding:0 0 10px;font-size:34px;line-height:1.16;font-weight:700;color:#ffffff;">
+                      <td style="padding:0 0 6px;font-size:28px;line-height:1.18;font-weight:700;color:#ffffff;">
                         ${escapeHtml(title)}
                       </td>
                     </tr>
                     <tr>
-                      <td style="padding:0;font-size:15px;line-height:1.75;color:#ecf8f0;">
+                      <td style="padding:0;font-size:14px;line-height:1.55;color:#e9f5ed;">
                         ${escapeHtml(intro)}
                       </td>
                     </tr>
@@ -456,12 +419,12 @@ const renderAdminNotificationLayout = ({
                 </td>
               </tr>
               <tr>
-                <td style="padding:30px 32px 32px;">
+                <td style="padding:24px;">
                   ${content}
                   ${footerContent}
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:24px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:20px;">
                     <tr>
-                      <td style="padding:18px 20px;border-radius:16px;background:#f6fbf8;font-size:13px;line-height:1.75;color:#5f6d66;">
+                      <td style="padding:14px 16px;background:#f6fbf8;border:1px solid #dbe5df;font-size:12px;line-height:1.55;color:#5f6d66;">
                         ${escapeHtml(footerNote)}
                       </td>
                     </tr>
@@ -472,36 +435,6 @@ const renderAdminNotificationLayout = ({
           </td>
         </tr>
       </table>
-    </div>
-  `;
-};
-
-const renderLayout = ({
-  eyebrow,
-  title,
-  intro,
-  content,
-  footer,
-}: {
-  eyebrow: string;
-  title: string;
-  intro: string;
-  content: string;
-  footer?: string | null;
-}) => {
-  return `
-    <div style="margin:0;padding:24px 12px;background:#eef5f0;">
-      <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #dbe5df;border-radius:18px;overflow:hidden;font-family:Arial,sans-serif;color:#10261a;">
-        <div style="padding:28px 28px 20px;background:linear-gradient(135deg,#0f3d27 0%,#146736 100%);">
-          <p style="margin:0 0 10px;font-size:11px;font-weight:700;line-height:1.4;letter-spacing:0.18em;text-transform:uppercase;color:#d7efe0;">${escapeHtml(eyebrow)}</p>
-          <h1 style="margin:0;font-size:28px;line-height:1.18;color:#ffffff;">${escapeHtml(title)}</h1>
-          <p style="margin:14px 0 0;font-size:15px;line-height:1.7;color:#e6f3ec;">${escapeHtml(intro)}</p>
-        </div>
-        <div style="padding:4px 28px 28px;">
-          ${content}
-        </div>
-        ${renderFooter(footer)}
-      </div>
     </div>
   `;
 };
@@ -523,7 +456,7 @@ export const buildAdminFormNotificationTemplate = (
   );
   const safeActionUrl = resolvePublicWebsiteUrl(input.actionUrl);
   const safeSourcePageUrl = resolvePublicWebsiteUrl(input.sourcePageUrl);
-  const summaryFields = input.summaryFields?.length
+  const rawSummaryFields = input.summaryFields?.length
     ? input.summaryFields
     : input.fields?.length
       ? input.fields
@@ -535,6 +468,11 @@ export const buildAdminFormNotificationTemplate = (
           { label: 'Phone Number', value: input.phoneNumber ?? undefined },
           { label: 'WhatsApp Number', value: input.whatsappNumber ?? undefined },
         ];
+  const summaryFields = rawSummaryFields.filter((field) => {
+    const normalizedLabel = sanitizeHeaderValue(field.label).toLowerCase();
+
+    return !['form name', 'submission id', 'inquiry id', 'tracking id'].includes(normalizedLabel);
+  });
   const footerFields =
     input.footerFields && input.footerFields.length > 0
       ? input.footerFields
@@ -543,27 +481,24 @@ export const buildAdminFormNotificationTemplate = (
           { label: 'Submission Date', value: readableSubmittedAt.date },
           { label: 'Submission Time', value: readableSubmittedAt.time },
         ];
-  const actionBlock = safeActionUrl
-    ? `
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:24px;">
-          <tr>
-            <td>
-              <a href="${escapeHtml(safeActionUrl)}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#d71920;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;">
-                ${escapeHtml(actionLabel)}
-              </a>
-            </td>
-          </tr>
-        </table>
-      `
-    : '';
+  const detailSections = (input.detailSections ?? [])
+    .map((section) => renderDataSection({ title: section.title, fields: section.fields }))
+    .filter(Boolean)
+    .join('');
   const html = renderAdminNotificationLayout({
     eyebrow: 'MediEntry Admin Alert',
     title,
     intro,
-    content: [renderAdminEmailSection('Submission Summary', summaryFields), actionBlock]
+    trackingBadge: renderTrackingBadge(input.trackingId ?? input.submissionId),
+    content: [
+      renderDataSection({ title: 'Submission Summary', fields: summaryFields, marginTop: 0 }),
+      renderDataSection({ title: 'Submission Information', fields: footerFields }),
+      detailSections,
+      renderPrimaryButton({ href: safeActionUrl, label: actionLabel }),
+    ]
       .filter(Boolean)
       .join(''),
-    footerContent: renderCompactFooterSection('Submission Information', footerFields),
+    footerContent: '',
     footerNote:
       input.footerNote ??
       'This notification was generated automatically by the MediEntry website. Please follow up with the student or guardian using the validated contact details above.',
@@ -606,12 +541,19 @@ export const buildCustomerConfirmationTemplate = (
     { label: 'Submission Date', value: readableSubmittedAt?.date ?? undefined },
     { label: 'Submission Time', value: readableSubmittedAt?.time ?? undefined },
   ];
+  const visibleSummaryFields = summaryFields.filter((field) => {
+    const normalizedLabel = sanitizeHeaderValue(field.label).toLowerCase();
+
+    return !['form name', 'submission id', 'inquiry id', 'tracking id'].includes(normalizedLabel);
+  });
   const html = renderAdminNotificationLayout({
-    eyebrow: sanitizeHeaderValue(input.eyebrow || 'MediEntry Confirmation'),
+    eyebrow: sanitizeHeaderValue(input.eyebrow || 'Medientry'),
     title: sanitizeHeaderValue(input.heading),
     intro: sanitizeHeaderValue(input.intro),
+    trackingBadge: renderTrackingBadge(input.trackingId),
     content: [
-      renderAdminEmailSection('Submission Summary', summaryFields),
+      renderDataSection({ title: 'Submission Summary', fields: visibleSummaryFields, marginTop: 0 }),
+      renderDataSection({ title: 'Submission Information', fields: footerFields }),
       renderWhatsAppContactBlock({
         displayNumber: input.whatsappDisplayNumber,
         actionUrl: input.whatsappActionUrl,
@@ -619,7 +561,7 @@ export const buildCustomerConfirmationTemplate = (
     ]
       .filter(Boolean)
       .join(''),
-    footerContent: renderCompactFooterSection('Submission Information', footerFields),
+    footerContent: '',
     footerNote:
       input.footer ??
       'Thank you for contacting Medientry. Our team will review your request and get in touch using the details you submitted.',

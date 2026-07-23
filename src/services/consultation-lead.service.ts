@@ -330,6 +330,7 @@ const sendConsultationLeadCustomerConfirmation = async (
     await dependencies.sendCustomerConfirmation({
       to: lead.emailAddress,
       subject: `Your Free Consultation Request Has Been Received — ${lead.trackingId}`,
+      trackingId: lead.trackingId,
       heading: 'Your Free Consultation Request Has Been Received',
       intro:
         'Thank you for contacting MediEntry. We have received your information successfully. Our counselling team will review your request and contact you as soon as possible.',
