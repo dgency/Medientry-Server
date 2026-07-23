@@ -506,21 +506,22 @@ export function CollegeFeeInquiriesPage() {
                   role="button"
                   tabIndex={0}
                   className={cn(
-                    'rounded-2xl border border-border bg-white p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    item.readAt ? 'hover:bg-muted/30' : 'bg-amber-50/40 hover:bg-amber-50/60',
+                    'rounded-2xl border bg-white p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    item.readAt
+                      ? 'border-border hover:bg-muted/30'
+                      : 'border-amber-200 bg-amber-100/90 hover:bg-amber-100',
                   )}
                   onClick={() => openDetails(item.id)}
                   onKeyDown={(event) => handleRowKeyDown(event, item.id)}
                 >
                   <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <StatusBadge readAt={item.readAt} />
+                    <div className="flex items-start justify-end gap-3">
                       <p className="text-xs text-muted-foreground">{formatDateTime(item.createdAt)}</p>
                     </div>
 
                     <div className="space-y-3">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Inquiry ID</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">ID</p>
                         <div className="mt-1">
                           <Badge variant="success">{item.trackingId}</Badge>
                         </div>
@@ -528,9 +529,7 @@ export function CollegeFeeInquiriesPage() {
 
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Name</p>
-                        <p className={cn('mt-1 text-sm text-foreground', item.readAt ? '' : 'font-semibold')}>
-                          {item.fullName}
-                        </p>
+                        <p className={cn('mt-1 text-sm text-foreground', item.readAt ? '' : 'font-semibold')}>{item.fullName}</p>
                       </div>
 
                       <div>
@@ -580,10 +579,10 @@ export function CollegeFeeInquiriesPage() {
                 <thead className="bg-muted/40">
                   <tr>
                     <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Status
+                      ID
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Inquiry
+                      Name
                     </th>
                     <th className="w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Phone
@@ -604,19 +603,16 @@ export function CollegeFeeInquiriesPage() {
                       tabIndex={0}
                       className={cn(
                         'cursor-pointer align-top transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-                        item.readAt ? 'hover:bg-muted/30' : 'bg-amber-50/35 hover:bg-amber-50/55',
+                        item.readAt ? 'hover:bg-muted/30' : 'bg-amber-100/80 hover:bg-amber-100',
                       )}
                       onClick={() => openDetails(item.id)}
                       onKeyDown={(event) => handleRowKeyDown(event, item.id)}
                     >
                       <td className="px-4 py-4 align-middle">
-                        <StatusBadge readAt={item.readAt} />
+                        <Badge variant="success">{item.trackingId}</Badge>
                       </td>
                       <td className={cn('max-w-0 px-4 py-4 text-sm text-foreground [overflow-wrap:anywhere]', item.readAt ? '' : 'font-semibold')}>
-                        <div className="space-y-2">
-                          <Badge variant="success">{item.trackingId}</Badge>
-                          <p className="text-sm text-foreground">{item.fullName}</p>
-                        </div>
+                        <p className="text-sm text-foreground">{item.fullName}</p>
                       </td>
                       <td className={cn('px-4 py-4 text-sm text-foreground', item.readAt ? '' : 'font-medium')}>
                         {item.phoneNumber}

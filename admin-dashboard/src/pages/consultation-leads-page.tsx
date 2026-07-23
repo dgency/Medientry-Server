@@ -476,21 +476,22 @@ export function ConsultationLeadsPage() {
                   role="button"
                   tabIndex={0}
                   className={cn(
-                    'rounded-2xl border border-border bg-white p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    lead.readAt ? 'hover:bg-muted/30' : 'bg-amber-50/40 hover:bg-amber-50/60',
+                    'rounded-2xl border bg-white p-4 text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    lead.readAt
+                      ? 'border-border hover:bg-muted/30'
+                      : 'border-amber-200 bg-amber-100/90 hover:bg-amber-100',
                   )}
                   onClick={() => openDetails(lead.id)}
                   onKeyDown={(event) => handleRowKeyDown(event, lead.id)}
                 >
                   <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <StatusBadge readAt={lead.readAt} />
+                    <div className="flex items-start justify-end gap-3">
                       <p className="text-xs text-muted-foreground">{formatDateTime(lead.createdAt)}</p>
                     </div>
 
                     <div className="space-y-3">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Lead ID</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">ID</p>
                         <div className="mt-1">
                           <Badge variant="success">{lead.trackingId}</Badge>
                         </div>
@@ -498,9 +499,7 @@ export function ConsultationLeadsPage() {
 
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Name</p>
-                        <p className={cn('mt-1 text-sm text-foreground', lead.readAt ? '' : 'font-semibold')}>
-                          {lead.fullName}
-                        </p>
+                        <p className={cn('mt-1 text-sm text-foreground', lead.readAt ? '' : 'font-semibold')}>{lead.fullName}</p>
                       </div>
 
                       <div>
@@ -549,10 +548,10 @@ export function ConsultationLeadsPage() {
                 <thead className="bg-muted/40">
                   <tr>
                     <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Status
+                      ID
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Lead
+                      Name
                     </th>
                     <th className="w-[180px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Phone
@@ -576,13 +575,13 @@ export function ConsultationLeadsPage() {
                       tabIndex={0}
                       className={cn(
                         'cursor-pointer align-top transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-                        lead.readAt ? 'hover:bg-muted/30' : 'bg-amber-50/35 hover:bg-amber-50/55',
+                        lead.readAt ? 'hover:bg-muted/30' : 'bg-amber-100/80 hover:bg-amber-100',
                       )}
                       onClick={() => openDetails(lead.id)}
                       onKeyDown={(event) => handleRowKeyDown(event, lead.id)}
                     >
                       <td className="px-4 py-4 align-middle">
-                        <StatusBadge readAt={lead.readAt} />
+                        <Badge variant="success">{lead.trackingId}</Badge>
                       </td>
                       <td
                         className={cn(
@@ -590,10 +589,7 @@ export function ConsultationLeadsPage() {
                           lead.readAt ? '' : 'font-semibold',
                         )}
                       >
-                        <div className="space-y-2">
-                          <Badge variant="success">{lead.trackingId}</Badge>
-                          <p className="text-sm text-foreground">{lead.fullName}</p>
-                        </div>
+                        <p className="text-sm text-foreground">{lead.fullName}</p>
                       </td>
                       <td className={cn('px-4 py-4 text-sm text-foreground', lead.readAt ? '' : 'font-medium')}>
                         {lead.phoneNumber}
