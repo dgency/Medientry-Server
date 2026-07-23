@@ -195,27 +195,25 @@ const normalizeTemplateFields = (fields: EmailTemplateField[]) =>
 
 const renderFieldValue = (field: NonNullable<ReturnType<typeof normalizeField>>) =>
   field.href && isSafeFieldHref(field.href)
-    ? `<a href="${escapeHtml(field.href)}" style="color:#146736;text-decoration:underline;word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(field.value)}</a>`
+    ? `<a href="${escapeHtml(field.href)}" style="color:#146736;text-decoration:underline;word-break:break-word;" target="_blank">${escapeHtml(field.value)}</a>`
     : escapeHtml(field.value);
 
 const renderTableRows = (
   fields: Array<NonNullable<ReturnType<typeof normalizeField>>>,
 ) =>
   fields
-    .map((field, index) => {
-      const borderStyle = index === fields.length - 1 ? '' : 'border-bottom:1px solid #dbe5df;';
-
-      return `
+    .map(
+      (field) => `
         <tr>
-          <td width="34%" valign="top" style="width:34%;padding:12px 12px;font-size:13px;line-height:1.45;font-weight:700;color:#22352d;background:#f3f8f5;border-right:1px solid #dbe5df;${borderStyle}">
+          <td width="34%" valign="top" style="padding:11px 12px;font-weight:700;border:1px solid #dbe5df;background:#f6fbf8;vertical-align:top;width:34%;font-size:13px;line-height:1.45;color:#22352d">
             ${escapeHtml(field.label)}
           </td>
-          <td width="66%" valign="top" style="width:66%;padding:12px 12px;font-size:13px;line-height:1.45;font-weight:400;color:#10261a;background:#ffffff;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;${borderStyle}">
+          <td width="66%" valign="top" style="padding:11px 12px;border:1px solid #dbe5df;word-break:break-word;vertical-align:top;width:66%;font-size:13px;line-height:1.45;color:#172b21">
             ${renderFieldValue(field)}
           </td>
         </tr>
-      `;
-    })
+      `,
+    )
     .join('');
 
 const renderTextSection = (title: string, fields: EmailTemplateField[]) => {
@@ -244,45 +242,23 @@ const renderDataSection = ({
   }
 
   return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:${marginTop}px;">
-      <tr>
-        <td style="padding:0 0 10px;font-size:18px;line-height:1.3;font-weight:700;color:#10261a;">
-          ${escapeHtml(title)}
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;border:1px solid #dbe5df;background:#ffffff;">
-            ${renderTableRows(normalizedFields)}
-          </table>
-        </td>
-      </tr>
-    </table>
-  `;
-};
-
-const renderPrimaryButton = ({
-  href,
-  label,
-}: {
-  href?: string | null;
-  label: string;
-}) => {
-  const safeHref = href && isSafeHttpUrl(href) ? href : null;
-
-  if (!safeHref) {
-    return '';
-  }
-
-  return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:20px;">
-      <tr>
-        <td>
-          <a href="${escapeHtml(safeHref)}" style="display:inline-block;padding:11px 18px;border-radius:999px;background:#d71920;color:#ffffff;text-decoration:none;font-size:14px;line-height:1.2;font-weight:700;">
-            ${escapeHtml(label)}
-          </a>
-        </td>
-      </tr>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:${marginTop}px">
+      <tbody>
+        <tr>
+          <td style="padding:0 0 12px;font-size:17px;line-height:1.3;font-weight:700;color:#1c3429">
+            ${escapeHtml(title)}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;border:1px solid #dbe5df;border-radius:14px;overflow:hidden">
+              <tbody>
+                ${renderTableRows(normalizedFields)}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
     </table>
   `;
 };
@@ -299,70 +275,6 @@ const renderTrackingBadge = (value?: string | null) => {
       <tr>
         <td style="padding:8px 14px;border-radius:999px;background:#ffffff;color:#146736;font-size:13px;line-height:1.2;font-weight:700;white-space:nowrap;">
           ${escapeHtml(safeValue)}
-        </td>
-      </tr>
-    </table>
-  `;
-};
-
-const renderWhatsAppContactBlock = ({
-  displayNumber,
-  actionUrl,
-}: {
-  displayNumber?: string | null;
-  actionUrl?: string | null;
-}) => {
-  const safeActionUrl = actionUrl && isSafeHttpUrl(actionUrl) ? actionUrl : undefined;
-  const safeDisplayNumber = normalizeTemplateValue(displayNumber);
-
-  if (!safeActionUrl || !safeDisplayNumber) {
-    return '';
-  }
-
-  return `
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:20px;border:1px solid #dbe5df;background:#f8fbf9;">
-      <tr>
-        <td style="padding:16px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
-            <tr>
-              <td style="padding:0 0 6px;font-size:18px;line-height:1.3;font-weight:700;color:#10261a;">
-                Need Faster Assistance?
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 0 12px;font-size:13px;line-height:1.55;color:#42534a;">
-                For faster communication, contact the MediEntry counselling team directly on WhatsApp.
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
-                  <tr>
-                    <td style="width:54px;vertical-align:middle;">
-                      <div style="width:40px;height:40px;border-radius:999px;background:#25d366;color:#ffffff;font-size:13px;line-height:40px;font-weight:700;text-align:center;">
-                        WA
-                      </div>
-                    </td>
-                    <td style="vertical-align:middle;padding:0 0 0 6px;">
-                      <div style="font-size:12px;line-height:1.4;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#146736;">
-                        WhatsApp
-                      </div>
-                      <div style="font-size:15px;line-height:1.45;font-weight:700;color:#10261a;word-break:break-word;overflow-wrap:anywhere;">
-                        ${escapeHtml(safeDisplayNumber)}
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" style="padding-top:12px;">
-                      <a href="${escapeHtml(safeActionUrl)}" style="display:inline-block;padding:11px 18px;border-radius:999px;background:#25d366;color:#ffffff;text-decoration:none;font-size:14px;line-height:1.2;font-weight:700;">
-                        Chat With Us on WhatsApp
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
         </td>
       </tr>
     </table>
@@ -419,12 +331,12 @@ const renderAdminNotificationLayout = ({
                 </td>
               </tr>
               <tr>
-                <td style="padding:24px;">
+                <td style="padding:20px;">
                   ${content}
                   ${footerContent}
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:20px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:16px;">
                     <tr>
-                      <td style="padding:14px 16px;background:#f6fbf8;border:1px solid #dbe5df;font-size:12px;line-height:1.55;color:#5f6d66;">
+                      <td style="padding:0;font-size:12px;line-height:1.6;color:#607066;">
                         ${escapeHtml(footerNote)}
                       </td>
                     </tr>
@@ -448,7 +360,6 @@ export const buildAdminFormNotificationTemplate = (
   const intro =
     sanitizeHeaderValue(input.intro || '') ||
     'A new public website form submission has been saved successfully and is ready for follow-up.';
-  const actionLabel = sanitizeHeaderValue(input.actionLabel || 'Open in Admin');
   const readableSubmittedAt = formatSubmittedAtForDisplay(
     input.submittedAt,
     input.displayTimeZone,
@@ -494,7 +405,6 @@ export const buildAdminFormNotificationTemplate = (
       renderDataSection({ title: 'Submission Summary', fields: summaryFields, marginTop: 0 }),
       renderDataSection({ title: 'Submission Information', fields: footerFields }),
       detailSections,
-      renderPrimaryButton({ href: safeActionUrl, label: actionLabel }),
     ]
       .filter(Boolean)
       .join(''),
@@ -514,7 +424,7 @@ export const buildAdminFormNotificationTemplate = (
       `Form: ${title}`,
       renderTextSection('Submission Summary', summaryFields),
       renderTextSection('Submission Information', footerFields),
-      safeActionUrl ? `${actionLabel}: ${safeActionUrl}` : undefined,
+      safeActionUrl ? `Open in Admin: ${safeActionUrl}` : undefined,
       input.footerNote ??
         'This notification was generated automatically by the MediEntry website. Please follow up with the student or guardian using the validated contact details above.',
     ]
@@ -554,10 +464,6 @@ export const buildCustomerConfirmationTemplate = (
     content: [
       renderDataSection({ title: 'Submission Summary', fields: visibleSummaryFields, marginTop: 0 }),
       renderDataSection({ title: 'Submission Information', fields: footerFields }),
-      renderWhatsAppContactBlock({
-        displayNumber: input.whatsappDisplayNumber,
-        actionUrl: input.whatsappActionUrl,
-      }),
     ]
       .filter(Boolean)
       .join(''),
@@ -575,14 +481,6 @@ export const buildCustomerConfirmationTemplate = (
       sanitizeHeaderValue(input.heading),
       sanitizeHeaderValue(input.intro),
       renderTextSection('Submission Summary', summaryFields),
-      input.whatsappDisplayNumber && input.whatsappActionUrl
-        ? [
-            'Need Faster Assistance?',
-            'For faster communication, contact the MediEntry counselling team directly on WhatsApp.',
-            `WhatsApp: ${sanitizeHeaderValue(input.whatsappDisplayNumber)}`,
-            `Chat With Us on WhatsApp: ${sanitizeHeaderValue(input.whatsappActionUrl)}`,
-          ].join('\n')
-        : undefined,
       renderTextSection('Submission Information', footerFields),
       input.footer ? sanitizeHeaderValue(input.footer) : undefined,
     ]
