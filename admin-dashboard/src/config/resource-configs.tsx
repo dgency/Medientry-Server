@@ -929,6 +929,41 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const normalizeString = (value: unknown) =>
   typeof value === 'string' ? value.trim() : '';
 
+const duplicateLabelSuffix = 'Copy';
+
+const appendDuplicateLabel = (value: unknown) => {
+  const normalizedValue = normalizeString(value);
+
+  if (!normalizedValue) {
+    return duplicateLabelSuffix;
+  }
+
+  return normalizedValue.toLowerCase().endsWith(duplicateLabelSuffix.toLowerCase())
+    ? normalizedValue
+    : `${normalizedValue} ${duplicateLabelSuffix}`;
+};
+
+const stripResourceMetaFields = (item: Record<string, unknown>) => {
+  const nextValues = { ...item };
+
+  delete nextValues.id;
+  delete nextValues.createdAt;
+  delete nextValues.updatedAt;
+  delete nextValues[shortcutPageEditHrefKey];
+  delete nextValues[shortcutPageUpdatePathKey];
+  delete nextValues[shortcutPageDeleteDisabledKey];
+
+  return nextValues;
+};
+
+const buildDuplicateDraftValues = (
+  editValues: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+) => ({
+  ...stripResourceMetaFields(editValues),
+  ...overrides,
+});
+
 const isHomePageValues = (values: Record<string, unknown>) =>
   String(values.pageType ?? '').trim() === 'HOME' ||
   String(values.slug ?? '').trim().toLowerCase() === 'home';
@@ -1429,6 +1464,18 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         ? String(item[shortcutPageUpdatePathKey])
         : null,
     canDeleteItem: (item) => item[shortcutPageDeleteDisabledKey] !== true,
+    getDuplicateValues: (item, editValues) => {
+      if (typeof item[shortcutPageEditHrefKey] === 'string') {
+        return null;
+      }
+
+      return buildDuplicateDraftValues(editValues, {
+        title: appendDuplicateLabel(editValues.title),
+        slug: '',
+        status: 'DRAFT',
+        canonicalUrl: '',
+      });
+    },
     slugSourceField: 'title',
     slugField: 'slug',
     previewUrlBuilder: (item) => {
@@ -4868,6 +4915,16 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       activeValue: 'PUBLISHED',
       inactiveValue: 'DRAFT',
     },
+    getDuplicateValues: (_item, editValues) =>
+      buildDuplicateDraftValues(editValues, {
+        title: appendDuplicateLabel(editValues.title),
+        slug: '',
+        status: 'DRAFT',
+        sortOrder: 0,
+        isFeatured: false,
+        showInMenu: false,
+        canonicalUrl: '',
+      }),
     createButtonLabel: 'New destination',
     emptyTitle: 'No destinations yet',
     emptyDescription: 'Add a study destination to populate menus and destination cards.',
@@ -5043,6 +5100,15 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       activeValue: 'PUBLISHED',
       inactiveValue: 'DRAFT',
     },
+    getDuplicateValues: (_item, editValues) =>
+      buildDuplicateDraftValues(editValues, {
+        name: appendDuplicateLabel(editValues.name),
+        slug: '',
+        status: 'DRAFT',
+        sortOrder: 0,
+        isFeatured: false,
+        canonicalUrl: '',
+      }),
     createButtonLabel: 'New college',
     emptyTitle: 'No colleges yet',
     emptyDescription: 'Add a medical college to power the fee structure and college detail pages.',
@@ -5537,6 +5603,13 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       activeValue: 'ACTIVE',
       inactiveValue: 'INACTIVE',
     },
+    getDuplicateValues: (_item, editValues) =>
+      buildDuplicateDraftValues(editValues, {
+        studentName: appendDuplicateLabel(editValues.studentName),
+        status: 'INACTIVE',
+        sortOrder: 0,
+        showOnHomepage: false,
+      }),
     createButtonLabel: 'New story',
     emptyTitle: 'No success stories yet',
     emptyDescription: 'Add a student review to populate the success stories section.',

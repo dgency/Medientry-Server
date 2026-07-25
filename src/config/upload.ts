@@ -57,7 +57,7 @@ export const uploadRules: Record<UploadKind, UploadRule> = {
       'image/vnd.microsoft.icon',
     ],
     maxFileSizeInBytes: env.MEDIA_MAX_IMAGE_BYTES,
-    targetFolder: 'videos',
+    targetFolder: 'images',
   },
 };
 

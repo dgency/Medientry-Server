@@ -8,6 +8,7 @@ import { normalizeStoredMediaValue, resolvePublicMediaUrl } from '../utils/media
 type AuditStatus =
   | 'empty'
   | 'legacy-relative'
+  | 'database-relative'
   | 'frontend-relative'
   | 'absolute-url'
   | 'invalid-local-path'
@@ -61,11 +62,18 @@ const classifyValue = (value?: string | null): AuditStatus => {
     return 'absolute-url';
   }
 
+  if (/^\/?api\/media\//i.test(trimmedValue) || /^\/?media\//i.test(trimmedValue)) {
+    return 'database-relative';
+  }
+
   if (/^\/?uploads\//i.test(trimmedValue)) {
     return 'legacy-relative';
   }
 
-  if (/^\/?(?:images|icons|home-page-icons)\//i.test(trimmedValue) || /^\/?favicon/i.test(trimmedValue)) {
+  if (
+    /^\/?(?:images|icons|home-page-icons|notices)\//i.test(trimmedValue)
+    || /^\/?favicon/i.test(trimmedValue)
+  ) {
     return 'frontend-relative';
   }
 

@@ -13,6 +13,8 @@ import { errorHandler } from './middlewares/error-handler';
 import { notFoundHandler } from './middlewares/not-found-handler';
 import { requestLogger } from './middlewares/request-logger';
 import { apiRouter } from './routes';
+import { getLegacyUploadMediaResponse } from './services/public-media.service';
+import { asyncHandler } from './utils/async-handler';
 
 const app = express();
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
@@ -81,6 +83,38 @@ if (env.MEDIA_ENABLE_LEGACY_FILESYSTEM_FALLBACK) {
         res.setHeader('Content-Disposition', 'inline');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       },
+    }),
+  );
+  app.use(
+    '/uploads',
+    asyncHandler(async (req, res, next) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        return next();
+      }
+
+      const mediaResponse = await getLegacyUploadMediaResponse({
+        legacyPath: `/uploads${req.path.startsWith('/') ? req.path : `/${req.path}`}`,
+        ifNoneMatch: req.headers['if-none-match'],
+        includeBody: req.method !== 'HEAD',
+      });
+
+      if (!mediaResponse) {
+        return next();
+      }
+
+      for (const [headerName, headerValue] of Object.entries(mediaResponse.headers)) {
+        res.setHeader(headerName, headerValue);
+      }
+
+      if (mediaResponse.statusCode === 304) {
+        return res.status(304).end();
+      }
+
+      if (req.method === 'HEAD') {
+        return res.status(200).end();
+      }
+
+      return res.status(200).send(mediaResponse.buffer);
     }),
   );
   app.use('/uploads', (_req, res) => {

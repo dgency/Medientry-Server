@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Eye, PencilLine, Plus, Search, Trash2 } from 'lucide-react';
+import { CopyPlus, Eye, PencilLine, Plus, Search, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -113,6 +113,7 @@ export function ResourcePage({ config }: ResourcePageProps) {
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ResourceItem | null>(null);
+  const [duplicatingItem, setDuplicatingItem] = useState<ResourceItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ResourceItem | null>(null);
   const debouncedSearch = useDebouncedValue(search, 300);
   const normalizedSearch = debouncedSearch.trim();
@@ -285,14 +286,51 @@ export function ResourcePage({ config }: ResourcePageProps) {
   }, [currentPage, effectivePagination.totalPages, searchParams, setSearchParams]);
 
   const editValues = editingItem && config.getEditValues ? config.getEditValues(editingItem) : editingItem ?? undefined;
+  const cloneFormValues = (values: Record<string, unknown>) => {
+    if (typeof structuredClone === 'function') {
+      return structuredClone(values);
+    }
+
+    return JSON.parse(JSON.stringify(values)) as Record<string, unknown>;
+  };
+  const duplicateBaseValues =
+    duplicatingItem && config.getEditValues
+      ? config.getEditValues(duplicatingItem)
+      : duplicatingItem ?? null;
+  const duplicateValues =
+    duplicatingItem && duplicateBaseValues
+      ? config.getDuplicateValues?.(duplicatingItem, duplicateBaseValues) ?? null
+      : null;
+  const initialFormValues =
+    editingItem
+      ? editValues
+      : duplicateValues
+        ? cloneFormValues(duplicateValues)
+        : undefined;
 
   const openCreateDialog = () => {
     setEditingItem(null);
+    setDuplicatingItem(null);
     setDialogOpen(true);
   };
 
   const openEditDialog = (item: ResourceItem) => {
+    setDuplicatingItem(null);
     setEditingItem(item);
+    setDialogOpen(true);
+  };
+
+  const openDuplicateDialog = (item: ResourceItem) => {
+    const baseDuplicateValues = config.getEditValues ? config.getEditValues(item) : item;
+    const nextDuplicateValues = config.getDuplicateValues?.(item, baseDuplicateValues) ?? null;
+
+    if (!nextDuplicateValues) {
+      toast.error(`This ${config.singular.toLowerCase()} cannot be duplicated.`);
+      return;
+    }
+
+    setEditingItem(null);
+    setDuplicatingItem(item);
     setDialogOpen(true);
   };
 
@@ -358,6 +396,13 @@ export function ResourcePage({ config }: ResourcePageProps) {
   };
 
   const renderActions = (item: ResourceItem, compact = false) => (
+    (() => {
+      const duplicateBaseValues = config.getEditValues ? config.getEditValues(item) : item;
+      const canDuplicate = Boolean(
+        config.getDuplicateValues?.(item, duplicateBaseValues),
+      );
+
+      return (
     <div
       className={cn(
         'flex flex-wrap items-center gap-2',
@@ -387,6 +432,18 @@ export function ResourcePage({ config }: ResourcePageProps) {
           Edit
         </Button>
       )}
+      {canDuplicate ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={compact ? 'flex-1 justify-center sm:flex-none' : ''}
+          onClick={() => openDuplicateDialog(item)}
+        >
+          <CopyPlus className="h-4 w-4" />
+          Duplicate
+        </Button>
+      ) : null}
       {renderPreviewAction(item, compact)}
       {renderStatusToggle(item, compact)}
       {config.allowDelete !== false && (config.canDeleteItem ? config.canDeleteItem(item) : true) ? (
@@ -405,6 +462,8 @@ export function ResourcePage({ config }: ResourcePageProps) {
         </Button>
       ) : null}
     </div>
+      );
+    })()
   );
 
   return (
@@ -541,12 +600,13 @@ export function ResourcePage({ config }: ResourcePageProps) {
         config={config}
         mode={editingItem ? 'edit' : 'create'}
         open={dialogOpen}
-        initialValues={editValues}
+        initialValues={initialFormValues}
         onOpenChange={(open) => {
           setDialogOpen(open);
 
           if (!open) {
             setEditingItem(null);
+            setDuplicatingItem(null);
           }
         }}
         onSubmit={async (values) => {

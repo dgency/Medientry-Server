@@ -147,15 +147,15 @@ export const buildMediaAssetPublicUrl = ({
   storageType,
   url,
 }: Pick<MediaAssetStorageRecord, 'filename' | 'id' | 'publicUrl' | 'storageKey' | 'storageType' | 'url'>) => {
+  if (storageType === 'database') {
+    const publicPath = buildPublicMediaPath(id, filename);
+    return resolvePublicMediaUrl(publicPath) ?? publicPath;
+  }
+
   const resolvedStoredUrl = resolvePublicMediaUrl(publicUrl) ?? resolvePublicMediaUrl(url);
 
   if (resolvedStoredUrl) {
     return resolvedStoredUrl;
-  }
-
-  if (storageType === 'database') {
-    const publicPath = buildPublicMediaPath(id, filename);
-    return resolvePublicMediaUrl(publicPath) ?? publicPath;
   }
 
   const filesystemStorageKey = storageKey ? normalizeStorageKey(storageKey) : null;

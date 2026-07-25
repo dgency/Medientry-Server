@@ -3,6 +3,7 @@ import { MediaKind, Prisma, SimpleStatus } from '@prisma/client';
 import { env } from '../config/env';
 import { prisma } from '../config/prisma';
 import { ApiError } from '../utils/api-error';
+import { getLegacyUploadReference } from '../utils/media-migration';
 import { sanitizeMediaFilename } from '../utils/media-public-url';
 import { buildMediaAssetPublicUrl, readStoredMediaBinary } from './storage.service';
 
@@ -72,6 +73,7 @@ export const buildPublicMediaHeaders = (
     'Content-Disposition': buildContentDisposition(asset),
     'Content-Length': String(contentLength),
     'Content-Type': asset.mimeType?.trim() || 'application/octet-stream',
+    'Cross-Origin-Resource-Policy': 'cross-origin',
     ETag: etag,
     'X-Content-Type-Options': 'nosniff',
   };
@@ -90,16 +92,56 @@ const getPublicMediaRecord = async (id: string) => {
   return asset;
 };
 
-export const getPublicMediaResponse = async ({
-  id,
+const buildAbsoluteLegacyUploadVariants = (normalizedPath: string) => {
+  const candidateOrigins = [
+    env.SERVER_PUBLIC_URL?.trim(),
+    env.PUBLIC_BASE_URL?.trim(),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.replace(/\/+$/, ''));
+
+  return Array.from(new Set(candidateOrigins.map((origin) => `${origin}${normalizedPath}`)));
+};
+
+const getLegacyUploadMediaRecord = async (legacyPath: string) => {
+  const reference = getLegacyUploadReference(legacyPath);
+
+  if (!reference) {
+    return null;
+  }
+
+  const absolutePathVariants = buildAbsoluteLegacyUploadVariants(reference.normalizedPath);
+  const pathVariants = [
+    reference.normalizedPath,
+    reference.relativeFilePath,
+    reference.storageKey,
+    ...absolutePathVariants,
+  ];
+
+  return prisma.mediaAsset.findFirst({
+    where: {
+      status: SimpleStatus.ACTIVE,
+      OR: [
+        { path: { in: pathVariants } },
+        { publicUrl: { in: [reference.normalizedPath, ...absolutePathVariants] } },
+        { url: { in: [reference.normalizedPath, ...absolutePathVariants] } },
+        { storageKey: { in: [reference.storageKey, reference.relativeFilePath] } },
+      ],
+    },
+    select: publicMediaDeliverySelect,
+    orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+  });
+};
+
+const buildPublicMediaResponseFromRecord = async ({
+  asset,
   ifNoneMatch,
   includeBody,
 }: {
-  id: string;
+  asset: PublicMediaDeliveryRecord;
   ifNoneMatch?: string;
   includeBody: boolean;
-}): Promise<PublicMediaResponse> => {
-  const asset = await getPublicMediaRecord(id);
+}): Promise<PublicMediaResponse | null> => {
   const etag = buildMediaEtag(asset);
 
   if (matchesIfNoneMatch(ifNoneMatch, etag)) {
@@ -109,6 +151,7 @@ export const getPublicMediaResponse = async ({
       headers: {
         ETag: etag,
         'Cache-Control': `public, max-age=${env.MEDIA_CACHE_MAX_AGE}, immutable`,
+        'Cross-Origin-Resource-Policy': 'cross-origin',
         'X-Content-Type-Options': 'nosniff',
       },
       statusCode: 304,
@@ -118,7 +161,7 @@ export const getPublicMediaResponse = async ({
   const storedBinary = await readStoredMediaBinary(asset);
 
   if (!storedBinary) {
-    throw new ApiError(404, 'Media file content is missing.');
+    return null;
   }
 
   const headers = buildPublicMediaHeaders(asset, asset.size ?? storedBinary.contentLength);
@@ -132,4 +175,49 @@ export const getPublicMediaResponse = async ({
     headers,
     statusCode: 200,
   };
+};
+
+export const getPublicMediaResponse = async ({
+  id,
+  ifNoneMatch,
+  includeBody,
+}: {
+  id: string;
+  ifNoneMatch?: string;
+  includeBody: boolean;
+}): Promise<PublicMediaResponse> => {
+  const asset = await getPublicMediaRecord(id);
+  const response = await buildPublicMediaResponseFromRecord({
+    asset,
+    ifNoneMatch,
+    includeBody,
+  });
+
+  if (!response) {
+    throw new ApiError(404, 'Media file content is missing.');
+  }
+
+  return response;
+};
+
+export const getLegacyUploadMediaResponse = async ({
+  legacyPath,
+  ifNoneMatch,
+  includeBody,
+}: {
+  legacyPath: string;
+  ifNoneMatch?: string;
+  includeBody: boolean;
+}) => {
+  const asset = await getLegacyUploadMediaRecord(legacyPath);
+
+  if (!asset) {
+    return null;
+  }
+
+  return buildPublicMediaResponseFromRecord({
+    asset,
+    ifNoneMatch,
+    includeBody,
+  });
 };

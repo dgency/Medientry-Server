@@ -107,8 +107,18 @@ const normalizeNullableString = (value?: string | null) => {
   return trimmed === '' ? null : trimmed;
 };
 
+const buildCanonicalAssetPath = (asset?: Pick<MediaLibraryAsset, 'id' | 'filename'> | null) => {
+  if (!asset?.id || !asset.filename?.trim()) {
+    return null;
+  }
+
+  return `/api/media/${encodeURIComponent(asset.id)}/${encodeURIComponent(asset.filename.trim())}`;
+};
+
 export const getAssetUrl = (asset?: MediaLibraryAsset | null) =>
-  normalizeNullableString(asset?.publicUrl) ?? normalizeNullableString(asset?.url);
+  buildCanonicalAssetPath(asset)
+  ?? normalizeNullableString(asset?.publicUrl)
+  ?? normalizeNullableString(asset?.url);
 
 const buildMediaMetadataFormValues = (
   item: MediaLibraryAsset | null,

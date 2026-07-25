@@ -1,5 +1,6 @@
 import { MediaKind, Prisma, SimpleStatus } from '@prisma/client';
 
+import { buildMediaAssetPublicUrl } from '../services/storage.service';
 import { resolvePublicMediaUrl } from './media-path';
 
 const normalizeNullableString = (value?: string | null) => {
@@ -69,31 +70,58 @@ export type PublicMediaAsset = {
 };
 
 export const resolveMediaAssetUrl = (
-  asset?: Pick<PublicMediaAsset, 'publicUrl' | 'url'> | null,
-) => resolvePublicMediaUrl(asset?.publicUrl) ?? resolvePublicMediaUrl(asset?.url);
+  asset?:
+    | Pick<PublicMediaAsset, 'publicUrl' | 'url'>
+    | Pick<PublicMediaAsset, 'filename' | 'id' | 'publicUrl' | 'storageKey' | 'storageType' | 'url'>
+    | null,
+) => {
+  if (!asset) {
+    return null;
+  }
 
-export const serializeMediaAsset = (asset: PublicMediaAssetRecord): PublicMediaAsset => ({
-  id: asset.id,
-  title: normalizeNullableString(asset.title),
-  altText: normalizeNullableString(asset.altText),
-  caption: normalizeNullableString(asset.caption),
-  seoTitle: normalizeNullableString(asset.seoTitle),
-  seoDescription: normalizeNullableString(asset.seoDescription),
-  filename: asset.filename,
-  originalName: normalizeNullableString(asset.originalName),
-  path: normalizeNullableString(asset.path),
-  url: resolvePublicMediaUrl(asset.url),
-  publicUrl: resolvePublicMediaUrl(asset.publicUrl),
-  storageKey: normalizeNullableString(asset.storageKey),
-  storageType: asset.storageType,
-  mimeType: normalizeNullableString(asset.mimeType),
-  extension: normalizeNullableString(asset.extension),
-  fileType: asset.fileType,
-  size: asset.size ?? null,
-  width: asset.width ?? null,
-  height: asset.height ?? null,
-  duration: asset.duration ?? null,
-  status: asset.status,
-  createdAt: asset.createdAt,
-  updatedAt: asset.updatedAt,
-});
+  if (
+    'storageType' in asset &&
+    asset.storageType &&
+    'id' in asset &&
+    asset.id &&
+    'filename' in asset &&
+    asset.filename
+  ) {
+    return buildMediaAssetPublicUrl(asset);
+  }
+
+  return resolvePublicMediaUrl(asset.publicUrl) ?? resolvePublicMediaUrl(asset.url);
+};
+
+const resolveSerializedMediaAssetUrl = (asset: PublicMediaAssetRecord) =>
+  buildMediaAssetPublicUrl(asset);
+
+export const serializeMediaAsset = (asset: PublicMediaAssetRecord): PublicMediaAsset => {
+  const resolvedAssetUrl = resolveSerializedMediaAssetUrl(asset);
+
+  return {
+    id: asset.id,
+    title: normalizeNullableString(asset.title),
+    altText: normalizeNullableString(asset.altText),
+    caption: normalizeNullableString(asset.caption),
+    seoTitle: normalizeNullableString(asset.seoTitle),
+    seoDescription: normalizeNullableString(asset.seoDescription),
+    filename: asset.filename,
+    originalName: normalizeNullableString(asset.originalName),
+    path: normalizeNullableString(asset.path),
+    url: resolvedAssetUrl,
+    publicUrl: resolvedAssetUrl,
+    storageKey: normalizeNullableString(asset.storageKey),
+    storageType: asset.storageType,
+    mimeType: normalizeNullableString(asset.mimeType),
+    extension: normalizeNullableString(asset.extension),
+    fileType: asset.fileType,
+    size: asset.size ?? null,
+    width: asset.width ?? null,
+    height: asset.height ?? null,
+    duration: asset.duration ?? null,
+    status: asset.status,
+    createdAt: asset.createdAt,
+    updatedAt: asset.updatedAt,
+  };
+};

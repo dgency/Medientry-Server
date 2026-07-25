@@ -112,6 +112,10 @@ export type ResourceConfig<TItem extends { id: string }> = {
   getItemEditHref?: (item: TItem) => string | null;
   getItemUpdatePath?: (item: TItem) => string | null;
   canDeleteItem?: (item: TItem) => boolean;
+  getDuplicateValues?: (
+    item: TItem,
+    editValues: Record<string, unknown>,
+  ) => Record<string, unknown> | null;
   allowCreate?: boolean;
   allowDelete?: boolean;
   createButtonLabel: string;
