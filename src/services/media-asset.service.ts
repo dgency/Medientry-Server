@@ -11,7 +11,7 @@ import {
   publicMediaAssetSelect,
   serializeMediaAsset,
 } from '../utils/media-asset-response';
-import { storageAdapter } from './storage.service';
+import { removeStoredMedia } from './storage.service';
 
 type ListMediaAssetsInput = {
   fileType?: MediaKind | 'ALL';
@@ -434,32 +434,16 @@ export const updateMediaAsset = async (id: string, input: UpdateMediaAssetInput)
   return serializeMediaAsset(updatedAsset);
 };
 
-const removeStoredMediaFile = async (storageKey?: string | null, pathValue?: string | null) => {
-  const relativePath = normalizeNullableString(storageKey) ?? normalizeNullableString(pathValue);
-
-  if (!relativePath) {
-    return;
-  }
-
-  try {
-    await storageAdapter.remove(relativePath);
-  } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('[media-assets] Failed to remove stored media file.', {
-        relativePath,
-        reason: error instanceof Error ? error.message : 'Unknown storage error.',
-      });
-    }
-  }
-};
-
 export const deleteMediaAsset = async (id: string) => {
   const existingMediaAsset = await prisma.mediaAsset.findUnique({
     where: { id },
     select: {
       id: true,
+      publicUrl: true,
+      storageType: true,
       storageKey: true,
       path: true,
+      url: true,
     },
   });
 
@@ -471,7 +455,7 @@ export const deleteMediaAsset = async (id: string) => {
     where: { id },
   });
 
-  await removeStoredMediaFile(existingMediaAsset.storageKey, existingMediaAsset.path);
+  await removeStoredMedia(existingMediaAsset);
 
   return { id: existingMediaAsset.id };
 };
@@ -491,8 +475,11 @@ export const bulkDeleteMediaAssets = async (ids: string[]): Promise<DeleteMediaA
     },
     select: {
       id: true,
+      publicUrl: true,
+      storageType: true,
       storageKey: true,
       path: true,
+      url: true,
     },
   });
 
@@ -511,9 +498,7 @@ export const bulkDeleteMediaAssets = async (ids: string[]): Promise<DeleteMediaA
   });
 
   await Promise.all(
-    existingMediaAssets.map((item) =>
-      removeStoredMediaFile(item.storageKey, item.path),
-    ),
+    existingMediaAssets.map((item) => removeStoredMedia(item)),
   );
 
   return {

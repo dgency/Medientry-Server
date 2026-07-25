@@ -81,11 +81,24 @@ export function resolveCmsAssetUrl(value?: string | null): string {
     return '';
   }
 
+  if (/^blob:/i.test(clean) || /^data:/i.test(clean)) {
+    return clean;
+  }
+
   if (clean.startsWith('http://') || clean.startsWith('https://')) {
     return clean;
   }
 
+  const apiBase = getApiBaseUrl().replace(/\/api\/?$/, '');
   const mediaBase = getMediaBaseUrl();
+
+  if (clean.startsWith('/api/media')) {
+    return apiBase ? `${apiBase}${clean}` : clean;
+  }
+
+  if (clean.startsWith('api/media')) {
+    return apiBase ? `${apiBase}/${clean}` : `/${clean}`;
+  }
 
   if (clean.startsWith('/uploads')) {
     return `${mediaBase}${clean}`;

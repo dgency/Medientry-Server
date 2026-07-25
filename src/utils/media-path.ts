@@ -4,6 +4,7 @@ const loopbackHosts = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
 const internalProjectHosts = new Set(['medientrybd.com', 'www.medientrybd.com']);
 const protocolRelativePattern = /^\/\//;
 const windowsPathPattern = /^(?:[a-z]:[\\/]|\\\\)/i;
+const apiMediaPathPattern = /^\/?api\/media\//i;
 const uploadsPathPattern = /^\/?uploads\//i;
 const frontendAssetPathPattern =
   /^\/?(?:images|icons|home-page-icons)\//i;
@@ -45,6 +46,12 @@ const normalizeProjectRelativePath = (value: string) => {
     return `/uploads/${uploadsMatch[1].replace(/^\/+/, '')}`;
   }
 
+  const apiMediaMatch = normalizedValue.match(/(?:^|\/)(api\/media\/.+)$/i);
+
+  if (apiMediaMatch?.[1]) {
+    return `/${apiMediaMatch[1].replace(/^\/+/, '')}`;
+  }
+
   const publicMatch = normalizedValue.match(/(?:^|\/)public\/(.+)$/i);
 
   if (publicMatch?.[1]) {
@@ -81,8 +88,7 @@ const getConfiguredServerOrigin = () => {
 
 const getConfiguredMediaOrigin = () => {
   const configuredBaseUrl =
-    env.SPACES_PUBLIC_BASE_URL?.trim()
-    || env.SERVER_PUBLIC_URL?.trim()
+    env.SERVER_PUBLIC_URL?.trim()
     || env.PUBLIC_BASE_URL?.trim()
     || '';
 
@@ -106,6 +112,7 @@ const looksLikeStandaloneMediaValue = (value: string, fieldName?: string | null)
 
   if (
     protocolRelativePattern.test(trimmedValue)
+    || apiMediaPathPattern.test(trimmedValue)
     || uploadsPathPattern.test(trimmedValue)
     || frontendAssetPathPattern.test(trimmedValue)
     || faviconPathPattern.test(trimmedValue)
@@ -124,6 +131,7 @@ const looksLikeStandaloneMediaValue = (value: string, fieldName?: string | null)
 
       return (
         uploadsPathPattern.test(normalizedPath)
+        || apiMediaPathPattern.test(normalizedPath)
         || frontendAssetPathPattern.test(normalizedPath)
         || faviconPathPattern.test(normalizedPath)
         || mediaExtensionPattern.test(parsedUrl.pathname)
@@ -161,6 +169,7 @@ export const normalizeStoredMediaValue = (value?: string | null) => {
       const normalizedPath = normalizeProjectRelativePath(url.pathname);
       const looksLikeProjectAsset =
         normalizedPath.startsWith('/uploads/')
+        || normalizedPath.startsWith('/api/media/')
         || normalizedPath.startsWith('/images/')
         || normalizedPath.startsWith('/favicon')
         || normalizedPath.startsWith('/home-page-icons/')
@@ -217,11 +226,24 @@ export const resolvePublicMediaUrl = (value?: string | null) => {
       : normalizedValue;
   }
 
+  if (normalizedValue.startsWith('/api/media/')) {
+    return configuredMediaOrigin
+      ? `${configuredMediaOrigin}${normalizedValue}`
+      : normalizedValue;
+  }
+
   if (normalizedValue.startsWith('uploads/')) {
     const normalizedUploadsPath = `/${normalizedValue.replace(/^\/+/, '')}`;
     return configuredMediaOrigin
       ? `${configuredMediaOrigin}${normalizedUploadsPath}`
       : normalizedUploadsPath;
+  }
+
+  if (normalizedValue.startsWith('api/media/')) {
+    const normalizedApiPath = `/${normalizedValue.replace(/^\/+/, '')}`;
+    return configuredMediaOrigin
+      ? `${configuredMediaOrigin}${normalizedApiPath}`
+      : normalizedApiPath;
   }
 
   return normalizedValue;

@@ -15,7 +15,9 @@ const resolveLocalUploadDirectory = () => {
 
 export const uploadsRootDirectory = resolveLocalUploadDirectory();
 
-mkdirSync(uploadsRootDirectory, { recursive: true });
+if (env.STORAGE_DRIVER === 'local' || env.MEDIA_ENABLE_LEGACY_FILESYSTEM_FALLBACK) {
+  mkdirSync(uploadsRootDirectory, { recursive: true });
+}
 
 export const uploadKinds = ['image', 'document', 'videoThumbnail'] as const;
 
@@ -37,12 +39,12 @@ export const uploadRules: Record<UploadKind, UploadRule> = {
       'image/x-icon',
       'image/vnd.microsoft.icon',
     ],
-    maxFileSizeInBytes: 10 * 1024 * 1024,
+    maxFileSizeInBytes: env.MEDIA_MAX_IMAGE_BYTES,
     targetFolder: 'images',
   },
   document: {
     allowedMimeTypes: ['application/pdf'],
-    maxFileSizeInBytes: 10 * 1024 * 1024,
+    maxFileSizeInBytes: env.MEDIA_MAX_DOCUMENT_BYTES,
     targetFolder: 'documents',
   },
   videoThumbnail: {
@@ -54,7 +56,7 @@ export const uploadRules: Record<UploadKind, UploadRule> = {
       'image/x-icon',
       'image/vnd.microsoft.icon',
     ],
-    maxFileSizeInBytes: 10 * 1024 * 1024,
+    maxFileSizeInBytes: env.MEDIA_MAX_IMAGE_BYTES,
     targetFolder: 'videos',
   },
 };

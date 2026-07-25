@@ -10,7 +10,7 @@ export const getHealth = asyncHandler(async (_req: Request, res: Response) => {
   const message =
     health.database === 'down'
       ? 'API is running but the database is unavailable.'
-      : health.storage.status === 'down'
+      : health.storage.status === 'degraded'
         ? 'API is running but storage is unavailable.'
         : 'API, database, and storage are healthy.';
 

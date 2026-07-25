@@ -25,6 +25,7 @@ export const publicMediaAssetSelect =
     url: true,
     publicUrl: true,
     storageKey: true,
+    storageType: true,
     mimeType: true,
     extension: true,
     fileType: true,
@@ -54,6 +55,7 @@ export type PublicMediaAsset = {
   url: string | null;
   publicUrl: string | null;
   storageKey: string | null;
+  storageType: string;
   mimeType: string | null;
   extension: string | null;
   fileType: MediaKind;
@@ -83,6 +85,7 @@ export const serializeMediaAsset = (asset: PublicMediaAssetRecord): PublicMediaA
   url: resolvePublicMediaUrl(asset.url),
   publicUrl: resolvePublicMediaUrl(asset.publicUrl),
   storageKey: normalizeNullableString(asset.storageKey),
+  storageType: asset.storageType,
   mimeType: normalizeNullableString(asset.mimeType),
   extension: normalizeNullableString(asset.extension),
   fileType: asset.fileType,

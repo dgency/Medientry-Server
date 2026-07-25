@@ -67,23 +67,26 @@ if (env.NODE_ENV !== 'production') {
 app.use(requestLogger);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  '/uploads',
-  express.static(uploadsRootDirectory, {
-    fallthrough: true,
-    index: false,
-    immutable: env.NODE_ENV === 'production',
-    maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
-    setHeaders(res) {
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Content-Disposition', 'inline');
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    },
-  }),
-);
-app.use('/uploads', (_req, res) => {
-  res.status(404).type('text/plain').send('Uploaded file not found.');
-});
+
+if (env.MEDIA_ENABLE_LEGACY_FILESYSTEM_FALLBACK) {
+  app.use(
+    '/uploads',
+    express.static(uploadsRootDirectory, {
+      fallthrough: true,
+      index: false,
+      immutable: env.NODE_ENV === 'production',
+      maxAge: env.NODE_ENV === 'production' ? '7d' : 0,
+      setHeaders(res) {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      },
+    }),
+  );
+  app.use('/uploads', (_req, res) => {
+    res.status(404).type('text/plain').send('Uploaded file not found.');
+  });
+}
 
 app.use('/api', apiRouter);
 // ==========================================================config for digital ocean

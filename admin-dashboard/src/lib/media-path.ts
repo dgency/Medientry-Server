@@ -18,6 +18,12 @@ const normalizeProjectRelativePath = (value: string) => {
     return `/uploads/${uploadsMatch[1].replace(/^\/+/, "")}`;
   }
 
+  const apiMediaMatch = normalizedValue.match(/(?:^|\/)(api\/media\/.+)$/i);
+
+  if (apiMediaMatch?.[1]) {
+    return `/${apiMediaMatch[1].replace(/^\/+/, "")}`;
+  }
+
   const publicMatch = normalizedValue.match(/(?:^|\/)public\/(.+)$/i);
 
   if (publicMatch?.[1]) {
@@ -53,6 +59,7 @@ export const normalizeStoredMediaValue = (value?: string | null) => {
       const url = new URL(trimmedValue);
       const normalizedPath = normalizeProjectRelativePath(url.pathname);
       const looksLikeProjectAsset =
+        normalizedPath.startsWith("/api/media/") ||
         normalizedPath.startsWith("/uploads/") ||
         normalizedPath.startsWith("/images/") ||
         normalizedPath.startsWith("/favicon") ||

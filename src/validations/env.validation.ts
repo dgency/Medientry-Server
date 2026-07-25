@@ -11,6 +11,8 @@ const booleanString = () =>
     .optional()
     .transform((value) => value?.trim().toLowerCase() === 'true');
 
+const bytesInMegabyte = 1024 * 1024;
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().min(1).default('0.0.0.0'),
@@ -26,14 +28,13 @@ export const envSchema = z.object({
   CORS_ORIGINS: z.string().optional(),
   SERVER_PUBLIC_URL: z.url('SERVER_PUBLIC_URL must be a valid URL.').optional(),
   PUBLIC_BASE_URL: z.url('PUBLIC_BASE_URL must be a valid URL.').optional(),
-  STORAGE_DRIVER: z.enum(['local', 'spaces']).default('local'),
+  STORAGE_DRIVER: z.enum(['local', 'database']).default('database'),
   LOCAL_UPLOAD_DIR: z.string().min(1).default('uploads'),
-  SPACES_REGION: z.string().optional(),
-  SPACES_ENDPOINT: z.url('SPACES_ENDPOINT must be a valid URL.').optional(),
-  SPACES_BUCKET: z.string().optional(),
-  SPACES_ACCESS_KEY: z.string().optional(),
-  SPACES_SECRET_KEY: z.string().optional(),
-  SPACES_PUBLIC_BASE_URL: z.url('SPACES_PUBLIC_BASE_URL must be a valid URL.').optional(),
+  MEDIA_MAX_IMAGE_BYTES: z.coerce.number().int().positive().default(10 * bytesInMegabyte),
+  MEDIA_MAX_DOCUMENT_BYTES: z.coerce.number().int().positive().default(10 * bytesInMegabyte),
+  MEDIA_MAX_VIDEO_BYTES: z.coerce.number().int().positive().default(25 * bytesInMegabyte),
+  MEDIA_CACHE_MAX_AGE: z.coerce.number().int().min(0).default(60 * 60 * 24 * 365),
+  MEDIA_ENABLE_LEGACY_FILESYSTEM_FALLBACK: booleanString().default(true),
   MAIL_ENABLED: booleanString(),
   MAIL_HOST: z.string().default('smtp.gmail.com'),
   MAIL_PORT: z.coerce.number().int().positive().default(587),
@@ -66,54 +67,20 @@ export const envSchema = z.object({
     .optional(),
 })
   .superRefine((value, context) => {
-    if (value.STORAGE_DRIVER === 'spaces') {
-      if (!value.SPACES_REGION?.trim()) {
-        context.addIssue({
-          code: 'custom',
-          path: ['SPACES_REGION'],
-          message: 'SPACES_REGION is required when STORAGE_DRIVER=spaces.',
-        });
-      }
+    if (value.MEDIA_MAX_DOCUMENT_BYTES > value.MEDIA_MAX_IMAGE_BYTES * 5) {
+      context.addIssue({
+        code: 'custom',
+        path: ['MEDIA_MAX_DOCUMENT_BYTES'],
+        message: 'MEDIA_MAX_DOCUMENT_BYTES is unexpectedly large. Keep document limits conservative.',
+      });
+    }
 
-      if (!value.SPACES_ENDPOINT?.trim()) {
-        context.addIssue({
-          code: 'custom',
-          path: ['SPACES_ENDPOINT'],
-          message: 'SPACES_ENDPOINT is required when STORAGE_DRIVER=spaces.',
-        });
-      }
-
-      if (!value.SPACES_BUCKET?.trim()) {
-        context.addIssue({
-          code: 'custom',
-          path: ['SPACES_BUCKET'],
-          message: 'SPACES_BUCKET is required when STORAGE_DRIVER=spaces.',
-        });
-      }
-
-      if (!value.SPACES_ACCESS_KEY?.trim()) {
-        context.addIssue({
-          code: 'custom',
-          path: ['SPACES_ACCESS_KEY'],
-          message: 'SPACES_ACCESS_KEY is required when STORAGE_DRIVER=spaces.',
-        });
-      }
-
-      if (!value.SPACES_SECRET_KEY?.trim()) {
-        context.addIssue({
-          code: 'custom',
-          path: ['SPACES_SECRET_KEY'],
-          message: 'SPACES_SECRET_KEY is required when STORAGE_DRIVER=spaces.',
-        });
-      }
-
-      if (!value.SPACES_PUBLIC_BASE_URL?.trim()) {
-        context.addIssue({
-          code: 'custom',
-          path: ['SPACES_PUBLIC_BASE_URL'],
-          message: 'SPACES_PUBLIC_BASE_URL is required when STORAGE_DRIVER=spaces.',
-        });
-      }
+    if (value.NODE_ENV === 'production' && value.STORAGE_DRIVER === 'database' && !value.SERVER_PUBLIC_URL?.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['SERVER_PUBLIC_URL'],
+        message: 'SERVER_PUBLIC_URL is required when STORAGE_DRIVER=database in production.',
+      });
     }
 
     if (!value.MAIL_ENABLED) {

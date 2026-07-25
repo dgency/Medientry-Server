@@ -344,8 +344,10 @@ model MediaAsset {
   url            String?
   publicUrl      String?
   storageKey     String?
+  storageType    String       @default("filesystem")
   mimeType       String?
   extension      String?
+  sha256         String?
   fileType       MediaKind     @default(UNKNOWN)
   size           Int?
   width          Int?
@@ -354,12 +356,23 @@ model MediaAsset {
   status         SimpleStatus  @default(ACTIVE)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  blob           MediaBlob?
   galleryItems   GalleryItem[]
 
   @@index([fileType, createdAt])
   @@index([status, createdAt])
+  @@index([storageType, status, createdAt])
   @@index([filename])
+  @@index([sha256])
   @@map("media_assets")
+}
+
+model MediaBlob {
+  mediaId String @id @db.Uuid
+  data    Bytes
+  media   MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@map("media_blobs")
 }
 
 model HomeReel {

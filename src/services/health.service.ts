@@ -1,6 +1,6 @@
 import { env } from '../config/env';
 import { prisma } from '../config/prisma';
-import { storageAdapter } from './storage.service';
+import { getStorageHealthStatus, isProductionUsingLocalStorage } from './storage.service';
 
 export type HealthStatus = {
   status: 'ok' | 'degraded';
@@ -9,24 +9,29 @@ export type HealthStatus = {
   uptime: number;
   database: 'up' | 'down';
   storage: {
-    driver: 'local' | 'spaces';
+    driver: 'local' | 'database';
     configured: boolean;
     writable: boolean | null;
-    bucketAccessible: boolean | null;
+    persistent: boolean;
     publicBaseUrl: string | null;
-    status: 'up' | 'down';
+    warning: string | null;
+    metadataAccessible: boolean | null;
+    blobAccessible: boolean | null;
+    legacyFilesystemFallbackEnabled: boolean;
+    status: 'up' | 'degraded';
   };
 };
 
 export const getHealthStatus = async (): Promise<HealthStatus> => {
-  const storage = await storageAdapter.getHealthStatus();
+  const storage = await getStorageHealthStatus();
 
   try {
     await prisma.$queryRaw`SELECT 1`;
 
-    const storageIsHealthy = storage.driver === 'spaces'
-      ? storage.configured && storage.bucketAccessible !== false
-      : storage.configured && storage.writable !== false;
+    const storageIsHealthy =
+      storage.driver === 'database'
+        ? storage.configured && storage.writable !== false
+        : storage.configured && storage.writable !== false && !isProductionUsingLocalStorage;
 
     return {
       status: storageIsHealthy ? 'ok' : 'degraded',
@@ -36,7 +41,7 @@ export const getHealthStatus = async (): Promise<HealthStatus> => {
       database: 'up',
       storage: {
         ...storage,
-        status: storageIsHealthy ? 'up' : 'down',
+        status: storageIsHealthy ? 'up' : 'degraded',
       },
     };
   } catch {
@@ -49,11 +54,11 @@ export const getHealthStatus = async (): Promise<HealthStatus> => {
       storage: {
         ...storage,
         status:
-          (storage.driver === 'spaces'
-            ? storage.configured && storage.bucketAccessible !== false
-            : storage.configured && storage.writable !== false)
+          (storage.driver === 'database'
+            ? storage.configured && storage.writable !== false
+            : storage.configured && storage.writable !== false && !isProductionUsingLocalStorage)
             ? 'up'
-            : 'down',
+            : 'degraded',
       },
     };
   }

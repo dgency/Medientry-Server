@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, Link2, LoaderCircle, Trash2, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -57,6 +57,7 @@ export function FileUploadField({
   const [isUploading, setIsUploading] = useState(false);
   const [brokenPreviewUrls, setBrokenPreviewUrls] = useState<BrokenPreviewMap>({});
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string>('');
 
   const canUseLibrary = uploadKind === 'image' || uploadKind === 'videoThumbnail';
 
@@ -98,6 +99,16 @@ export function FileUploadField({
       return;
     }
 
+    const nextPendingPreviewUrl =
+      previewable && uploadKind !== 'document' ? URL.createObjectURL(files[0]) : '';
+
+    setPendingPreviewUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+
+      return nextPendingPreviewUrl;
+    });
     setIsUploading(true);
 
     try {
@@ -125,6 +136,13 @@ export function FileUploadField({
 
       if (primaryAsset) {
         const primaryAssetUrl = getAssetUrl(primaryAsset) ?? uploadedPayloads[0].url;
+        setPendingPreviewUrl((currentUrl) => {
+          if (currentUrl) {
+            URL.revokeObjectURL(currentUrl);
+          }
+
+          return '';
+        });
         onChange(primaryAssetUrl);
         onAssetSelect?.(primaryAsset);
       }
@@ -135,6 +153,13 @@ export function FileUploadField({
           : `${uploadedPayloads.length} files uploaded successfully.`,
       );
     } catch (error) {
+      setPendingPreviewUrl((currentUrl) => {
+        if (currentUrl) {
+          URL.revokeObjectURL(currentUrl);
+        }
+
+        return '';
+      });
       toast.error(getApiErrorMessage(error));
     } finally {
       setIsUploading(false);
@@ -144,7 +169,16 @@ export function FileUploadField({
       }
     }
   };
-  const previewUrl = resolveCmsAssetUrl(value);
+
+  useEffect(() => {
+    return () => {
+      if (pendingPreviewUrl) {
+        URL.revokeObjectURL(pendingPreviewUrl);
+      }
+    };
+  }, [pendingPreviewUrl]);
+
+  const previewUrl = pendingPreviewUrl || resolveCmsAssetUrl(value);
   const isImagePreview = previewable && uploadKind !== 'document' && Boolean(previewUrl);
 
   return (
