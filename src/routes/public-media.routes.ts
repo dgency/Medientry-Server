@@ -6,7 +6,9 @@ import { publicMediaParamSchema } from '../validations/public-media.validation';
 
 const router = Router();
 
-router.head('/:id/:filename?', validateRequest(publicMediaParamSchema), headPublicMedia);
-router.get('/:id/:filename?', validateRequest(publicMediaParamSchema), getPublicMedia);
+router.head('/:id', validateRequest(publicMediaParamSchema), headPublicMedia);
+router.head('/:id/:filename', validateRequest(publicMediaParamSchema), headPublicMedia);
+router.get('/:id', validateRequest(publicMediaParamSchema), getPublicMedia);
+router.get('/:id/:filename', validateRequest(publicMediaParamSchema), getPublicMedia);
 
 export const publicMediaRouter = router;
