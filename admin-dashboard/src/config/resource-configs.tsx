@@ -594,34 +594,21 @@ const contactPageFallbackContent = {
   offices: [
     {
       id: 'bangladesh-office',
-      title: 'Head Office - Bangladesh',
-      company: 'Medientry Bangladesh',
-      country: 'Bangladesh',
-      address: [
-        'Online Wasi Tower, 572/K (13th Floor)',
-        'Matikata, Dhaka Cantonment',
-        'Dhaka-1206, Bangladesh',
-      ],
+      name: 'Head Office - Bangladesh',
+      address:
+        'Online Wasi Tower, 572/K (13th Floor)\nMatikata, Dhaka Cantonment\nDhaka-1206, Bangladesh',
       phone: '+880 1713 456 910',
-      phoneHref: 'tel:+8801713456910',
       email: 'info@medientrybd.com',
-      emailHref: 'mailto:info@medientrybd.com',
+      googleMapsUrl: '',
     },
     {
       id: 'india-office',
-      title: 'India Office',
-      company: 'Talentz Edu Connect',
-      country: 'India',
-      address: [
-        'House No. 125, C-1',
-        'SRP Colony 8th Street Extension',
-        'Peravallur, Chennai-600082',
-        'Tamil Nadu, India',
-      ],
+      name: 'India Office',
+      address:
+        'House No. 125, C-1\nSRP Colony 8th Street Extension\nPeravallur, Chennai-600082\nTamil Nadu, India',
       phone: '+91 97917 15555',
-      phoneHref: 'tel:+919791715555',
       email: '',
-      emailHref: '',
+      googleMapsUrl: '',
     },
   ],
 } as const;
@@ -967,10 +954,17 @@ const sanitizeGoogleMapsPageUrl = (value: unknown) => {
       return null;
     }
 
-    if (
-      url.hostname.toLowerCase() !== 'maps.app.goo.gl' &&
-      !url.pathname.toLowerCase().startsWith('/maps')
-    ) {
+    const normalizedPath = url.pathname.toLowerCase();
+    const hasSupportedPath =
+      normalizedPath.startsWith('/maps') ||
+      normalizedPath.startsWith('/place') ||
+      normalizedPath.startsWith('/search') ||
+      normalizedPath.startsWith('/dir');
+    const hasSupportedQuery = ['q', 'query', 'destination', 'origin', 'place_id'].some((key) =>
+      url.searchParams.has(key),
+    );
+
+    if (url.hostname.toLowerCase() !== 'maps.app.goo.gl' && !hasSupportedPath && !hasSupportedQuery) {
       return null;
     }
 
@@ -978,6 +972,121 @@ const sanitizeGoogleMapsPageUrl = (value: unknown) => {
   } catch {
     return null;
   }
+};
+
+const isValidEmailAddress = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+const readContactOfficeAddress = (value: unknown) => {
+  if (typeof value === 'string') {
+    return value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  if (!Array.isArray(value)) {
+    return '';
+  }
+
+  return value
+    .map((line) => normalizeString(line))
+    .filter(Boolean)
+    .join('\n');
+};
+
+const sanitizeContactOffices = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item, index) => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const id = normalizeString(item.id) || `office-${index + 1}`;
+      const name =
+        normalizeString(item.name) ||
+        normalizeString(item.title) ||
+        normalizeString(item.company);
+      const address = readContactOfficeAddress(item.address);
+      const phone = normalizeString(item.phone);
+      const email = normalizeString(item.email);
+      const googleMapsUrl = sanitizeGoogleMapsPageUrl(
+        item.googleMapsUrl ?? item.googleMapsLink,
+      );
+
+      if (!name && !address && !phone && !email && !googleMapsUrl) {
+        return null;
+      }
+
+      return {
+        id,
+        name,
+        address,
+        ...(phone ? { phone } : {}),
+        ...(email ? { email } : {}),
+        googleMapsUrl: googleMapsUrl ?? '',
+      };
+    })
+    .filter(
+      (
+        item,
+      ): item is {
+        id: string;
+        name: string;
+        address: string;
+        phone?: string;
+        email?: string;
+        googleMapsUrl: string;
+      } => Boolean(item),
+    );
+};
+
+const validateContactOffices = (value: unknown) => {
+  if (!Array.isArray(value) || value.length === 0) {
+    return undefined;
+  }
+
+  for (let index = 0; index < value.length; index += 1) {
+    const item = value[index];
+
+    if (!isRecord(item)) {
+      return `Office ${index + 1}: Invalid office entry.`;
+    }
+
+    const name =
+      normalizeString(item.name) ||
+      normalizeString(item.title) ||
+      normalizeString(item.company);
+    const address = readContactOfficeAddress(item.address);
+    const email = normalizeString(item.email);
+    const googleMapsUrl = normalizeString(item.googleMapsUrl ?? item.googleMapsLink);
+
+    if (!name) {
+      return `Office ${index + 1}: Office Name is required.`;
+    }
+
+    if (!address) {
+      return `Office ${index + 1}: Office Address is required.`;
+    }
+
+    if (!googleMapsUrl) {
+      return `Office ${index + 1}: Google Maps Link is required.`;
+    }
+
+    if (!sanitizeGoogleMapsPageUrl(googleMapsUrl)) {
+      return `Office ${index + 1}: Enter a full Google Maps URL from a supported Google Maps domain.`;
+    }
+
+    if (email && !isValidEmailAddress(email)) {
+      return `Office ${index + 1}: Enter a valid Email Address.`;
+    }
+  }
+
+  return undefined;
 };
 
 const duplicateLabelSuffix = 'Copy';
@@ -1688,7 +1797,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       contactOfficesEyebrow: contactPageFallbackContent.officesEyebrow,
       contactOfficesTitle: contactPageFallbackContent.officesTitle,
       contactOfficesSubtitle: contactPageFallbackContent.officesSubtitle,
-      contactOfficeGoogleMapsLink: '',
       contactOfficeHours: contactPageFallbackContent.workingHours.officeHours,
       contactFridayHours: contactPageFallbackContent.workingHours.friday,
       contactWhatToExpectItems: contactPageFallbackContent.whatToExpect,
@@ -2665,28 +2773,12 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         visible: (values) => isContactPageValues(values),
       },
       {
-        name: 'contactOfficeGoogleMapsLink',
-        label: 'Office Google Maps Link',
-        type: 'url',
-        colSpan: 2,
-        placeholder: 'https://www.google.com/maps/...',
-        visible: (values) => isContactPageValues(values),
-        validate: (value) => {
-          if (!normalizeString(value)) {
-            return undefined;
-          }
-
-          return sanitizeGoogleMapsPageUrl(value)
-            ? undefined
-            : 'Enter a full Google Maps URL from a supported Google Maps domain.';
-        },
-      },
-      {
         name: 'contactOffices',
         label: 'Contact Office Cards',
         type: 'contact-offices',
         colSpan: 2,
         visible: (values) => isContactPageValues(values),
+        validate: (value) => validateContactOffices(value),
       },
       {
         name: 'collegesHeroEyebrow',
@@ -3677,8 +3769,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           content.contactOfficesSubtitle =
             normalizeString(values.contactOfficesSubtitle) ||
             contactPageFallbackContent.officesSubtitle;
-          content.contactOfficeGoogleMapsLink =
-            sanitizeGoogleMapsPageUrl(values.contactOfficeGoogleMapsLink);
           content.contactWorkingHours = {
             officeHours:
               normalizeString(values.contactOfficeHours) ||
@@ -3692,10 +3782,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
             values.contactWhatToExpectItems.length > 0
               ? values.contactWhatToExpectItems
               : contactPageFallbackContent.whatToExpect;
-          content.contactOffices =
-            Array.isArray(values.contactOffices) && values.contactOffices.length > 0
-              ? values.contactOffices
-              : contactPageFallbackContent.offices;
+          content.contactOffices = sanitizeContactOffices(values.contactOffices);
+          delete content.contactOfficeGoogleMapsLink;
         }
 
         if (isCollegesPageValues(values)) {
@@ -4181,6 +4269,26 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       const pageHeroTitle = normalizeString(item.heroTitle);
       const pageHeroSubtitle = normalizeString(item.heroSubtitle);
 
+      const legacyContactOfficeMapLink =
+        readContentString(content, 'contactOfficeGoogleMapsLink') ?? '';
+      const savedContactOffices =
+        Array.isArray(content.contactOffices) && content.contactOffices.length > 0
+          ? content.contactOffices
+          : Array.isArray(content.offices)
+            ? content.offices
+            : contactPageFallbackContent.offices;
+      const normalizedContactOffices = sanitizeContactOffices(savedContactOffices).map(
+        (office, index) =>
+          index === 0 &&
+          legacyContactOfficeMapLink &&
+          !office.googleMapsUrl
+            ? {
+                ...office,
+                googleMapsUrl: legacyContactOfficeMapLink,
+              }
+            : office,
+      );
+
       return {
         ...item,
         content: item.content,
@@ -4391,8 +4499,6 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         contactOfficesSubtitle:
           readContentString(content, 'contactOfficesSubtitle') ??
           contactPageFallbackContent.officesSubtitle,
-        contactOfficeGoogleMapsLink:
-          readContentString(content, 'contactOfficeGoogleMapsLink') ?? '',
         contactOfficeHours:
           readContentString(isRecord(content.contactWorkingHours) ? content.contactWorkingHours : {}, 'officeHours') ??
           contactPageFallbackContent.workingHours.officeHours,
@@ -4401,8 +4507,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           contactPageFallbackContent.workingHours.friday,
         contactWhatToExpectItems:
           content.contactWhatToExpectItems ?? contactPageFallbackContent.whatToExpect,
-        contactOffices:
-          content.contactOffices ?? contactPageFallbackContent.offices,
+        contactOffices: normalizedContactOffices,
         collegesHeroEyebrow:
           readContentString(content, 'collegesHeroEyebrow') ??
           collegesPageFallbackContent.heroEyebrow,
