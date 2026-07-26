@@ -8,6 +8,7 @@ import {
   deleteSuccessStory,
   listHomepageSuccessStories,
   listSuccessStories,
+  submitSuccessStoryShare,
   updateSuccessStory,
 } from '../services/success-story.service';
 
@@ -36,6 +37,16 @@ export const getHomepageSuccessStories = asyncHandler(async (_req, res: Response
     success: true,
     message: 'Homepage success stories retrieved successfully.',
     data: successStories,
+  });
+});
+
+export const createPublicSuccessStoryShare = asyncHandler(async (req, res: Response) => {
+  const result = await submitSuccessStoryShare(req.body);
+
+  sendResponse(res, 201, {
+    success: true,
+    message: 'Your story has been shared successfully.',
+    data: result,
   });
 });
 

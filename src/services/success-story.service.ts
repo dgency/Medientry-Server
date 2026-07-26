@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { Prisma, SimpleStatus } from '@prisma/client';
 
 import { prisma } from '../config/prisma';
@@ -15,6 +17,12 @@ import {
   mapSuccessStoryToApi,
   publicSuccessStorySelect,
 } from '../utils/success-story-response';
+import {
+  normalizeOptionalPublicEmailAddress,
+  normalizePublicFormText,
+  normalizePublicPhoneNumber,
+} from '../utils/public-form-validation';
+import { sendAdminFormNotification } from '../utils/mailer';
 
 type CreateSuccessStoryInput = {
   studentName: string;
@@ -35,6 +43,21 @@ type CreateSuccessStoryInput = {
 
 type UpdateSuccessStoryInput = Partial<CreateSuccessStoryInput>;
 
+type ShareSuccessStorySubmissionInput = {
+  fullName: string;
+  roleType: string;
+  emailAddress: string;
+  phoneNumber?: string;
+  university: string;
+  batch?: string;
+  country?: string;
+  city?: string;
+  shareStory: string;
+  sourcePage?: string;
+  submissionDate?: Date;
+  website?: string;
+};
+
 type ListSuccessStoriesOptions = {
   includeInactive?: boolean;
   search?: string;
@@ -54,6 +77,11 @@ const normalizeNullableString = (value?: string | null) => {
 
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
+};
+
+const normalizeOptionalString = (value?: string | null) => {
+  const normalizedValue = normalizeNullableString(value);
+  return normalizedValue ?? undefined;
 };
 
 const isStringArray = (value: unknown): value is string[] =>
@@ -276,4 +304,72 @@ export const deleteSuccessStory = async (id: string) => {
   await prisma.successStory.delete({
     where: { id },
   });
+};
+
+export const submitSuccessStoryShare = async (input: ShareSuccessStorySubmissionInput) => {
+  if (input.website?.trim()) {
+    throw new ApiError(400, 'Spam submission detected.');
+  }
+
+  const submissionId = randomUUID();
+  const submittedAt = input.submissionDate ?? new Date();
+  const normalizedEmail = normalizeOptionalPublicEmailAddress(input.emailAddress);
+
+  if (!normalizedEmail) {
+    throw new ApiError(400, 'A valid email address is required.');
+  }
+
+  const normalizedPhone = input.phoneNumber
+    ? normalizePublicPhoneNumber(input.phoneNumber)
+    : undefined;
+  const deliveryResult = await sendAdminFormNotification({
+    formName: 'Share Your Story',
+    submissionId,
+    subject: `New Share Your Story Submission - ${normalizePublicFormText(input.fullName)}`,
+    title: 'Share Your Story Submission',
+    intro:
+      'A new success story has been shared from the public Success Stories page and is awaiting manual review.',
+    submittedAt,
+    customerName: normalizePublicFormText(input.fullName),
+    customerEmail: normalizedEmail,
+    phoneNumber: normalizedPhone,
+    sourcePageUrl: normalizeOptionalString(input.sourcePage),
+    replyTo: normalizedEmail,
+    summaryFields: [
+      { label: 'Submission ID', value: submissionId },
+      { label: 'Form Name', value: 'Share Your Story' },
+      { label: 'Name', value: normalizePublicFormText(input.fullName) },
+      { label: 'Role / Type', value: normalizePublicFormText(input.roleType) },
+      { label: 'Email Address', value: normalizedEmail, href: `mailto:${normalizedEmail}` },
+      ...(normalizedPhone
+        ? [{ label: 'Phone Number', value: normalizedPhone, href: `tel:${normalizedPhone}` }]
+        : []),
+    ],
+    detailSections: [
+      {
+        title: 'Story Details',
+        fields: [
+          { label: 'College Name', value: normalizePublicFormText(input.university) },
+          { label: 'Batch Year', value: normalizeOptionalString(input.batch) },
+          { label: 'Country', value: normalizeOptionalString(input.country) },
+          { label: 'City', value: normalizeOptionalString(input.city) },
+          { label: 'Share Story', value: normalizePublicFormText(input.shareStory) },
+        ],
+      },
+    ],
+    footerNote:
+      'This story was submitted from the public website. It has not been published automatically. Review the content manually before adding it to Success Stories.',
+  });
+
+  if (deliveryResult.skipped) {
+    throw new ApiError(
+      503,
+      'Share story submissions are temporarily unavailable because email delivery is not configured.',
+    );
+  }
+
+  return {
+    delivered: true,
+    submissionId,
+  };
 };

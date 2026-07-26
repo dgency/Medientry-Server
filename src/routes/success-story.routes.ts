@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import {
+  createPublicSuccessStoryShare,
   createCmsSuccessStory,
   deleteCmsSuccessStory,
   getHomepageSuccessStories,
@@ -13,6 +14,7 @@ import { cmsEditorRoles, requireRole } from '../middlewares/require-role';
 import { validateRequest } from '../middlewares/validate-request';
 import {
   createSuccessStorySchema,
+  shareSuccessStorySchema,
   successStoryIdParamSchema,
   updateSuccessStorySchema,
 } from '../validations/success-story.validation';
@@ -21,6 +23,7 @@ const router = Router();
 
 router.get('/homepage', getHomepageSuccessStories);
 router.get('/', optionalAuth, getSuccessStories);
+router.post('/share', validateRequest(shareSuccessStorySchema), createPublicSuccessStoryShare);
 
 router.use(requireAuth, requireRole(cmsEditorRoles));
 
