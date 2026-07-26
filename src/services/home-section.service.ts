@@ -327,24 +327,10 @@ const resolveNoticeItems = async (
     ],
   });
 
-  const selectedIdOrder = new Map(selectedItemIds.map((id, index) => [id, index]));
   const orderedNotices =
     selectedItemIds.length === 0
       ? notices
-      : [...notices].sort((a, b) => {
-          if (a.isPinned !== b.isPinned) {
-            return a.isPinned ? -1 : 1;
-          }
-
-          if (a.isPinned && b.isPinned) {
-            return (a.pinnedOrder ?? Number.MAX_SAFE_INTEGER)
-              - (b.pinnedOrder ?? Number.MAX_SAFE_INTEGER);
-          }
-
-          const aIndex = selectedIdOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER;
-          const bIndex = selectedIdOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER;
-          return aIndex - bIndex;
-        });
+      : applySelectedOrder(notices, selectedItemIds);
 
   return applyItemLimit(orderedNotices, itemLimit).map(mapNoticeToApi);
 };

@@ -929,6 +929,57 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const normalizeString = (value: unknown) =>
   typeof value === 'string' ? value.trim() : '';
 
+const sanitizeStringList = (value: unknown) =>
+  Array.isArray(value)
+    ? value
+        .map((item) => normalizeString(item))
+        .filter((item) => item.length > 0)
+    : [];
+
+const isAllowedGoogleMapsHost = (host: string) => {
+  const normalizedHost = host.toLowerCase();
+
+  if (normalizedHost === 'maps.app.goo.gl') {
+    return true;
+  }
+
+  return (
+    /^(?:www\.)?google\.[a-z.]+$/.test(normalizedHost) ||
+    /^maps\.google\.[a-z.]+$/.test(normalizedHost)
+  );
+};
+
+const sanitizeGoogleMapsPageUrl = (value: unknown) => {
+  const normalizedValue = normalizeString(value);
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  try {
+    const url = new URL(normalizedValue);
+
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return null;
+    }
+
+    if (!isAllowedGoogleMapsHost(url.hostname)) {
+      return null;
+    }
+
+    if (
+      url.hostname.toLowerCase() !== 'maps.app.goo.gl' &&
+      !url.pathname.toLowerCase().startsWith('/maps')
+    ) {
+      return null;
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
+
 const duplicateLabelSuffix = 'Copy';
 
 const appendDuplicateLabel = (value: unknown) => {
@@ -1015,6 +1066,9 @@ const parsePageContentObject = (value: unknown) => (isRecord(value) ? { ...value
 
 const readContentString = (content: Record<string, unknown>, key: string) =>
   typeof content[key] === 'string' ? content[key] : null;
+
+const readContentBoolean = (content: Record<string, unknown>, key: string) =>
+  typeof content[key] === 'boolean' ? content[key] : null;
 
 const readContentNumber = (content: Record<string, unknown>, key: string) => {
   const value = content[key];
@@ -1634,6 +1688,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       contactOfficesEyebrow: contactPageFallbackContent.officesEyebrow,
       contactOfficesTitle: contactPageFallbackContent.officesTitle,
       contactOfficesSubtitle: contactPageFallbackContent.officesSubtitle,
+      contactOfficeGoogleMapsLink: '',
       contactOfficeHours: contactPageFallbackContent.workingHours.officeHours,
       contactFridayHours: contactPageFallbackContent.workingHours.friday,
       contactWhatToExpectItems: contactPageFallbackContent.whatToExpect,
@@ -1647,6 +1702,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       collegesGeorgiaEyebrow: collegesPageFallbackContent.georgiaEyebrow,
       collegesGeorgiaTitle: collegesPageFallbackContent.georgiaTitle,
       collegesGeorgiaDescription: collegesPageFallbackContent.georgiaDescription,
+      collegesGeorgiaVisible: true,
       collegesGuidanceEyebrow: collegesPageFallbackContent.guidanceEyebrow,
       collegesGuidanceTitle: collegesPageFallbackContent.guidanceTitle,
       collegesGuidanceTips: collegesPageFallbackContent.guidanceTips,
@@ -2609,6 +2665,23 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         visible: (values) => isContactPageValues(values),
       },
       {
+        name: 'contactOfficeGoogleMapsLink',
+        label: 'Office Google Maps Link',
+        type: 'url',
+        colSpan: 2,
+        placeholder: 'https://www.google.com/maps/...',
+        visible: (values) => isContactPageValues(values),
+        validate: (value) => {
+          if (!normalizeString(value)) {
+            return undefined;
+          }
+
+          return sanitizeGoogleMapsPageUrl(value)
+            ? undefined
+            : 'Enter a full Google Maps URL from a supported Google Maps domain.';
+        },
+      },
+      {
         name: 'contactOffices',
         label: 'Contact Office Cards',
         type: 'contact-offices',
@@ -2676,6 +2749,12 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         type: 'textarea',
         rows: 4,
         colSpan: 2,
+        visible: (values) => isCollegesPageValues(values),
+      },
+      {
+        name: 'collegesGeorgiaVisible',
+        label: 'Show Georgia Section',
+        type: 'switch',
         visible: (values) => isCollegesPageValues(values),
       },
       {
@@ -3598,6 +3677,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           content.contactOfficesSubtitle =
             normalizeString(values.contactOfficesSubtitle) ||
             contactPageFallbackContent.officesSubtitle;
+          content.contactOfficeGoogleMapsLink =
+            sanitizeGoogleMapsPageUrl(values.contactOfficeGoogleMapsLink);
           content.contactWorkingHours = {
             officeHours:
               normalizeString(values.contactOfficeHours) ||
@@ -3645,6 +3726,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           content.collegesGeorgiaDescription =
             normalizeString(values.collegesGeorgiaDescription) ||
             collegesPageFallbackContent.georgiaDescription;
+          content.collegesGeorgiaVisible = values.collegesGeorgiaVisible !== false;
           content.collegesGuidanceEyebrow =
             normalizeString(values.collegesGuidanceEyebrow) ||
             collegesPageFallbackContent.guidanceEyebrow;
@@ -4309,6 +4391,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         contactOfficesSubtitle:
           readContentString(content, 'contactOfficesSubtitle') ??
           contactPageFallbackContent.officesSubtitle,
+        contactOfficeGoogleMapsLink:
+          readContentString(content, 'contactOfficeGoogleMapsLink') ?? '',
         contactOfficeHours:
           readContentString(isRecord(content.contactWorkingHours) ? content.contactWorkingHours : {}, 'officeHours') ??
           contactPageFallbackContent.workingHours.officeHours,
@@ -4346,6 +4430,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         collegesGeorgiaDescription:
           readContentString(content, 'collegesGeorgiaDescription') ??
           collegesPageFallbackContent.georgiaDescription,
+        collegesGeorgiaVisible:
+          readContentBoolean(content, 'collegesGeorgiaVisible') ?? true,
         collegesGuidanceEyebrow:
           readContentString(content, 'collegesGuidanceEyebrow') ??
           collegesPageFallbackContent.guidanceEyebrow,
@@ -5126,6 +5212,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       eligibility: '',
       admissionProcess: [],
       facilities: '',
+      packageIncludedItems: [],
+      packageAdditionalCostItems: [],
       gallery: [],
       contentBlocks: '',
       isFeatured: false,
@@ -5151,6 +5239,22 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         label: 'Fee Structure',
         type: 'college-fee-structure',
         colSpan: 2,
+      },
+      {
+        name: 'packageIncludedItems',
+        label: 'Included in Package',
+        type: 'string-list',
+        colSpan: 2,
+        placeholder: 'Complete admission processing',
+        description: 'Manage the package items shown in the Included in Package group.',
+      },
+      {
+        name: 'packageAdditionalCostItems',
+        label: 'Additional Costs (Not Included)',
+        type: 'string-list',
+        colSpan: 2,
+        placeholder: 'Air tickets',
+        description: 'Manage the package items shown in the Additional Costs (Not Included) group.',
       },
       { name: 'eligibility', label: 'Eligibility', type: 'textarea', rows: 3, colSpan: 2 },
       { name: 'status', label: 'Status', type: 'select', required: true, options: publicationStatusOptions },
@@ -5204,6 +5308,12 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       },
       admissionProcess: Array.isArray(item.admissionProcess) ? item.admissionProcess : [],
       facilities: toKeywordsValue(item.facilities),
+      packageIncludedItems: sanitizeStringList(
+        isRecord(item.contentBlocks) ? item.contentBlocks.included : [],
+      ),
+      packageAdditionalCostItems: sanitizeStringList(
+        isRecord(item.contentBlocks) ? item.contentBlocks.notIncluded : [],
+      ),
       gallery: Array.isArray(item.gallery) ? item.gallery : [],
       contentBlocks: item.contentBlocks,
       seoKeywords: toKeywordsValue(item.seoKeywords),
@@ -5226,14 +5336,20 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         : [];
       const establishedYear =
         typeof values.establishedYear === 'string' ? values.establishedYear.trim() : '';
+      const packageIncludedItems = sanitizeStringList(values.packageIncludedItems);
+      const packageAdditionalCostItems = sanitizeStringList(values.packageAdditionalCostItems);
 
       const contentBlocks = {
         ...existingContentBlocks,
         ...(establishedYear ? { established: establishedYear } : {}),
+        included: packageIncludedItems,
+        notIncluded: packageAdditionalCostItems,
       };
 
       const restValues = { ...values };
       delete restValues.feeManagement;
+      delete restValues.packageIncludedItems;
+      delete restValues.packageAdditionalCostItems;
 
       return {
         ...restValues,
