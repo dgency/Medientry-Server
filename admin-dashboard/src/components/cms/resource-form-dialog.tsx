@@ -25,6 +25,7 @@ import { CollegeFeeStructureField } from './college-fee-structure-field';
 import { YouTubeVideoField } from './youtube-video-field';
 import { ProgramCardsField } from './program-cards-field';
 import { SeatAllocationField } from './seat-allocation-field';
+import { FaqCategoriesField } from './faq-categories-field';
 
 type ResourceFormDialogProps<TItem extends { id: string }> = {
   config: ResourceConfig<TItem>;
@@ -375,6 +376,21 @@ export function ResourceFormDialog<TItem extends { id: string }>({
                         }}
                         render={({ field: controllerField }) => (
                           <CollegeFeeStructureField
+                            value={controllerField.value}
+                            onChange={controllerField.onChange}
+                          />
+                        )}
+                      />
+                    ) : field.type === 'faq-categories' ? (
+                      <Controller
+                        name={field.name}
+                        control={control}
+                        rules={{
+                          required: required ? `${field.label} is required.` : false,
+                          validate: validateField,
+                        }}
+                        render={({ field: controllerField }) => (
+                          <FaqCategoriesField
                             value={controllerField.value}
                             onChange={controllerField.onChange}
                           />

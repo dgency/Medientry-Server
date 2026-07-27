@@ -22,6 +22,7 @@ export type NavigationItem = {
   href: string;
   icon: LucideIcon;
   roles?: AuthUser['role'][];
+  children?: NavigationItem[];
 };
 
 export const navigationItems: NavigationItem[] = [
@@ -43,7 +44,14 @@ export const navigationItems: NavigationItem[] = [
 ];
 
 export const getNavigationItemsForRole = (role?: AuthUser['role']) =>
-  navigationItems.filter((item) => !item.roles || (role ? item.roles.includes(role) : false));
+  navigationItems
+    .filter((item) => !item.roles || (role ? item.roles.includes(role) : false))
+    .map((item) => ({
+      ...item,
+      children: item.children?.filter(
+        (child) => !child.roles || (role ? child.roles.includes(role) : false),
+      ),
+    }));
 
 export const dashboardHighlights = [
   {

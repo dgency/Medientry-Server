@@ -66,6 +66,7 @@ const baseConsultationLeadBodySchema = z.object({
   sourcePage: normalizeOptionalString,
   submissionDate: z.coerce.date().optional(),
   submissionSource: z.enum(['consultation', 'contact']).optional(),
+  formVariant: z.enum(['default', 'mbbs-georgia']).optional(),
 });
 
 export const createConsultationLeadSchema = z.object({

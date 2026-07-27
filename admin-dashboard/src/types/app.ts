@@ -43,7 +43,8 @@ export type FieldType =
   | 'contact-offices'
   | 'program-cards'
   | 'seat-allocation'
-  | 'college-fee-structure';
+  | 'college-fee-structure'
+  | 'faq-categories';
 
 export type RichContentStorageMode = 'json-object' | 'json-loose' | 'string-html';
 

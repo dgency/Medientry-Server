@@ -46,8 +46,11 @@ type CreateConsultationLeadInput = {
   sourcePage?: string;
   submissionDate?: Date;
   submissionSource?: 'consultation' | 'contact';
+  formVariant?: 'default' | 'mbbs-georgia';
   website?: string;
 };
+
+type ConsultationLeadFormVariant = 'default' | 'mbbs-georgia';
 
 type ConsultationLeadStatusFilter = 'all' | 'read' | 'unread';
 
@@ -134,6 +137,10 @@ const normalizeSearch = (value?: string | null) => {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
 };
+
+const normalizeConsultationLeadFormVariant = (
+  value?: string | null,
+): ConsultationLeadFormVariant => (value === 'mbbs-georgia' ? 'mbbs-georgia' : 'default');
 
 const buildPhoneLink = (value?: string | null) => {
   const normalizedValue = value ? normalizePublicPhoneNumber(value) : '';
@@ -246,8 +253,49 @@ const assertNoSpamIndicators = async (
 const sendConsultationLeadNotification = async (
   lead: ConsultationLeadRecord,
   formName: string,
+  formVariant: ConsultationLeadFormVariant,
   dependencies: ConsultationLeadServiceDependencies,
 ) => {
+  const summaryFields =
+    formVariant === 'mbbs-georgia'
+      ? [
+          { label: 'Submission ID', value: lead.trackingId },
+          { label: 'Form Name', value: formName },
+          { label: 'Customer or Student Name', value: lead.fullName },
+          { label: 'Phone Number', value: lead.phoneNumber, href: buildPhoneLink(lead.phoneNumber) },
+          { label: 'Role', value: lead.userRole },
+          { label: 'Passing Year', value: lead.passingYear },
+          ...(lead.message?.trim()
+            ? [{ label: 'Your Message', value: lead.message }]
+            : []),
+        ]
+      : [
+          { label: 'Submission ID', value: lead.trackingId },
+          { label: 'Form Name', value: formName },
+          { label: 'Customer or Student Name', value: lead.fullName },
+          ...(lead.emailAddress
+            ? [{ label: 'Email Address', value: lead.emailAddress, href: `mailto:${lead.emailAddress}` }]
+            : []),
+          { label: 'Phone Number', value: lead.phoneNumber, href: buildPhoneLink(lead.phoneNumber) },
+          {
+            label: 'WhatsApp Number',
+            value: lead.whatsappNumber,
+            href: buildCustomerWhatsAppLink(lead.whatsappNumber),
+          },
+          { label: 'Role', value: lead.userRole },
+          { label: 'Passing Year', value: lead.passingYear },
+          ...(lead.neetScore?.trim()
+            ? [{ label: 'NEET Score', value: lead.neetScore }]
+            : [{ label: 'NEET Score', value: 'Not provided' }]),
+          { label: 'State', value: lead.stateName },
+          ...(lead.preferredCollege?.trim()
+            ? [{ label: 'Preferred College', value: lead.preferredCollege }]
+            : [{ label: 'Preferred College', value: 'Not provided' }]),
+          ...(lead.message?.trim()
+            ? [{ label: 'Message or Additional Information', value: lead.message }]
+            : []),
+        ];
+
   try {
     await dependencies.sendAdminFormNotification({
       formName,
@@ -270,32 +318,7 @@ const sendConsultationLeadNotification = async (
       replyTo: lead.emailAddress ?? undefined,
       displayTimeZone: consultationLeadEmailTimezone,
       displayTimeZoneLabel: consultationLeadEmailTimezoneLabel,
-      summaryFields: [
-        { label: 'Submission ID', value: lead.trackingId },
-        { label: 'Form Name', value: formName },
-        { label: 'Customer or Student Name', value: lead.fullName },
-        ...(lead.emailAddress
-          ? [{ label: 'Email Address', value: lead.emailAddress, href: `mailto:${lead.emailAddress}` }]
-          : []),
-        { label: 'Phone Number', value: lead.phoneNumber, href: buildPhoneLink(lead.phoneNumber) },
-        {
-          label: 'WhatsApp Number',
-          value: lead.whatsappNumber,
-          href: buildCustomerWhatsAppLink(lead.whatsappNumber),
-        },
-        { label: 'Role', value: lead.userRole },
-        { label: 'Passing Year', value: lead.passingYear },
-        ...(lead.neetScore?.trim()
-          ? [{ label: 'NEET Score', value: lead.neetScore }]
-          : [{ label: 'NEET Score', value: 'Not provided' }]),
-        { label: 'State', value: lead.stateName },
-        ...(lead.preferredCollege?.trim()
-          ? [{ label: 'Preferred College', value: lead.preferredCollege }]
-          : [{ label: 'Preferred College', value: 'Not provided' }]),
-        ...(lead.message?.trim()
-          ? [{ label: 'Message or Additional Information', value: lead.message }]
-          : []),
-      ],
+      summaryFields,
       footerNote:
         'This notification was generated automatically by the MediEntry website. Please follow up with the student or guardian using the validated contact details above.',
     });
@@ -312,6 +335,7 @@ const sendConsultationLeadNotification = async (
 
 const sendConsultationLeadCustomerConfirmation = async (
   lead: ConsultationLeadRecord,
+  formVariant: ConsultationLeadFormVariant,
   dependencies: ConsultationLeadServiceDependencies,
 ) => {
   if (!lead.emailAddress) {
@@ -339,14 +363,19 @@ const sendConsultationLeadCustomerConfirmation = async (
         { label: 'Form Name', value: consultationLeadFormName },
         { label: 'Customer or Student Name', value: lead.fullName },
         { label: 'Phone Number', value: lead.phoneNumber },
-        { label: 'WhatsApp Number', value: lead.whatsappNumber },
         { label: 'Role', value: lead.userRole },
         { label: 'Passing Year', value: lead.passingYear },
-        ...(lead.neetScore?.trim() ? [{ label: 'NEET Score', value: lead.neetScore }] : []),
-        { label: 'State', value: lead.stateName },
-        ...(lead.preferredCollege?.trim()
-          ? [{ label: 'Preferred College', value: lead.preferredCollege }]
-          : []),
+        ...(formVariant === 'mbbs-georgia'
+          ? []
+          : [
+              { label: 'WhatsApp Number', value: lead.whatsappNumber },
+              ...(lead.neetScore?.trim() ? [{ label: 'NEET Score', value: lead.neetScore }] : []),
+              { label: 'State', value: lead.stateName },
+              ...(lead.preferredCollege?.trim()
+                ? [{ label: 'Preferred College', value: lead.preferredCollege }]
+                : []),
+            ]),
+        ...(lead.message?.trim() ? [{ label: 'Your Message', value: lead.message }] : []),
       ],
       sourcePageUrl: lead.sourcePage ?? undefined,
       submittedAt: lead.createdAt,
@@ -410,6 +439,7 @@ export const createConsultationLeadWithDependencies = async (
 ) => {
   await assertNoSpamIndicators(input, dependencies.consultationLeadModel);
   const trackingNumber = await dependencies.allocateTrackingNumber();
+  const formVariant = normalizeConsultationLeadFormVariant(input.formVariant);
 
   const lead = await dependencies.consultationLeadModel.create({
     data: {
@@ -421,8 +451,8 @@ export const createConsultationLeadWithDependencies = async (
   });
   const formName = consultationLeadFormName;
 
-  await sendConsultationLeadNotification(lead, formName, dependencies);
-  await sendConsultationLeadCustomerConfirmation(lead, dependencies);
+  await sendConsultationLeadNotification(lead, formName, formVariant, dependencies);
+  await sendConsultationLeadCustomerConfirmation(lead, formVariant, dependencies);
 
   return lead;
 };

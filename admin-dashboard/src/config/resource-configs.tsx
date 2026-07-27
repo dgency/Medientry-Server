@@ -419,9 +419,82 @@ const genericPageCtaFallbackContent = {
   subtitle:
     'Talk to our admissions team for clear guidance, quick answers, and a transparent roadmap for your MBBS or study abroad journey.',
   primaryButtonText: 'Book Free Consultation',
-  primaryButtonUrl: '/contact',
+  primaryButtonUrl: '/contact-us',
   secondaryButtonText: 'Chat on WhatsApp',
   secondaryButtonUrl: '',
+} as const;
+
+const defaultFaqPageCategories = [
+  {
+    id: 'admissions-eligibility',
+    title: 'Admissions and Eligibility',
+    description:
+      'Quick answers to the most common admission planning questions students and parents ask before starting.',
+    sortOrder: 1,
+    isActive: true,
+    faqs: [
+      {
+        question: 'Who can apply through Medientry for admission guidance?',
+        answer:
+          'Students and families looking for MBBS or selected study-abroad guidance can contact Medientry for counseling, documentation support, and admission planning.',
+        sortOrder: 1,
+        isActive: true,
+      },
+      {
+        question: 'What documents are usually required to begin the process?',
+        answer:
+          'Common requirements include academic transcripts, identification documents, passport details, recent photographs, and destination-specific eligibility records. The exact checklist depends on the student profile and target institution.',
+        sortOrder: 2,
+        isActive: true,
+      },
+      {
+        question: 'Can I speak with a counselor before choosing a destination?',
+        answer:
+          'Yes. Medientry provides consultation support so students can compare options, understand timelines, and move forward with a destination that matches their goals and budget.',
+        sortOrder: 3,
+        isActive: true,
+      },
+    ],
+  },
+  {
+    id: 'fees-support',
+    title: 'Fees and Ongoing Support',
+    description:
+      'Helpful answers around cost planning, guidance scope, and post-admission support expectations.',
+    sortOrder: 2,
+    isActive: true,
+    faqs: [
+      {
+        question: 'Does Medientry help with fee planning and budgeting?',
+        answer:
+          'Yes. The team can guide students through expected tuition, living expenses, and payment planning so families can prepare realistically before confirming admission.',
+        sortOrder: 1,
+        isActive: true,
+      },
+      {
+        question: 'Will support continue after admission is confirmed?',
+        answer:
+          'Medientry aims to support students beyond the initial application stage with practical next-step guidance related to documentation, travel preparation, and onboarding requirements.',
+        sortOrder: 2,
+        isActive: true,
+      },
+      {
+        question: 'How can I ask a question that is not listed here?',
+        answer:
+          'If your question is not covered on this page, use the contact or consultation options on the website and the team will guide you directly.',
+        sortOrder: 3,
+        isActive: true,
+      },
+    ],
+  },
+] as const;
+
+const faqPageFallbackContent = {
+  sectionEyebrow: 'Frequently Asked Questions',
+  sectionTitle: 'Answers That Help You Move Forward with Confidence',
+  sectionSubtitle:
+    'Browse the most common questions by topic and get clear, professional answers before you start your application journey.',
+  categories: defaultFaqPageCategories,
 } as const;
 
 const aboutPageFallbackContent = {
@@ -1045,6 +1118,84 @@ const sanitizeContactOffices = (value: unknown) => {
     );
 };
 
+const sanitizeFaqCategories = (value: unknown) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item, categoryIndex) => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      const title = normalizeString(item.title);
+      const description = normalizeString(item.description);
+      const rawFaqs = Array.isArray(item.faqs) ? item.faqs : [];
+      const faqs = rawFaqs
+        .map((faqItem, faqIndex) => {
+          if (!isRecord(faqItem)) {
+            return null;
+          }
+
+          const question = normalizeString(faqItem.question);
+          const answer = normalizeString(faqItem.answer);
+
+          if (!question && !answer) {
+            return null;
+          }
+
+          return {
+            question: question ?? '',
+            answer: answer ?? '',
+            sortOrder: faqIndex + 1,
+            isActive:
+              typeof faqItem.isActive === 'boolean' ? faqItem.isActive : true,
+          };
+        })
+        .filter(
+          (
+            faqItem,
+          ): faqItem is {
+            question: string;
+            answer: string;
+            sortOrder: number;
+            isActive: boolean;
+          } => Boolean(faqItem),
+        );
+
+      if (!title && !description && faqs.length === 0) {
+        return null;
+      }
+
+      return {
+        id: normalizeString(item.id) || `faq-category-${categoryIndex + 1}`,
+        title: title ?? '',
+        description: description ?? '',
+        sortOrder: categoryIndex + 1,
+        isActive: typeof item.isActive === 'boolean' ? item.isActive : true,
+        faqs,
+      };
+    })
+    .filter(
+      (
+        item,
+      ): item is {
+        id: string;
+        title: string;
+        description: string;
+        sortOrder: number;
+        isActive: boolean;
+        faqs: Array<{
+          question: string;
+          answer: string;
+          sortOrder: number;
+          isActive: boolean;
+        }>;
+      } => Boolean(item),
+    );
+};
+
 const validateContactOffices = (value: unknown) => {
   if (!Array.isArray(value) || value.length === 0) {
     return undefined;
@@ -1149,6 +1300,9 @@ const isSuccessStoriesPageValues = (values: Record<string, unknown>) =>
 const isCollegesPageValues = (values: Record<string, unknown>) =>
   getNormalizedPageSlug(values) === 'colleges';
 
+const isFaqPageValues = (values: Record<string, unknown>) =>
+  getNormalizedPageSlug(values) === 'faqs';
+
 const isMbbsBangladeshGovernmentPageValues = (values: Record<string, unknown>) =>
   getNormalizedPageSlug(values) === 'mbbs-bangladesh-government';
 
@@ -1161,6 +1315,7 @@ const usesStructuredStaticPageEditor = (values: Record<string, unknown>) =>
   isWhyMedientryPageValues(values) ||
   isSuccessStoriesPageValues(values) ||
   isCollegesPageValues(values) ||
+  isFaqPageValues(values) ||
   isMbbsBangladeshGovernmentPageValues(values) ||
   isGeorgiaForBangladeshisPageValues(values);
 
@@ -1496,6 +1651,298 @@ const studyDestinationPageShortcutFields = [
   ...defaultSeoFields,
 ] as const;
 
+const mbbsGeorgiaPageFallbackContent = {
+  heroEyebrow: 'Study Destination',
+  heroPrimaryButtonText: 'Get Free Counseling',
+  heroSecondaryButtonText: 'View Universities',
+  heroSecondaryButtonUrl: '/colleges',
+  whyEyebrow: 'Why Georgia',
+  whyTitle: 'European Medical Education Made Accessible',
+  whySubtitle:
+    'Georgia offers a unique combination of European education standards, international recognition, and affordability that makes it an ideal destination for MBBS.',
+  advantages: [
+    {
+      title: 'WHO & NMC Approved',
+      description:
+        'Georgian medical universities are recognized by WHO, NMC, and listed in the World Directory of Medical Schools.',
+    },
+    {
+      title: 'ECFMG Certified',
+      description:
+        'Graduates are eligible for ECFMG certification, opening doors to practice in the USA and other countries.',
+    },
+    {
+      title: 'European Standards',
+      description:
+        'Medical education follows European standards with modern curriculum and teaching methodologies.',
+    },
+    {
+      title: 'English Medium',
+      description:
+        'Complete medical program taught in English, making it accessible for international students.',
+    },
+    {
+      title: 'Safe Country',
+      description:
+        'Georgia is ranked among the safest countries in Europe with low crime rates and welcoming locals.',
+    },
+    {
+      title: 'Modern Infrastructure',
+      description:
+        'State-of-the-art hospitals and laboratories with advanced medical equipment for practical training.',
+    },
+    {
+      title: 'Affordable Living',
+      description:
+        'Cost of living is reasonable compared to other European countries, making it budget-friendly.',
+    },
+    {
+      title: 'Easy Travel',
+      description:
+        'Direct flights from major Indian cities. Visa process is straightforward for students.',
+    },
+  ],
+  recognitionEyebrow: 'Global Recognition',
+  recognitionTitle: 'Internationally Recognized Degrees',
+  recognitionSubtitle:
+    'Georgian medical universities are recognized by major international medical bodies, ensuring your degree is valued worldwide and opens doors to global opportunities.',
+  recognitions: [
+    'World Health Organization (WHO)',
+    'National Medical Commission (NMC), India',
+    'Educational Commission for Foreign Medical Graduates (ECFMG)',
+    'World Directory of Medical Schools (WDOMS)',
+    'Foundation for Advancement of International Medical Education and Research (FAIMER)',
+  ],
+  programOverviewTitle: 'Program Overview',
+  programOverviewItems: [
+    { title: 'Duration', description: '6 Years (5+1 Internship)' },
+    { title: 'Medium of Instruction', description: 'English' },
+    { title: 'Intake Period', description: 'September / February' },
+    { title: 'Eligibility', description: '50% in PCB (Class 12)' },
+  ],
+  feeEyebrow: 'Investment',
+  feeTitle: 'Fee Structure & Cost of Living',
+  feeSubtitle:
+    'Georgia offers European medical education at a fraction of the cost compared to other European or American universities.',
+  tuitionTitle: 'Tuition & Fees',
+  tuitionItems: [
+    { title: 'Annual Tuition', description: '$5,000 - $6,000' },
+    { title: 'Total Course Fee (6 Years)', description: '$30,000 - $36,000' },
+    { title: 'INR Equivalent', description: 'INR 27-33 Lakh' },
+  ],
+  livingExpensesTitle: 'Living Expenses',
+  livingExpensesItems: [
+    { title: 'Hostel/Apartment', description: '$100 - $200/month' },
+    { title: 'Food & Groceries', description: '$100 - $200/month' },
+    { title: 'Total Monthly', description: '$200 - $400/month' },
+  ],
+  feeNote:
+    '* Fees vary by university. Contact us for detailed fee breakdowns and payment plans.',
+  careerEyebrow: 'After Graduation',
+  careerTitle: 'Global Career Opportunities',
+  careerSubtitle:
+    'A medical degree from Georgia opens doors to practice medicine in India, USA, Europe, and many other countries.',
+  careerProspects: [
+    {
+      title: 'Practice in India',
+      description:
+        'Clear FMGE/NExT and register with State Medical Council to practice in India.',
+    },
+    {
+      title: 'Practice in USA',
+      description:
+        'ECFMG certification makes Georgian graduates eligible for USMLE and US residency programs.',
+    },
+    {
+      title: 'Practice in Europe',
+      description:
+        'European-standard education facilitates recognition in EU countries.',
+    },
+    {
+      title: 'Higher Studies',
+      description:
+        'Pursue postgraduate specializations in Georgia, Europe, or return to India for MD/MS.',
+    },
+  ],
+  pageCtaTitle: 'Start Your European Medical Journey',
+  pageCtaSubtitle:
+    'Get expert guidance on choosing the right university in Georgia and begin your path to a global medical career.',
+  pageCtaPrimaryButtonText: 'Book Free Consultation',
+  pageCtaPrimaryButtonUrl: '/contact',
+  pageCtaSecondaryButtonText: 'Chat on WhatsApp',
+  pageCtaSecondaryButtonUrl: '',
+} as const;
+
+const mbbsGeorgiaPageShortcutFields = [
+  { name: 'title', label: 'Title', type: 'text', required: true },
+  { name: 'country', label: 'Country', type: 'text', required: true },
+  { name: 'shortDescription', label: 'Short Description', type: 'textarea', rows: 4, colSpan: 2 },
+  { name: 'featuredImage', label: 'Featured Image URL', type: 'url', colSpan: 2, uploadKind: 'image', previewLabel: 'Preview featured image' },
+  {
+    name: 'heroOverlayColor',
+    label: 'Hero Overlay Color',
+    type: 'text',
+    colSpan: 1,
+    description: 'Hex color like #052118 used on destination hero image.',
+  },
+  {
+    name: 'heroOverlayOpacity',
+    label: 'Hero Overlay Opacity',
+    type: 'number',
+    colSpan: 1,
+    min: 0.35,
+    max: 0.96,
+  },
+  {
+    name: 'homepageHighlights',
+    label: 'Homepage Features',
+    type: 'keywords',
+    colSpan: 2,
+    description: 'Comma-separated feature list shown inside the homepage destination card.',
+  },
+  {
+    name: 'homepageButtonText',
+    label: 'Homepage Button Text',
+    type: 'text',
+    colSpan: 2,
+  },
+  {
+    name: 'homepageButtonUrl',
+    label: 'Homepage Button URL',
+    type: 'text',
+    colSpan: 2,
+    description: 'Supports internal paths like /mbbs-bangladesh or full external URLs.',
+  },
+  { name: 'heroEyebrow', label: 'Hero Eyebrow', type: 'text', colSpan: 2 },
+  { name: 'heroPrimaryButtonText', label: 'Hero Primary Button Text', type: 'text' },
+  { name: 'heroSecondaryButtonText', label: 'Hero Secondary Button Text', type: 'text' },
+  {
+    name: 'heroSecondaryButtonUrl',
+    label: 'Hero Secondary Button URL',
+    type: 'text',
+    colSpan: 2,
+    description: 'Supports internal paths like /colleges or full external URLs.',
+  },
+  { name: 'mbbsGeorgiaWhyEyebrow', label: 'Why Georgia Eyebrow', type: 'text', colSpan: 2 },
+  { name: 'mbbsGeorgiaWhyTitle', label: 'Why Georgia Title', type: 'text', colSpan: 2 },
+  {
+    name: 'mbbsGeorgiaWhySubtitle',
+    label: 'Why Georgia Subtitle',
+    type: 'textarea',
+    rows: 4,
+    colSpan: 2,
+  },
+  {
+    name: 'mbbsGeorgiaAdvantages',
+    label: 'Why Georgia Cards',
+    type: 'content-cards',
+    colSpan: 2,
+    description: 'Manage the Georgia advantage cards. Existing icons stay aligned with the frontend design.',
+  },
+  { name: 'mbbsGeorgiaRecognitionEyebrow', label: 'Recognition Eyebrow', type: 'text', colSpan: 2 },
+  { name: 'mbbsGeorgiaRecognitionTitle', label: 'Recognition Title', type: 'text', colSpan: 2 },
+  {
+    name: 'mbbsGeorgiaRecognitionSubtitle',
+    label: 'Recognition Subtitle',
+    type: 'textarea',
+    rows: 4,
+    colSpan: 2,
+  },
+  {
+    name: 'mbbsGeorgiaRecognitions',
+    label: 'Recognition List',
+    type: 'string-list',
+    colSpan: 2,
+    description: 'Manage the recognition bullet points shown in the left column.',
+  },
+  {
+    name: 'mbbsGeorgiaProgramOverviewTitle',
+    label: 'Program Overview Title',
+    type: 'text',
+    colSpan: 2,
+  },
+  {
+    name: 'mbbsGeorgiaProgramOverviewItems',
+    label: 'Program Overview Rows',
+    type: 'content-cards',
+    colSpan: 2,
+    description: 'Each row uses Title for the left label and Description for the right value.',
+  },
+  { name: 'mbbsGeorgiaFeeEyebrow', label: 'Fee Section Eyebrow', type: 'text', colSpan: 2 },
+  { name: 'mbbsGeorgiaFeeTitle', label: 'Fee Section Title', type: 'text', colSpan: 2 },
+  {
+    name: 'mbbsGeorgiaFeeSubtitle',
+    label: 'Fee Section Subtitle',
+    type: 'textarea',
+    rows: 4,
+    colSpan: 2,
+  },
+  { name: 'mbbsGeorgiaTuitionTitle', label: 'Tuition Card Title', type: 'text' },
+  { name: 'mbbsGeorgiaLivingExpensesTitle', label: 'Living Expenses Card Title', type: 'text' },
+  {
+    name: 'mbbsGeorgiaTuitionItems',
+    label: 'Tuition Rows',
+    type: 'content-cards',
+    colSpan: 2,
+    description: 'Each row uses Title for the fee label and Description for the amount.',
+  },
+  {
+    name: 'mbbsGeorgiaLivingExpenseItems',
+    label: 'Living Expense Rows',
+    type: 'content-cards',
+    colSpan: 2,
+    description: 'Each row uses Title for the expense label and Description for the amount.',
+  },
+  {
+    name: 'mbbsGeorgiaFeeNote',
+    label: 'Fee Note',
+    type: 'textarea',
+    rows: 3,
+    colSpan: 2,
+  },
+  { name: 'mbbsGeorgiaCareerEyebrow', label: 'Career Section Eyebrow', type: 'text', colSpan: 2 },
+  { name: 'mbbsGeorgiaCareerTitle', label: 'Career Section Title', type: 'text', colSpan: 2 },
+  {
+    name: 'mbbsGeorgiaCareerSubtitle',
+    label: 'Career Section Subtitle',
+    type: 'textarea',
+    rows: 4,
+    colSpan: 2,
+  },
+  {
+    name: 'mbbsGeorgiaCareerProspects',
+    label: 'Career Opportunity Cards',
+    type: 'content-cards',
+    colSpan: 2,
+    description: 'Manage the cards shown in the career opportunities grid.',
+  },
+  { name: 'pageCtaTitle', label: 'Bottom CTA Title', type: 'text', colSpan: 2 },
+  {
+    name: 'pageCtaSubtitle',
+    label: 'Bottom CTA Subtitle',
+    type: 'textarea',
+    rows: 4,
+    colSpan: 2,
+  },
+  { name: 'pageCtaPrimaryButtonText', label: 'Bottom CTA Primary Button Text', type: 'text' },
+  { name: 'pageCtaPrimaryButtonUrl', label: 'Bottom CTA Primary Button URL', type: 'text' },
+  { name: 'pageCtaSecondaryButtonText', label: 'Bottom CTA Secondary Button Text', type: 'text' },
+  { name: 'pageCtaSecondaryButtonUrl', label: 'Bottom CTA Secondary Button URL', type: 'text' },
+  { name: 'status', label: 'Active Status', type: 'select', required: true, options: publicationStatusOptions },
+  { name: 'sortOrder', label: 'Display Order', type: 'number', min: 0, required: true },
+  { name: 'isFeatured', label: 'Featured', type: 'switch' },
+  { name: 'showInMenu', label: 'Show In Menu', type: 'switch' },
+  {
+    name: 'content',
+    label: 'Page Content',
+    type: 'rich-content',
+    richContentStorageMode: 'json-object',
+    rows: 12,
+    colSpan: 2,
+  },
+  ...defaultSeoFields,
+] as const;
+
 const getStudyDestinationShortcutItemsBySlug = (payload: unknown, slug: string) =>
   (Array.isArray(payload) ? payload : []).filter(
     (item): item is ResourceItem =>
@@ -1529,6 +1976,114 @@ const getStudyDestinationShortcutEditValues = (item: ResourceItem) => ({
   content: item.content,
   seoKeywords: toKeywordsValue(item.seoKeywords),
 });
+
+const getMbbsGeorgiaShortcutEditValues = (item: ResourceItem) => {
+  const baseValues = getStudyDestinationShortcutEditValues(item);
+  const content = isRecord(item.content) ? item.content : {};
+
+  return {
+    ...baseValues,
+    heroEyebrow:
+      readContentString(content, 'heroEyebrow') ??
+      mbbsGeorgiaPageFallbackContent.heroEyebrow,
+    heroPrimaryButtonText:
+      readContentString(content, 'heroPrimaryButtonText') ??
+      mbbsGeorgiaPageFallbackContent.heroPrimaryButtonText,
+    heroSecondaryButtonText:
+      readContentString(content, 'heroSecondaryButtonText') ??
+      mbbsGeorgiaPageFallbackContent.heroSecondaryButtonText,
+    heroSecondaryButtonUrl:
+      readContentString(content, 'heroSecondaryButtonUrl') ??
+      mbbsGeorgiaPageFallbackContent.heroSecondaryButtonUrl,
+    mbbsGeorgiaWhyEyebrow:
+      readContentString(content, 'mbbsGeorgiaWhyEyebrow') ??
+      mbbsGeorgiaPageFallbackContent.whyEyebrow,
+    mbbsGeorgiaWhyTitle:
+      readContentString(content, 'mbbsGeorgiaWhyTitle') ??
+      mbbsGeorgiaPageFallbackContent.whyTitle,
+    mbbsGeorgiaWhySubtitle:
+      readContentString(content, 'mbbsGeorgiaWhySubtitle') ??
+      mbbsGeorgiaPageFallbackContent.whySubtitle,
+    mbbsGeorgiaAdvantages:
+      content.mbbsGeorgiaAdvantages ??
+      content.advantages ??
+      mbbsGeorgiaPageFallbackContent.advantages,
+    mbbsGeorgiaRecognitionEyebrow:
+      readContentString(content, 'mbbsGeorgiaRecognitionEyebrow') ??
+      mbbsGeorgiaPageFallbackContent.recognitionEyebrow,
+    mbbsGeorgiaRecognitionTitle:
+      readContentString(content, 'mbbsGeorgiaRecognitionTitle') ??
+      mbbsGeorgiaPageFallbackContent.recognitionTitle,
+    mbbsGeorgiaRecognitionSubtitle:
+      readContentString(content, 'mbbsGeorgiaRecognitionSubtitle') ??
+      mbbsGeorgiaPageFallbackContent.recognitionSubtitle,
+    mbbsGeorgiaRecognitions:
+      content.mbbsGeorgiaRecognitions ??
+      content.recognitions ??
+      mbbsGeorgiaPageFallbackContent.recognitions,
+    mbbsGeorgiaProgramOverviewTitle:
+      readContentString(content, 'mbbsGeorgiaProgramOverviewTitle') ??
+      mbbsGeorgiaPageFallbackContent.programOverviewTitle,
+    mbbsGeorgiaProgramOverviewItems:
+      content.mbbsGeorgiaProgramOverviewItems ??
+      mbbsGeorgiaPageFallbackContent.programOverviewItems,
+    mbbsGeorgiaFeeEyebrow:
+      readContentString(content, 'mbbsGeorgiaFeeEyebrow') ??
+      mbbsGeorgiaPageFallbackContent.feeEyebrow,
+    mbbsGeorgiaFeeTitle:
+      readContentString(content, 'mbbsGeorgiaFeeTitle') ??
+      mbbsGeorgiaPageFallbackContent.feeTitle,
+    mbbsGeorgiaFeeSubtitle:
+      readContentString(content, 'mbbsGeorgiaFeeSubtitle') ??
+      mbbsGeorgiaPageFallbackContent.feeSubtitle,
+    mbbsGeorgiaTuitionTitle:
+      readContentString(content, 'mbbsGeorgiaTuitionTitle') ??
+      mbbsGeorgiaPageFallbackContent.tuitionTitle,
+    mbbsGeorgiaLivingExpensesTitle:
+      readContentString(content, 'mbbsGeorgiaLivingExpensesTitle') ??
+      mbbsGeorgiaPageFallbackContent.livingExpensesTitle,
+    mbbsGeorgiaTuitionItems:
+      content.mbbsGeorgiaTuitionItems ??
+      mbbsGeorgiaPageFallbackContent.tuitionItems,
+    mbbsGeorgiaLivingExpenseItems:
+      content.mbbsGeorgiaLivingExpenseItems ??
+      mbbsGeorgiaPageFallbackContent.livingExpensesItems,
+    mbbsGeorgiaFeeNote:
+      readContentString(content, 'mbbsGeorgiaFeeNote') ??
+      mbbsGeorgiaPageFallbackContent.feeNote,
+    mbbsGeorgiaCareerEyebrow:
+      readContentString(content, 'mbbsGeorgiaCareerEyebrow') ??
+      mbbsGeorgiaPageFallbackContent.careerEyebrow,
+    mbbsGeorgiaCareerTitle:
+      readContentString(content, 'mbbsGeorgiaCareerTitle') ??
+      mbbsGeorgiaPageFallbackContent.careerTitle,
+    mbbsGeorgiaCareerSubtitle:
+      readContentString(content, 'mbbsGeorgiaCareerSubtitle') ??
+      mbbsGeorgiaPageFallbackContent.careerSubtitle,
+    mbbsGeorgiaCareerProspects:
+      content.mbbsGeorgiaCareerProspects ??
+      content.careerProspects ??
+      mbbsGeorgiaPageFallbackContent.careerProspects,
+    pageCtaTitle:
+      readContentString(content, 'pageCtaTitle') ??
+      mbbsGeorgiaPageFallbackContent.pageCtaTitle,
+    pageCtaSubtitle:
+      readContentString(content, 'pageCtaSubtitle') ??
+      mbbsGeorgiaPageFallbackContent.pageCtaSubtitle,
+    pageCtaPrimaryButtonText:
+      readContentString(content, 'pageCtaPrimaryButtonText') ??
+      mbbsGeorgiaPageFallbackContent.pageCtaPrimaryButtonText,
+    pageCtaPrimaryButtonUrl:
+      readContentString(content, 'pageCtaPrimaryButtonUrl') ??
+      mbbsGeorgiaPageFallbackContent.pageCtaPrimaryButtonUrl,
+    pageCtaSecondaryButtonText:
+      readContentString(content, 'pageCtaSecondaryButtonText') ??
+      mbbsGeorgiaPageFallbackContent.pageCtaSecondaryButtonText,
+    pageCtaSecondaryButtonUrl:
+      readContentString(content, 'pageCtaSecondaryButtonUrl') ??
+      mbbsGeorgiaPageFallbackContent.pageCtaSecondaryButtonUrl,
+  };
+};
 
 const buildStudyDestinationShortcutPayload = (values: Record<string, unknown>) => {
   const {
@@ -1572,6 +2127,143 @@ const buildStudyDestinationShortcutPayload = (values: Record<string, unknown>) =
 
   return {
     ...baseValues,
+    content,
+  };
+};
+
+const buildMbbsGeorgiaShortcutPayload = (values: Record<string, unknown>) => {
+  const basePayload = buildStudyDestinationShortcutPayload(values);
+  const existingContent =
+    basePayload.content &&
+    typeof basePayload.content === 'object' &&
+    !Array.isArray(basePayload.content)
+      ? { ...(basePayload.content as Record<string, unknown>) }
+      : {};
+
+  const content = {
+    ...existingContent,
+    heroEyebrow:
+      normalizeString(values.heroEyebrow) ||
+      mbbsGeorgiaPageFallbackContent.heroEyebrow,
+    heroPrimaryButtonText:
+      normalizeString(values.heroPrimaryButtonText) ||
+      mbbsGeorgiaPageFallbackContent.heroPrimaryButtonText,
+    heroSecondaryButtonText:
+      normalizeString(values.heroSecondaryButtonText) ||
+      mbbsGeorgiaPageFallbackContent.heroSecondaryButtonText,
+    heroSecondaryButtonUrl:
+      normalizeString(values.heroSecondaryButtonUrl) ||
+      mbbsGeorgiaPageFallbackContent.heroSecondaryButtonUrl,
+    mbbsGeorgiaWhyEyebrow:
+      normalizeString(values.mbbsGeorgiaWhyEyebrow) ||
+      mbbsGeorgiaPageFallbackContent.whyEyebrow,
+    mbbsGeorgiaWhyTitle:
+      normalizeString(values.mbbsGeorgiaWhyTitle) ||
+      mbbsGeorgiaPageFallbackContent.whyTitle,
+    mbbsGeorgiaWhySubtitle:
+      normalizeString(values.mbbsGeorgiaWhySubtitle) ||
+      mbbsGeorgiaPageFallbackContent.whySubtitle,
+    mbbsGeorgiaAdvantages:
+      Array.isArray(values.mbbsGeorgiaAdvantages) && values.mbbsGeorgiaAdvantages.length > 0
+        ? values.mbbsGeorgiaAdvantages
+        : mbbsGeorgiaPageFallbackContent.advantages,
+    advantages:
+      Array.isArray(values.mbbsGeorgiaAdvantages) && values.mbbsGeorgiaAdvantages.length > 0
+        ? values.mbbsGeorgiaAdvantages
+        : mbbsGeorgiaPageFallbackContent.advantages,
+    mbbsGeorgiaRecognitionEyebrow:
+      normalizeString(values.mbbsGeorgiaRecognitionEyebrow) ||
+      mbbsGeorgiaPageFallbackContent.recognitionEyebrow,
+    mbbsGeorgiaRecognitionTitle:
+      normalizeString(values.mbbsGeorgiaRecognitionTitle) ||
+      mbbsGeorgiaPageFallbackContent.recognitionTitle,
+    mbbsGeorgiaRecognitionSubtitle:
+      normalizeString(values.mbbsGeorgiaRecognitionSubtitle) ||
+      mbbsGeorgiaPageFallbackContent.recognitionSubtitle,
+    mbbsGeorgiaRecognitions:
+      Array.isArray(values.mbbsGeorgiaRecognitions) && values.mbbsGeorgiaRecognitions.length > 0
+        ? values.mbbsGeorgiaRecognitions
+        : mbbsGeorgiaPageFallbackContent.recognitions,
+    recognitions:
+      Array.isArray(values.mbbsGeorgiaRecognitions) && values.mbbsGeorgiaRecognitions.length > 0
+        ? values.mbbsGeorgiaRecognitions
+        : mbbsGeorgiaPageFallbackContent.recognitions,
+    mbbsGeorgiaProgramOverviewTitle:
+      normalizeString(values.mbbsGeorgiaProgramOverviewTitle) ||
+      mbbsGeorgiaPageFallbackContent.programOverviewTitle,
+    mbbsGeorgiaProgramOverviewItems:
+      Array.isArray(values.mbbsGeorgiaProgramOverviewItems) &&
+      values.mbbsGeorgiaProgramOverviewItems.length > 0
+        ? values.mbbsGeorgiaProgramOverviewItems
+        : mbbsGeorgiaPageFallbackContent.programOverviewItems,
+    mbbsGeorgiaFeeEyebrow:
+      normalizeString(values.mbbsGeorgiaFeeEyebrow) ||
+      mbbsGeorgiaPageFallbackContent.feeEyebrow,
+    mbbsGeorgiaFeeTitle:
+      normalizeString(values.mbbsGeorgiaFeeTitle) ||
+      mbbsGeorgiaPageFallbackContent.feeTitle,
+    mbbsGeorgiaFeeSubtitle:
+      normalizeString(values.mbbsGeorgiaFeeSubtitle) ||
+      mbbsGeorgiaPageFallbackContent.feeSubtitle,
+    mbbsGeorgiaTuitionTitle:
+      normalizeString(values.mbbsGeorgiaTuitionTitle) ||
+      mbbsGeorgiaPageFallbackContent.tuitionTitle,
+    mbbsGeorgiaLivingExpensesTitle:
+      normalizeString(values.mbbsGeorgiaLivingExpensesTitle) ||
+      mbbsGeorgiaPageFallbackContent.livingExpensesTitle,
+    mbbsGeorgiaTuitionItems:
+      Array.isArray(values.mbbsGeorgiaTuitionItems) && values.mbbsGeorgiaTuitionItems.length > 0
+        ? values.mbbsGeorgiaTuitionItems
+        : mbbsGeorgiaPageFallbackContent.tuitionItems,
+    mbbsGeorgiaLivingExpenseItems:
+      Array.isArray(values.mbbsGeorgiaLivingExpenseItems) &&
+      values.mbbsGeorgiaLivingExpenseItems.length > 0
+        ? values.mbbsGeorgiaLivingExpenseItems
+        : mbbsGeorgiaPageFallbackContent.livingExpensesItems,
+    mbbsGeorgiaFeeNote:
+      normalizeString(values.mbbsGeorgiaFeeNote) ||
+      mbbsGeorgiaPageFallbackContent.feeNote,
+    mbbsGeorgiaCareerEyebrow:
+      normalizeString(values.mbbsGeorgiaCareerEyebrow) ||
+      mbbsGeorgiaPageFallbackContent.careerEyebrow,
+    mbbsGeorgiaCareerTitle:
+      normalizeString(values.mbbsGeorgiaCareerTitle) ||
+      mbbsGeorgiaPageFallbackContent.careerTitle,
+    mbbsGeorgiaCareerSubtitle:
+      normalizeString(values.mbbsGeorgiaCareerSubtitle) ||
+      mbbsGeorgiaPageFallbackContent.careerSubtitle,
+    mbbsGeorgiaCareerProspects:
+      Array.isArray(values.mbbsGeorgiaCareerProspects) &&
+      values.mbbsGeorgiaCareerProspects.length > 0
+        ? values.mbbsGeorgiaCareerProspects
+        : mbbsGeorgiaPageFallbackContent.careerProspects,
+    careerProspects:
+      Array.isArray(values.mbbsGeorgiaCareerProspects) &&
+      values.mbbsGeorgiaCareerProspects.length > 0
+        ? values.mbbsGeorgiaCareerProspects
+        : mbbsGeorgiaPageFallbackContent.careerProspects,
+    pageCtaTitle:
+      normalizeString(values.pageCtaTitle) ||
+      mbbsGeorgiaPageFallbackContent.pageCtaTitle,
+    pageCtaSubtitle:
+      normalizeString(values.pageCtaSubtitle) ||
+      mbbsGeorgiaPageFallbackContent.pageCtaSubtitle,
+    pageCtaPrimaryButtonText:
+      normalizeString(values.pageCtaPrimaryButtonText) ||
+      mbbsGeorgiaPageFallbackContent.pageCtaPrimaryButtonText,
+    pageCtaPrimaryButtonUrl:
+      normalizeString(values.pageCtaPrimaryButtonUrl) ||
+      mbbsGeorgiaPageFallbackContent.pageCtaPrimaryButtonUrl,
+    pageCtaSecondaryButtonText:
+      normalizeString(values.pageCtaSecondaryButtonText) ||
+      mbbsGeorgiaPageFallbackContent.pageCtaSecondaryButtonText,
+    pageCtaSecondaryButtonUrl:
+      normalizeString(values.pageCtaSecondaryButtonUrl) ||
+      mbbsGeorgiaPageFallbackContent.pageCtaSecondaryButtonUrl,
+  };
+
+  return {
+    ...basePayload,
     content,
   };
 };
@@ -1734,6 +2426,10 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       pageCtaPrimaryButtonUrl: genericPageCtaFallbackContent.primaryButtonUrl,
       pageCtaSecondaryButtonText: genericPageCtaFallbackContent.secondaryButtonText,
       pageCtaSecondaryButtonUrl: genericPageCtaFallbackContent.secondaryButtonUrl,
+      faqSectionEyebrow: faqPageFallbackContent.sectionEyebrow,
+      faqSectionTitle: faqPageFallbackContent.sectionTitle,
+      faqSectionSubtitle: faqPageFallbackContent.sectionSubtitle,
+      faqCategories: faqPageFallbackContent.categories,
       aboutWhoWeAreEyebrow: aboutPageFallbackContent.whoWeAreEyebrow,
       aboutWhoWeAreTitle: aboutPageFallbackContent.whoWeAreTitle,
       aboutWhoWeAreImage: aboutPageFallbackContent.whoWeAreImage,
@@ -3415,6 +4111,35 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         type: 'text',
         visible: (values) => usesStructuredStaticPageEditor(values),
       },
+      {
+        name: 'faqSectionEyebrow',
+        label: 'FAQ Section Eyebrow',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isFaqPageValues(values),
+      },
+      {
+        name: 'faqSectionTitle',
+        label: 'FAQ Section Title',
+        type: 'text',
+        colSpan: 2,
+        visible: (values) => isFaqPageValues(values),
+      },
+      {
+        name: 'faqSectionSubtitle',
+        label: 'FAQ Section Subtitle',
+        type: 'textarea',
+        rows: 4,
+        colSpan: 2,
+        visible: (values) => isFaqPageValues(values),
+      },
+      {
+        name: 'faqCategories',
+        label: 'FAQ Categories',
+        type: 'faq-categories',
+        colSpan: 2,
+        visible: (values) => isFaqPageValues(values),
+      },
       ...homeHeroStatFieldConfigs.flatMap((statConfig) => {
         const prefix =
           statConfig.key.charAt(0).toUpperCase() + statConfig.key.slice(1);
@@ -3555,6 +4280,24 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
           content.pageCtaSecondaryButtonUrl =
             normalizeString(values.pageCtaSecondaryButtonUrl) ||
             genericPageCtaFallbackContent.secondaryButtonUrl;
+        }
+
+        if (isFaqPageValues(values)) {
+          const sanitizedFaqCategories = sanitizeFaqCategories(values.faqCategories);
+
+          content.faqSectionEyebrow =
+            normalizeString(values.faqSectionEyebrow) ||
+            faqPageFallbackContent.sectionEyebrow;
+          content.faqSectionTitle =
+            normalizeString(values.faqSectionTitle) ||
+            faqPageFallbackContent.sectionTitle;
+          content.faqSectionSubtitle =
+            normalizeString(values.faqSectionSubtitle) ||
+            faqPageFallbackContent.sectionSubtitle;
+          content.faqCategories =
+            sanitizedFaqCategories.length > 0
+              ? sanitizedFaqCategories
+              : faqPageFallbackContent.categories;
         }
 
         if (isAboutPageValues(values)) {
@@ -4317,6 +5060,19 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
         pageCtaSecondaryButtonUrl:
           readContentString(content, 'pageCtaSecondaryButtonUrl') ??
           genericPageCtaFallbackContent.secondaryButtonUrl,
+        faqSectionEyebrow:
+          readContentString(content, 'faqSectionEyebrow') ??
+          faqPageFallbackContent.sectionEyebrow,
+        faqSectionTitle:
+          readContentString(content, 'faqSectionTitle') ??
+          faqPageFallbackContent.sectionTitle,
+        faqSectionSubtitle:
+          readContentString(content, 'faqSectionSubtitle') ??
+          faqPageFallbackContent.sectionSubtitle,
+        faqCategories:
+          sanitizeFaqCategories(content.faqCategories).length > 0
+            ? sanitizeFaqCategories(content.faqCategories)
+            : faqPageFallbackContent.categories,
         aboutWhoWeAreEyebrow:
           readContentString(content, 'aboutWhoWeAreEyebrow') ??
           aboutPageFallbackContent.whoWeAreEyebrow,
@@ -5004,6 +5760,38 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       homepageHighlights: '',
       homepageButtonText: '',
       homepageButtonUrl: '',
+      heroEyebrow: mbbsGeorgiaPageFallbackContent.heroEyebrow,
+      heroPrimaryButtonText: mbbsGeorgiaPageFallbackContent.heroPrimaryButtonText,
+      heroSecondaryButtonText: mbbsGeorgiaPageFallbackContent.heroSecondaryButtonText,
+      heroSecondaryButtonUrl: mbbsGeorgiaPageFallbackContent.heroSecondaryButtonUrl,
+      mbbsGeorgiaWhyEyebrow: mbbsGeorgiaPageFallbackContent.whyEyebrow,
+      mbbsGeorgiaWhyTitle: mbbsGeorgiaPageFallbackContent.whyTitle,
+      mbbsGeorgiaWhySubtitle: mbbsGeorgiaPageFallbackContent.whySubtitle,
+      mbbsGeorgiaAdvantages: mbbsGeorgiaPageFallbackContent.advantages,
+      mbbsGeorgiaRecognitionEyebrow: mbbsGeorgiaPageFallbackContent.recognitionEyebrow,
+      mbbsGeorgiaRecognitionTitle: mbbsGeorgiaPageFallbackContent.recognitionTitle,
+      mbbsGeorgiaRecognitionSubtitle: mbbsGeorgiaPageFallbackContent.recognitionSubtitle,
+      mbbsGeorgiaRecognitions: mbbsGeorgiaPageFallbackContent.recognitions,
+      mbbsGeorgiaProgramOverviewTitle: mbbsGeorgiaPageFallbackContent.programOverviewTitle,
+      mbbsGeorgiaProgramOverviewItems: mbbsGeorgiaPageFallbackContent.programOverviewItems,
+      mbbsGeorgiaFeeEyebrow: mbbsGeorgiaPageFallbackContent.feeEyebrow,
+      mbbsGeorgiaFeeTitle: mbbsGeorgiaPageFallbackContent.feeTitle,
+      mbbsGeorgiaFeeSubtitle: mbbsGeorgiaPageFallbackContent.feeSubtitle,
+      mbbsGeorgiaTuitionTitle: mbbsGeorgiaPageFallbackContent.tuitionTitle,
+      mbbsGeorgiaLivingExpensesTitle: mbbsGeorgiaPageFallbackContent.livingExpensesTitle,
+      mbbsGeorgiaTuitionItems: mbbsGeorgiaPageFallbackContent.tuitionItems,
+      mbbsGeorgiaLivingExpenseItems: mbbsGeorgiaPageFallbackContent.livingExpensesItems,
+      mbbsGeorgiaFeeNote: mbbsGeorgiaPageFallbackContent.feeNote,
+      mbbsGeorgiaCareerEyebrow: mbbsGeorgiaPageFallbackContent.careerEyebrow,
+      mbbsGeorgiaCareerTitle: mbbsGeorgiaPageFallbackContent.careerTitle,
+      mbbsGeorgiaCareerSubtitle: mbbsGeorgiaPageFallbackContent.careerSubtitle,
+      mbbsGeorgiaCareerProspects: mbbsGeorgiaPageFallbackContent.careerProspects,
+      pageCtaTitle: mbbsGeorgiaPageFallbackContent.pageCtaTitle,
+      pageCtaSubtitle: mbbsGeorgiaPageFallbackContent.pageCtaSubtitle,
+      pageCtaPrimaryButtonText: mbbsGeorgiaPageFallbackContent.pageCtaPrimaryButtonText,
+      pageCtaPrimaryButtonUrl: mbbsGeorgiaPageFallbackContent.pageCtaPrimaryButtonUrl,
+      pageCtaSecondaryButtonText: mbbsGeorgiaPageFallbackContent.pageCtaSecondaryButtonText,
+      pageCtaSecondaryButtonUrl: mbbsGeorgiaPageFallbackContent.pageCtaSecondaryButtonUrl,
       content: '',
       isFeatured: false,
       showInMenu: false,
@@ -5015,7 +5803,7 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
       ogImage: '',
       canonicalUrl: '',
     },
-    fields: [...studyDestinationPageShortcutFields],
+    fields: [...mbbsGeorgiaPageShortcutFields],
     columns: [
       { key: 'title', label: 'Title', render: (item) => <div className="font-semibold">{String(item.title ?? '-')}</div> },
       { key: 'country', label: 'Country', render: (item) => String(item.country ?? '-') },
@@ -5085,8 +5873,8 @@ export const resourceConfigs: Record<string, ResourceConfig<ResourceItem>> = {
     ],
     getSearchText: (item) =>
       `${String(item.title ?? '')} ${String(item.country ?? '')} ${String(item.slug ?? '')}`,
-    getEditValues: getStudyDestinationShortcutEditValues,
-    buildPayload: (values) => buildStudyDestinationShortcutPayload(values),
+    getEditValues: getMbbsGeorgiaShortcutEditValues,
+    buildPayload: (values) => buildMbbsGeorgiaShortcutPayload(values),
     getListItems: (payload) => getStudyDestinationShortcutItemsBySlug(payload, 'mbbs-georgia'),
   },
   'study-destinations': {

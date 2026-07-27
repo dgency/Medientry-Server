@@ -2,6 +2,7 @@ import { Menu, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
+import type { NavigationItem } from '../../config/navigation';
 import { getNavigationItemsForRole } from '../../config/navigation';
 import { useAuth } from '../../hooks/use-auth';
 import { cn } from '../../lib/utils';
@@ -20,6 +21,48 @@ function SidebarContent({
   const location = useLocation();
   const { user, logout } = useAuth();
   const navigationItems = getNavigationItemsForRole(user?.role);
+  const currentLocation = `${location.pathname}${location.search}`;
+
+  const isItemActive = (item: NavigationItem): boolean =>
+    currentLocation === item.href ||
+    location.pathname === item.href ||
+    (item.href !== '/' &&
+      !item.href.includes('?') &&
+      location.pathname.startsWith(`${item.href}/`)) ||
+    Boolean(item.children?.some((child) => isItemActive(child)));
+
+  const renderNavigationItem = (item: NavigationItem, depth = 0) => {
+    const Icon = item.icon;
+    const active = isItemActive(item);
+
+    return (
+      <div key={item.href} className={depth > 0 ? 'ml-5' : undefined}>
+        <NavLink
+          to={item.href}
+          end={item.href === '/'}
+          onClick={onNavigate}
+          className={() =>
+            cn(
+              'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+              depth > 0 ? 'mt-1 text-[13px]' : '',
+              active
+                ? 'bg-primary text-primary-foreground shadow-soft'
+                : 'text-muted-foreground hover:bg-secondary hover:text-secondary-foreground',
+            )
+          }
+        >
+          <Icon className="h-4 w-4" />
+          <span>{item.label}</span>
+        </NavLink>
+
+        {item.children?.length ? (
+          <div className="mt-1 space-y-1">
+            {item.children.map((child) => renderNavigationItem(child, depth + 1))}
+          </div>
+        ) : null}
+      </div>
+    );
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -42,29 +85,7 @@ function SidebarContent({
       </div>
       <Separator />
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              end
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
-                  isActive || location.pathname === item.href
-                    ? 'bg-primary text-primary-foreground shadow-soft'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-secondary-foreground',
-                )
-              }
-            >
-              <Icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
+        {navigationItems.map((item) => renderNavigationItem(item))}
       </nav>
       <div className="border-t border-border/80 px-4 py-4">
         <div className="mb-3 rounded-2xl bg-secondary/70 p-3">

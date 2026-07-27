@@ -17,6 +17,8 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
+  Heading5,
   Highlighter,
   Italic,
   Link2,
@@ -61,10 +63,12 @@ const editorModes: Array<{ id: EditorMode; label: string; icon: typeof WrapText 
   { id: 'preview', label: 'Preview', icon: Eye },
 ];
 
-const headingOptions: Array<{ level: 1 | 2 | 3; label: string; icon: typeof Heading1 }> = [
+const headingOptions: Array<{ level: 1 | 2 | 3 | 4 | 5; label: string; icon: typeof Heading1 }> = [
   { level: 1, label: 'H1', icon: Heading1 },
   { level: 2, label: 'H2', icon: Heading2 },
   { level: 3, label: 'H3', icon: Heading3 },
+  { level: 4, label: 'H4', icon: Heading4 },
+  { level: 5, label: 'H5', icon: Heading5 },
 ];
 
 const ToolbarButton = ({
