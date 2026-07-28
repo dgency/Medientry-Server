@@ -136,6 +136,7 @@ model SiteSetting {
   googleTagManagerHeadCode String?
   googleTagManagerBodyCode String?
   googleTagManagerEnvironment GoogleTagManagerEnvironment @default(PRODUCTION)
+  redirectRules    Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

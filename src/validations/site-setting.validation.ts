@@ -156,6 +156,98 @@ const nullableGtmCodeString = z
   });
 const gtmModeSchema = z.enum(['container-id', 'custom-code']).optional();
 const gtmEnvironmentSchema = z.enum(['production', 'all']).optional();
+const normalizeRedirectPathValue = (value: string) => {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedValue);
+    const normalizedPath = parsedUrl.pathname.replace(/\/+$/, '') || '/';
+    return `${normalizedPath}${parsedUrl.search}`;
+  } catch {
+    if (!trimmedValue.startsWith('/')) {
+      return null;
+    }
+
+    const [pathPart = '/', searchPart] = trimmedValue.split('?');
+    const normalizedPath = pathPart.replace(/\/+$/, '') || '/';
+    return searchPart ? `${normalizedPath}?${searchPart}` : normalizedPath;
+  }
+};
+const normalizeRedirectDestinationValue = (value: string) => {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedValue);
+    parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, '') || '/';
+    return parsedUrl.toString();
+  } catch {
+    if (!trimmedValue.startsWith('/')) {
+      return null;
+    }
+
+    const [pathPart = '/', searchPart] = trimmedValue.split('?');
+    const normalizedPath = pathPart.replace(/\/+$/, '') || '/';
+    return searchPart ? `${normalizedPath}?${searchPart}` : normalizedPath;
+  }
+};
+const redirectRuleSchema = z
+  .object({
+    sourcePath: z.string().trim(),
+    destination: z.string().trim(),
+    permanent: booleanLikeSchema,
+  })
+  .transform((value, ctx) => {
+    const normalizedSourcePath = normalizeRedirectPathValue(value.sourcePath);
+    const normalizedDestination = normalizeRedirectDestinationValue(
+      value.destination,
+    );
+
+    if (!normalizedSourcePath) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['sourcePath'],
+        message: 'Source must be a root-relative path or full URL.',
+      });
+    }
+
+    if (!normalizedDestination) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['destination'],
+        message: 'Destination must be a root-relative path or full URL.',
+      });
+    }
+
+    if (
+      normalizedSourcePath &&
+      normalizedDestination &&
+      normalizedSourcePath === normalizedDestination
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['destination'],
+        message: 'Source and destination cannot be the same.',
+      });
+    }
+
+    if (!normalizedSourcePath || !normalizedDestination) {
+      return z.NEVER;
+    }
+
+    return {
+      sourcePath: normalizedSourcePath,
+      destination: normalizedDestination,
+      permanent: value.permanent !== false,
+    };
+  });
 
 const siteSettingBodySchema = z.preprocess(
   (input) => {
@@ -201,6 +293,7 @@ const siteSettingBodySchema = z.preprocess(
       googleTagManagerHeadCode: nullableGtmCodeString,
       googleTagManagerBodyCode: nullableGtmCodeString,
       googleTagManagerEnvironment: gtmEnvironmentSchema,
+      redirectRules: z.array(redirectRuleSchema).optional(),
     })
     .superRefine((value, ctx) => {
       const enabled = value.googleTagManagerEnabled === true;

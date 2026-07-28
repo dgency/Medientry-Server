@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from "path";
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
@@ -127,20 +128,33 @@ app.use('/api', apiRouter);
 
 // Compute paths dynamically to support both raw src and compiled dist execution
 const dashboardPath = path.resolve(process.cwd(), 'admin-dashboard', 'dist');
+const dashboardIndexPath = path.join(dashboardPath, 'index.html');
+const dashboardBuildExists = fs.existsSync(dashboardIndexPath);
 
 // 1. Serve the compiled static assets from the Vite dashboard folder
-app.use(express.static(dashboardPath, {
-  maxAge: env.NODE_ENV === 'production' ? '1y' : 0,
-  index: false
-}));
+if (dashboardBuildExists) {
+  app.use(express.static(dashboardPath, {
+    maxAge: env.NODE_ENV === 'production' ? '1y' : 0,
+    index: false,
+  }));
 
-// 2. Direct all remaining non-API browser traffic to your Vite dashboard index.html
-app.get('/*any', (req, res, next) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-    return next();
-  }
-  return res.sendFile(path.join(dashboardPath, 'index.html'));
-});
+  // Send the dashboard shell for browser refreshes on SPA routes, including `/`.
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return next();
+    }
+
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+
+    if (path.extname(req.path)) {
+      return next();
+    }
+
+    return res.sendFile(dashboardIndexPath);
+  });
+}
 
 // ==========================================config for digital ocean
 

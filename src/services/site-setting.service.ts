@@ -38,9 +38,16 @@ export type SiteSettingApiShape = {
   googleTagManagerHeadCode: string | null;
   googleTagManagerBodyCode: string | null;
   googleTagManagerEnvironment: 'production' | 'all';
+  redirectRules: SiteRedirectRule[];
 };
 
 type UpdateSiteSettingInput = Partial<SiteSettingApiShape>;
+
+export type SiteRedirectRule = {
+  sourcePath: string;
+  destination: string;
+  permanent: boolean;
+};
 
 type SocialLinksShape = {
   facebook?: string | null;
@@ -48,6 +55,25 @@ type SocialLinksShape = {
   linkedin?: string | null;
   youtube?: string | null;
 };
+
+type RedirectRuleShape = {
+  sourcePath?: string | null;
+  destination?: string | null;
+  permanent?: boolean | null;
+};
+
+const DEFAULT_REDIRECT_RULES: SiteRedirectRule[] = [
+  {
+    sourcePath: '/what-we-do',
+    destination: '/why-medientry',
+    permanent: true,
+  },
+  {
+    sourcePath: '/colleges-we-represent',
+    destination: '/colleges',
+    permanent: true,
+  },
+];
 
 const normalizeNullableString = (value?: string | null) => {
   if (value === undefined) {
@@ -70,6 +96,101 @@ const normalizeNullableSocialLink = (value?: string | null) => {
   }
 
   return normalizedValue;
+};
+
+const normalizeRedirectPath = (value?: string | null) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedValue);
+    const normalizedPath =
+      parsedUrl.pathname.replace(/\/+$/, '') || '/';
+    const normalizedSearch = parsedUrl.search || '';
+    return `${normalizedPath}${normalizedSearch}`;
+  } catch {
+    if (!trimmedValue.startsWith('/')) {
+      return null;
+    }
+
+    const [pathPart = '/', searchPart] = trimmedValue.split('?');
+    const normalizedPath = pathPart.replace(/\/+$/, '') || '/';
+    return searchPart ? `${normalizedPath}?${searchPart}` : normalizedPath;
+  }
+};
+
+const normalizeRedirectDestination = (value?: string | null) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedValue);
+    parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, '') || '/';
+    return parsedUrl.toString();
+  } catch {
+    if (!trimmedValue.startsWith('/')) {
+      return null;
+    }
+
+    const [pathPart = '/', searchPart] = trimmedValue.split('?');
+    const normalizedPath = pathPart.replace(/\/+$/, '') || '/';
+    return searchPart ? `${normalizedPath}?${searchPart}` : normalizedPath;
+  }
+};
+
+const normalizeRedirectRules = (
+  value: unknown,
+  fallback: SiteRedirectRule[] = [],
+): SiteRedirectRule[] => {
+  if (!Array.isArray(value)) {
+    return [...fallback];
+  }
+
+  const rules = value
+    .map((item): SiteRedirectRule | null => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        return null;
+      }
+
+      const candidate = item as RedirectRuleShape;
+      const sourcePath = normalizeRedirectPath(candidate.sourcePath);
+      const destination = normalizeRedirectDestination(candidate.destination);
+
+      if (!sourcePath || !destination || sourcePath === destination) {
+        return null;
+      }
+
+      return {
+        sourcePath,
+        destination,
+        permanent: candidate.permanent !== false,
+      };
+    })
+    .filter((rule): rule is SiteRedirectRule => Boolean(rule));
+
+  return rules;
 };
 
 const resolveUpdatedValue = (
@@ -143,6 +264,7 @@ export const getDefaultSiteSetting = (): SiteSettingApiShape => ({
   googleTagManagerHeadCode: null,
   googleTagManagerBodyCode: null,
   googleTagManagerEnvironment: 'production',
+  redirectRules: [...DEFAULT_REDIRECT_RULES],
 });
 
 const mapSiteSettingToApi = (siteSetting: {
@@ -167,6 +289,7 @@ const mapSiteSettingToApi = (siteSetting: {
   googleTagManagerHeadCode: string | null;
   googleTagManagerBodyCode: string | null;
   googleTagManagerEnvironment: GoogleTagManagerEnvironment;
+  redirectRules: unknown;
 } | null): SiteSettingApiShape => {
   const socialLinks =
     typeof siteSetting?.socialLinks === 'object' && siteSetting.socialLinks !== null
@@ -205,6 +328,10 @@ const mapSiteSettingToApi = (siteSetting: {
       siteSetting?.googleTagManagerEnvironment === GoogleTagManagerEnvironment.ALL
         ? 'all'
         : 'production',
+    redirectRules:
+      siteSetting?.redirectRules == null
+        ? [...DEFAULT_REDIRECT_RULES]
+        : normalizeRedirectRules(siteSetting.redirectRules),
   };
 };
 
@@ -229,6 +356,10 @@ export const updateSiteSetting = async (input: UpdateSiteSettingInput) => {
   const normalizedGoogleTagManagerBodyCode = normalizeGtmCode(
     input.googleTagManagerBodyCode,
   );
+  const normalizedRedirectRules =
+    input.redirectRules === undefined
+      ? undefined
+      : normalizeRedirectRules(input.redirectRules);
   const nextExchangeRateUsdToInr =
     normalizedExchangeRate === undefined
       ? decimalToNumber(existing.exchangeRateUsdToInr)
@@ -320,6 +451,7 @@ export const updateSiteSetting = async (input: UpdateSiteSettingInput) => {
         : normalizeGtmEnvironment(input.googleTagManagerEnvironment) === 'all'
           ? GoogleTagManagerEnvironment.ALL
           : GoogleTagManagerEnvironment.PRODUCTION,
+    redirectRules: normalizedRedirectRules,
   };
 
   const siteSetting = await prisma.siteSetting.update({

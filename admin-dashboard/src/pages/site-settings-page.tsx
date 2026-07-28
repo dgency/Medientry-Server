@@ -1,6 +1,6 @@
 import { useEffect, type ChangeEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Button } from '../components/ui/button';
@@ -20,6 +20,11 @@ import { apiClient, extractApiData, getApiErrorMessage } from '../lib/api-client
 
 type GoogleTagManagerMode = 'container-id' | 'custom-code';
 type GoogleTagManagerEnvironment = 'production' | 'all';
+type SiteRedirectRuleFormValue = {
+  sourcePath: string;
+  destination: string;
+  permanent: boolean;
+};
 
 type SiteSettingsFormValues = {
   logoLight: string;
@@ -46,6 +51,7 @@ type SiteSettingsFormValues = {
   googleTagManagerHeadCode: string;
   googleTagManagerBodyCode: string;
   googleTagManagerEnvironment: GoogleTagManagerEnvironment;
+  redirectRules: SiteRedirectRuleFormValue[];
 };
 
 const fallbackColorValues = {
@@ -57,6 +63,25 @@ const fallbackColorValues = {
   SiteSettingsFormValues,
   'primaryColor' | 'secondaryColor' | 'accentColor' | 'textColor'
 >;
+
+const defaultRedirectRules: SiteRedirectRuleFormValue[] = [
+  {
+    sourcePath: '/what-we-do',
+    destination: '/why-medientry',
+    permanent: true,
+  },
+  {
+    sourcePath: '/colleges-we-represent',
+    destination: '/colleges',
+    permanent: true,
+  },
+];
+
+const createEmptyRedirectRule = (): SiteRedirectRuleFormValue => ({
+  sourcePath: '',
+  destination: '',
+  permanent: true,
+});
 
 type ColorFieldName = keyof typeof fallbackColorValues;
 
@@ -82,6 +107,7 @@ const defaultValues: SiteSettingsFormValues = {
   googleTagManagerHeadCode: '',
   googleTagManagerBodyCode: '',
   googleTagManagerEnvironment: 'production',
+  redirectRules: defaultRedirectRules,
 };
 
 const GTM_ID_PATTERN = /^GTM-[A-Z0-9]+$/;
@@ -248,6 +274,38 @@ const toNumberValue = (value: unknown) => {
   return null;
 };
 
+const normalizeRedirectRulesValue = (
+  value: unknown,
+): SiteRedirectRuleFormValue[] => {
+  if (!Array.isArray(value)) {
+    return [...defaultRedirectRules];
+  }
+
+  const items = value
+    .map((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        return null;
+      }
+
+      const candidate = item as Partial<SiteRedirectRuleFormValue>;
+      const sourcePath = toStringValue(candidate.sourcePath).trim();
+      const destination = toStringValue(candidate.destination).trim();
+
+      if (!sourcePath || !destination) {
+        return null;
+      }
+
+      return {
+        sourcePath,
+        destination,
+        permanent: candidate.permanent !== false,
+      };
+    })
+    .filter((item): item is SiteRedirectRuleFormValue => Boolean(item));
+
+  return items;
+};
+
 const normalizeSiteSettingsValues = (value?: Partial<SiteSettingsFormValues> | null) => ({
   ...defaultValues,
   logoLight: toStringValue(value?.logoLight).trim(),
@@ -297,6 +355,7 @@ const normalizeSiteSettingsValues = (value?: Partial<SiteSettingsFormValues> | n
   googleTagManagerEnvironment: normalizeGtmEnvironmentValue(
     value?.googleTagManagerEnvironment,
   ),
+  redirectRules: normalizeRedirectRulesValue(value?.redirectRules),
 });
 
 const sanitizeSiteSettingsPayload = (values: SiteSettingsFormValues) => {
@@ -329,6 +388,13 @@ const sanitizeSiteSettingsPayload = (values: SiteSettingsFormValues) => {
     googleTagManagerBodyCode:
       normalizedValues.googleTagManagerBodyCode.trim() || null,
     googleTagManagerEnvironment: normalizedValues.googleTagManagerEnvironment,
+    redirectRules: normalizedValues.redirectRules
+      .map((item) => ({
+        sourcePath: item.sourcePath.trim(),
+        destination: item.destination.trim(),
+        permanent: item.permanent !== false,
+      }))
+      .filter((item) => item.sourcePath.length > 0 || item.destination.length > 0),
   };
 };
 
@@ -344,6 +410,14 @@ export function SiteSettingsPage() {
     formState: { isSubmitting },
   } = useForm<SiteSettingsFormValues>({
     defaultValues,
+  });
+  const {
+    fields: redirectRuleFields,
+    append: appendRedirectRule,
+    remove: removeRedirectRule,
+  } = useFieldArray({
+    control,
+    name: 'redirectRules',
   });
 
   const settingsQuery = useQuery({
@@ -532,6 +606,102 @@ export function SiteSettingsPage() {
                   <Label htmlFor="address">Address</Label>
                   <Textarea id="address" rows={4} {...register('address')} />
                 </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <Card className="border border-slate-200 bg-white shadow-sm">
+                  <CardHeader className="space-y-2">
+                    <CardTitle className="text-xl">URL Redirects</CardTitle>
+                    <CardDescription>
+                      Manage old or custom URLs and redirect them to the right public page.
+                      You can paste full URLs like
+                      {' '}
+                      <span className="font-mono">https://medientrybd.com/what-we-do/</span>
+                      {' '}
+                      or simple paths like
+                      {' '}
+                      <span className="font-mono">/what-we-do</span>
+                      .
+                    </CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {redirectRuleFields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                      >
+                        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] lg:items-end">
+                          <div className="space-y-2">
+                            <Label htmlFor={`redirectRules.${index}.sourcePath`}>
+                              From URL
+                            </Label>
+                            <Input
+                              id={`redirectRules.${index}.sourcePath`}
+                              type="text"
+                              placeholder="/what-we-do"
+                              {...register(`redirectRules.${index}.sourcePath`)}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor={`redirectRules.${index}.destination`}>
+                              Redirect To
+                            </Label>
+                            <Input
+                              id={`redirectRules.${index}.destination`}
+                              type="text"
+                              placeholder="/why-medientry"
+                              {...register(`redirectRules.${index}.destination`)}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-slate-900">
+                              Permanent
+                            </Label>
+                            <Controller
+                              name={`redirectRules.${index}.permanent`}
+                              control={control}
+                              render={({ field: redirectField }) => (
+                                <div className="flex h-11 items-center gap-3 rounded-md border border-slate-200 bg-white px-3">
+                                  <span className="text-sm text-slate-600">
+                                    {redirectField.value ? '301/308' : '307'}
+                                  </span>
+                                  <Switch
+                                    checked={redirectField.value}
+                                    onCheckedChange={(checked) =>
+                                      redirectField.onChange(checked === true)
+                                    }
+                                  />
+                                </div>
+                              )}
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => removeRedirectRule(index)}
+                            disabled={redirectRuleFields.length <= 1}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="flex justify-start">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => appendRedirectRule(createEmptyRedirectRule())}
+                      >
+                        Add redirect
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               <div className="md:col-span-2">
