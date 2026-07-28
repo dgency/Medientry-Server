@@ -219,8 +219,8 @@ export function ContactOfficesField({
                     placeholder="Complete office address"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Each line break entered here will display the same way on the
-                    Contact page.
+                    Enter the full office address exactly as you want it saved for
+                    this office card.
                   </p>
                 </div>
 

@@ -317,6 +317,8 @@ export function MediaLibraryBrowser({
   uploadKinds = ['image'],
 }: MediaLibraryBrowserProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const shouldUseLocationSearchParams =
+    variant === 'page' && (!allowedAssetTypes || allowedAssetTypes.length === 0);
   const effectiveAssetTypes = useMemo(
     () => (allowedAssetTypes && allowedAssetTypes.length > 0 ? allowedAssetTypes : null),
     [allowedAssetTypes],
@@ -340,11 +342,23 @@ export function MediaLibraryBrowser({
   const [libraryItems, setLibraryItems] = useState<MediaLibraryAsset[]>([]);
   const [serverPagination, setServerPagination] = useState<PaginationMeta | null>(null);
   const [libraryError, setLibraryError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<MediaViewMode>(getSanitizedViewMode(searchParams.get('view')));
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') ?? '');
-  const [statusFilter, setStatusFilter] = useState<MediaStatusFilter>(getSanitizedMediaStatusFilter(searchParams.get('status')));
+  const [viewMode, setViewMode] = useState<MediaViewMode>(
+    shouldUseLocationSearchParams
+      ? getSanitizedViewMode(searchParams.get('view'))
+      : 'grid',
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    shouldUseLocationSearchParams ? searchParams.get('search') ?? '' : '',
+  );
+  const [statusFilter, setStatusFilter] = useState<MediaStatusFilter>(
+    shouldUseLocationSearchParams
+      ? getSanitizedMediaStatusFilter(searchParams.get('status'))
+      : 'ALL',
+  );
   const [fileTypeFilter, setFileTypeFilter] = useState<MediaAssetFilterType>(
-    getSanitizedMediaFileTypeFilter(searchParams.get('fileType'), fileTypeOptions),
+    shouldUseLocationSearchParams
+      ? getSanitizedMediaFileTypeFilter(searchParams.get('fileType'), fileTypeOptions)
+      : 'ALL',
   );
   const [activeItem, setActiveItem] = useState<MediaLibraryAsset | null>(null);
   const [metadataValues, setMetadataValues] = useState<MediaMetadataFormValues>(
