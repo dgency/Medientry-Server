@@ -5,7 +5,10 @@ import process from 'node:process';
 import app from './app';
 import { env } from './config/env';
 import { prisma } from './config/prisma';
-import { ensureDefaultSuperAdmin } from './services/bootstrap.service';
+import {
+  ensureDefaultCmsPages,
+  ensureDefaultSuperAdmin,
+} from './services/bootstrap.service';
 import { verifyMailConnection } from './utils/mailer';
 import { mapPrismaErrorToHttp } from './utils/prisma-error';
 
@@ -70,6 +73,12 @@ const startServer = async () => {
     await ensureDefaultSuperAdmin();
   } catch (error) {
     console.error('Failed to ensure the default super admin account:', error);
+  }
+
+  try {
+    await ensureDefaultCmsPages();
+  } catch (error) {
+    console.error('Failed to ensure default CMS pages:', error);
   }
 
   if (env.MAIL_ENABLED) {

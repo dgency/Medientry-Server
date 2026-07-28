@@ -218,6 +218,10 @@ export function ContactOfficesField({
                     rows={4}
                     placeholder="Complete office address"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Each line break entered here will display the same way on the
+                    Contact page.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -252,6 +256,10 @@ export function ContactOfficesField({
                     }
                     placeholder="https://www.google.com/maps/..."
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Paste the exact Google Maps location link for this office.
+                    The Contact page map will use it automatically.
+                  </p>
                 </div>
               </div>
             </div>
