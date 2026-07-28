@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import { apiClient, extractApiData, getApiErrorMessage } from '../../lib/api-client';
 import { resolveCmsAssetUrl } from '../../lib/media';
+import { normalizeStoredMediaValue } from '../../lib/media-path';
 import {
   defaultAcceptByKind,
   getAssetUrl,
@@ -60,6 +61,8 @@ export function FileUploadField({
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string>('');
 
   const canUseLibrary = uploadKind === 'image' || uploadKind === 'videoThumbnail';
+  const normalizeFieldValue = (nextValue: string) =>
+    normalizeStoredMediaValue(nextValue) || nextValue.trim();
 
   const markPreviewAsBroken = (previewUrl: string, context?: Record<string, unknown>) => {
     setBrokenPreviewUrls((currentState) => {
@@ -135,7 +138,9 @@ export function FileUploadField({
       const primaryAsset = uploadedPayloads[0]?.asset ?? null;
 
       if (primaryAsset) {
-        const primaryAssetUrl = getAssetUrl(primaryAsset) ?? uploadedPayloads[0].url;
+        const primaryAssetUrl = normalizeFieldValue(
+          getAssetUrl(primaryAsset) ?? uploadedPayloads[0].url,
+        );
         setPendingPreviewUrl((currentUrl) => {
           if (currentUrl) {
             URL.revokeObjectURL(currentUrl);
@@ -187,7 +192,7 @@ export function FileUploadField({
         <Input
           value={value}
           onChange={(event) => {
-            onChange(event.target.value);
+            onChange(normalizeFieldValue(event.target.value));
 
             if (!event.target.value.trim()) {
               onAssetSelect?.(null);
@@ -288,7 +293,7 @@ export function FileUploadField({
           setIsLibraryOpen(open);
         }}
       >
-        <DialogContent className="max-h-[88vh] w-[85vw] max-w-[85vw] overflow-hidden p-0">
+        <DialogContent className="h-[88vh] max-h-[88vh] w-[85vw] max-w-[85vw] overflow-hidden p-0">
           <MediaLibraryBrowser
             variant="dialog"
             title="Select from Media Library"
@@ -297,7 +302,7 @@ export function FileUploadField({
             selectedAssetId={assetId ?? null}
             selectedValue={value}
             onSelectAsset={(asset) => {
-              const itemUrl = getAssetUrl(asset);
+              const itemUrl = normalizeFieldValue(getAssetUrl(asset) ?? '');
 
               if (!itemUrl) {
                 toast.error('This asset does not have a usable URL yet.');

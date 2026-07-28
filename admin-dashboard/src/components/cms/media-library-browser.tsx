@@ -97,6 +97,7 @@ const uploadButtonLabels: Record<UploadKind, string> = {
   document: 'Upload PDFs',
   videoThumbnail: 'Upload Thumbnails',
 };
+const dialogVisibleAssetBatchSize = 16;
 
 const normalizeNullableString = (value?: string | null) => {
   if (typeof value !== 'string') {
@@ -232,10 +233,29 @@ export function MediaPreview({
   const normalizedSrc = src?.trim() ?? '';
   const isBroken = Boolean(normalizedSrc) && brokenPreviewUrls[normalizedSrc] === true;
   const [isLoading, setIsLoading] = useState(Boolean(normalizedSrc) && !isBroken);
+  const imageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     setIsLoading(Boolean(normalizedSrc) && !isBroken);
   }, [isBroken, normalizedSrc]);
+
+  useEffect(() => {
+    const image = imageRef.current;
+
+    if (!image || !normalizedSrc || isBroken) {
+      return;
+    }
+
+    if (image.complete && image.naturalWidth > 0) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (image.complete && image.naturalWidth === 0) {
+      setIsLoading(false);
+      onPreviewError(normalizedSrc, errorContext);
+    }
+  }, [errorContext, isBroken, normalizedSrc, onPreviewError]);
 
   if (!normalizedSrc || isBroken) {
     return (
@@ -269,6 +289,7 @@ export function MediaPreview({
         <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200" />
       ) : null}
       <img
+        ref={imageRef}
         src={normalizedSrc}
         alt={alt}
         className={cn(
@@ -373,6 +394,7 @@ export function MediaLibraryBrowser({
   const [usageSummariesById, setUsageSummariesById] = useState<Record<string, MediaAssetUsageSummary>>({});
   const [usageLoadingIds, setUsageLoadingIds] = useState<Record<string, true>>({});
   const [libraryReloadKey, setLibraryReloadKey] = useState(0);
+  const [dialogVisibleItemCount, setDialogVisibleItemCount] = useState(dialogVisibleAssetBatchSize);
   const allowSelection = Boolean(onSelectAsset);
   const isPageVariant = variant === 'page' && effectiveAssetTypes === null;
   const shouldUseServerPagination = isPageVariant;
@@ -533,11 +555,28 @@ export function MediaLibraryBrowser({
       return searchableText.includes(normalizedSearch);
     });
   }, [fileTypeFilter, libraryItems, searchQuery, shouldUseServerPagination, statusFilter]);
+  const visibleLibraryItems = useMemo(
+    () =>
+      variant === 'dialog'
+        ? filteredLibraryItems.slice(0, dialogVisibleItemCount)
+        : filteredLibraryItems,
+    [dialogVisibleItemCount, filteredLibraryItems, variant],
+  );
+  const hasMoreDialogItems =
+    variant === 'dialog' && visibleLibraryItems.length < filteredLibraryItems.length;
 
   const visibleItemIds = useMemo(
-    () => filteredLibraryItems.map((item) => item.id),
-    [filteredLibraryItems],
+    () => visibleLibraryItems.map((item) => item.id),
+    [visibleLibraryItems],
   );
+
+  useEffect(() => {
+    if (variant !== 'dialog') {
+      return;
+    }
+
+    setDialogVisibleItemCount(dialogVisibleAssetBatchSize);
+  }, [fileTypeFilter, libraryReloadKey, normalizedSearchQuery, statusFilter, variant, viewMode]);
   const selectedVisibleCount = useMemo(
     () => selectedItemIds.filter((id) => visibleItemIds.includes(id)).length,
     [selectedItemIds, visibleItemIds],
@@ -1010,7 +1049,7 @@ export function MediaLibraryBrowser({
   return (
     <div
       className={cn(
-        'flex h-full flex-col bg-white',
+        'flex h-full min-h-0 flex-col bg-white',
         variant === 'page'
           ? 'overflow-hidden rounded-[30px] border border-border/70 shadow-[0_18px_40px_rgba(15,61,39,0.08)]'
           : '',
@@ -1101,7 +1140,7 @@ export function MediaLibraryBrowser({
 
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-semibold text-foreground">{filteredLibraryItems.length}</span> of{' '}
+              Showing <span className="font-semibold text-foreground">{visibleLibraryItems.length}</span> of{' '}
               <span className="font-semibold text-foreground">{totalFilteredAssetCount}</span> assets
               {shouldUseServerPagination && totalAssetCount !== totalFilteredAssetCount ? (
                 <> from <span className="font-semibold text-foreground">{totalAssetCount}</span> total</>
@@ -1172,7 +1211,7 @@ export function MediaLibraryBrowser({
         </div>
       </div>
 
-      <div className={cn('flex-1 overflow-y-auto px-6 py-5', variant === 'page' ? 'min-h-[65vh]' : '')}>
+      <div className={cn('flex-1 min-h-0 overflow-y-auto px-6 py-5', variant === 'page' ? 'min-h-[65vh]' : '')}>
         {isLoadingLibrary ? (
           <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-muted/20 px-4 py-6 text-sm text-muted-foreground">
             <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -1187,13 +1226,14 @@ export function MediaLibraryBrowser({
             No uploaded assets matched the current filters.
           </div>
         ) : viewMode === 'grid' ? (
-          <div
-            className={cn(
-              'grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6',
-              variant === 'page' ? '2xl:grid-cols-6' : '2xl:grid-cols-8',
-            )}
-          >
-            {filteredLibraryItems.map((item) => {
+          <div className="space-y-5">
+            <div
+              className={cn(
+                'grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6',
+                variant === 'page' ? '2xl:grid-cols-6' : '2xl:grid-cols-8',
+              )}
+            >
+            {visibleLibraryItems.map((item) => {
               const itemUrl = resolveCmsAssetUrl(getAssetUrl(item));
               const isSelected =
                 (selectedAssetId && selectedAssetId === item.id)
@@ -1304,10 +1344,25 @@ export function MediaLibraryBrowser({
                 </div>
               );
             })}
+            </div>
+            {hasMoreDialogItems ? (
+              <div className="flex justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setDialogVisibleItemCount((currentValue) => currentValue + dialogVisibleAssetBatchSize)
+                  }
+                >
+                  Load more
+                </Button>
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredLibraryItems.map((item) => {
+            {visibleLibraryItems.map((item) => {
               const itemUrl = resolveCmsAssetUrl(getAssetUrl(item));
               const isSelected =
                 (selectedAssetId && selectedAssetId === item.id)
@@ -1413,6 +1468,20 @@ export function MediaLibraryBrowser({
                 </div>
               );
             })}
+            {hasMoreDialogItems ? (
+              <div className="flex justify-center pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setDialogVisibleItemCount((currentValue) => currentValue + dialogVisibleAssetBatchSize)
+                  }
+                >
+                  Load more
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

@@ -36,5 +36,5 @@ export const mapPageToApi = (page: RawPublicPage): PublicPage => ({
   ...page,
   heroImage: resolvePublicMediaUrl(page.heroImage),
   content: normalizeMediaContentValue(page.content, 'content'),
-  ogImage: resolvePublicMediaUrl(page.ogImage),
+  ogImage: resolvePublicMediaUrl(page.ogImage) ?? resolvePublicMediaUrl(page.heroImage),
 });

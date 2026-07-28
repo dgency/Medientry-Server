@@ -19,7 +19,7 @@ export const getMediaAssets = asyncHandler(async (req, res: Response) => {
     pagination: resolvePaginationInput({
       page: req.query.page,
       limit: req.query.limit,
-      enabledByDefault: true,
+      enabledByDefault: false,
     }),
   });
 

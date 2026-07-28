@@ -7,6 +7,7 @@ import {
   type PaginatedResult,
   type PaginationInput,
 } from '../utils/pagination';
+import { normalizeStoredMediaValue } from '../utils/media-path';
 import { mapPageToApi, publicPageSelect } from '../utils/page-response';
 
 type CreatePageInput = {
@@ -101,7 +102,7 @@ const buildPageData = (input: CreatePageInput | UpdatePageInput): Prisma.PageUnc
   }
 
   if ('heroImage' in input) {
-    data.heroImage = normalizeNullableString(input.heroImage);
+    data.heroImage = normalizeStoredMediaValue(input.heroImage) ?? normalizeNullableString(input.heroImage);
   }
 
   if ('content' in input) {
@@ -121,7 +122,7 @@ const buildPageData = (input: CreatePageInput | UpdatePageInput): Prisma.PageUnc
   }
 
   if ('ogImage' in input) {
-    data.ogImage = normalizeNullableString(input.ogImage);
+    data.ogImage = normalizeStoredMediaValue(input.ogImage) ?? normalizeNullableString(input.ogImage);
   }
 
   if ('canonicalUrl' in input) {
