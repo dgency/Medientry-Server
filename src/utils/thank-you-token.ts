@@ -8,7 +8,12 @@ import { env } from '../config/env';
 
 const THANK_YOU_TOKEN_EXPIRES_IN = '15m';
 
-const thankYouSourceSchema = z.enum(['consultation', 'contact']);
+const thankYouSourceSchema = z.enum([
+  'consultation',
+  'contact',
+  'college-fee-inquiry',
+  'success-story-share',
+]);
 
 const thankYouTokenClaimsSchema = z.object({
   sub: z.string().uuid(),
@@ -31,7 +36,7 @@ export type VerifiedThankYouTokenPayload = z.infer<
 
 export const signThankYouToken = (
   payload: {
-    leadId: string;
+    submissionId: string;
     source: ThankYouSource;
   },
   options?: {
@@ -41,7 +46,7 @@ export const signThankYouToken = (
 ) =>
   jwt.sign(
     {
-      sub: payload.leadId,
+      sub: payload.submissionId,
       purpose: 'thank-you',
       source: payload.source,
     },

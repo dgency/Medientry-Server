@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import { asyncHandler } from '../utils/async-handler';
 import { isPaginatedResult, resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
+import { signThankYouToken } from '../utils/thank-you-token';
 import {
   createSuccessStory,
   deleteSuccessStory,
@@ -42,11 +43,18 @@ export const getHomepageSuccessStories = asyncHandler(async (_req, res: Response
 
 export const createPublicSuccessStoryShare = asyncHandler(async (req, res: Response) => {
   const result = await submitSuccessStoryShare(req.body);
+  const thankYouToken = signThankYouToken({
+    submissionId: result.submissionId,
+    source: 'success-story-share',
+  });
 
   sendResponse(res, 201, {
     success: true,
     message: 'Your story has been shared successfully.',
-    data: result,
+    data: {
+      ...result,
+      thankYouToken,
+    },
   });
 });
 

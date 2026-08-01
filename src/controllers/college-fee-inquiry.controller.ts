@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import { asyncHandler } from '../utils/async-handler';
 import { resolvePaginationInput } from '../utils/pagination';
 import { sendResponse } from '../utils/send-response';
+import { signThankYouToken } from '../utils/thank-you-token';
 import {
   createCollegeFeeInquiry,
   deleteCollegeFeeInquiry,
@@ -44,11 +45,18 @@ export const getAdminCollegeFeeInquiry = asyncHandler(async (req, res: Response)
 
 export const createPublicCollegeFeeInquiry = asyncHandler(async (req, res: Response) => {
   const inquiry = await createCollegeFeeInquiry(req.body);
+  const thankYouToken = signThankYouToken({
+    submissionId: inquiry.id,
+    source: 'college-fee-inquiry',
+  });
 
   sendResponse(res, 201, {
     success: true,
     message: 'College fee inquiry submitted successfully.',
-    data: inquiry,
+    data: {
+      inquiry,
+      thankYouToken,
+    },
   });
 });
 

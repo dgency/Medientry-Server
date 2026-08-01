@@ -38,7 +38,7 @@ export const createPublicConsultationLead = asyncHandler(async (req, res: Respon
   const submissionSource =
     req.body?.submissionSource === 'contact' ? 'contact' : 'consultation';
   const thankYouToken = signThankYouToken({
-    leadId: lead.id,
+    submissionId: lead.id,
     source: submissionSource,
   });
 
@@ -82,7 +82,7 @@ export const verifyPublicThankYouToken = asyncHandler(async (req, res: Response)
     success: true,
     message: 'Thank-you token verified successfully.',
     data: {
-      leadId: payload.sub,
+      submissionId: payload.sub,
       source: payload.source,
       expiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
     },
