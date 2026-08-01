@@ -74,7 +74,7 @@ test('createMailer skips delivery cleanly when mail is disabled', async () => {
   );
 
   const result = await mailer.sendAdminFormNotification({
-    formName: 'Free Book Consultation',
+    formName: 'Book Your Free Consultation',
     submissionId: 'lead-1',
     submittedAt: new Date('2026-07-19T10:00:00.000Z'),
     customerName: 'Test User',
@@ -101,7 +101,7 @@ test('admin notifications use the configured sender, reply-to, and all unique ad
   });
 
   const result = await mailer.sendAdminFormNotification({
-    formName: 'Free Book Consultation',
+    formName: 'Book Your Free Consultation',
     submissionId: 'lead-1',
     submittedAt: new Date('2026-07-19T10:00:00.000Z'),
     customerName: 'Test User',
