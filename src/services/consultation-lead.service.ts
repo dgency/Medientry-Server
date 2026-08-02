@@ -31,6 +31,7 @@ import {
   type PaginationInput,
 } from '../utils/pagination';
 import { resolvePublicWebsiteUrl } from '../utils/public-site-url';
+import type { CapturedRequestClientInfo } from '../utils/request-client-info';
 
 type CreateConsultationLeadInput = {
   fullName: string;
@@ -38,6 +39,7 @@ type CreateConsultationLeadInput = {
   whatsappNumber: string;
   phoneNumber: string;
   emailAddress?: string;
+  country?: string;
   passingYear: string;
   neetScore?: string;
   stateName: string;
@@ -49,6 +51,8 @@ type CreateConsultationLeadInput = {
   formVariant?: 'default' | 'mbbs-georgia';
   website?: string;
 };
+
+type CreateConsultationLeadMetadata = CapturedRequestClientInfo;
 
 type ConsultationLeadFormVariant = 'default' | 'mbbs-georgia';
 
@@ -69,6 +73,12 @@ const consultationLeadSelect = {
   whatsappNumber: true,
   phoneNumber: true,
   emailAddress: true,
+  country: true,
+  ipAddress: true,
+  ipLocation: true,
+  userAgent: true,
+  deviceType: true,
+  deviceLabel: true,
   passingYear: true,
   neetScore: true,
   stateName: true,
@@ -159,12 +169,19 @@ type ConsultationLeadCreateData = Omit<
 
 const buildConsultationLeadData = (
   input: CreateConsultationLeadInput,
+  metadata?: CreateConsultationLeadMetadata,
 ): ConsultationLeadCreateData => ({
   fullName: normalizePublicFormText(input.fullName),
   userRole: normalizePublicFormText(input.userRole),
   whatsappNumber: normalizePublicPhoneNumber(input.whatsappNumber),
   phoneNumber: normalizePublicPhoneNumber(input.phoneNumber),
   emailAddress: normalizeNullableEmail(input.emailAddress),
+  country: normalizeNullableString(input.country),
+  ipAddress: normalizeNullableString(metadata?.ipAddress),
+  ipLocation: normalizeNullableString(metadata?.ipLocation),
+  userAgent: normalizeNullableString(metadata?.userAgent),
+  deviceType: normalizeNullableString(metadata?.deviceType),
+  deviceLabel: normalizeNullableString(metadata?.deviceLabel),
   passingYear: normalizePublicFormText(input.passingYear),
   neetScore: normalizeNullableString(input.neetScore),
   stateName: normalizePublicFormText(input.stateName),
@@ -211,6 +228,11 @@ const buildConsultationLeadWhere = (
             { phoneNumber: { contains: search, mode: 'insensitive' } },
             { whatsappNumber: { contains: search, mode: 'insensitive' } },
             { emailAddress: { contains: search, mode: 'insensitive' } },
+            { country: { contains: search, mode: 'insensitive' } },
+            { ipAddress: { contains: search, mode: 'insensitive' } },
+            { ipLocation: { contains: search, mode: 'insensitive' } },
+            { deviceType: { contains: search, mode: 'insensitive' } },
+            { deviceLabel: { contains: search, mode: 'insensitive' } },
             { passingYear: { contains: search, mode: 'insensitive' } },
             { neetScore: { contains: search, mode: 'insensitive' } },
             { stateName: { contains: search, mode: 'insensitive' } },
@@ -283,11 +305,12 @@ const sendConsultationLeadNotification = async (
             href: buildCustomerWhatsAppLink(lead.whatsappNumber),
           },
           { label: 'Role', value: lead.userRole },
+          ...(lead.country?.trim() ? [{ label: 'Country', value: lead.country }] : []),
           { label: 'Passing Year', value: lead.passingYear },
           ...(lead.neetScore?.trim()
             ? [{ label: 'NEET Score', value: lead.neetScore }]
             : [{ label: 'NEET Score', value: 'Not provided' }]),
-          { label: 'State', value: lead.stateName },
+          { label: 'Division / State', value: lead.stateName },
           ...(lead.preferredCollege?.trim()
             ? [{ label: 'Preferred College', value: lead.preferredCollege }]
             : [{ label: 'Preferred College', value: 'Not provided' }]),
@@ -369,8 +392,9 @@ const sendConsultationLeadCustomerConfirmation = async (
           ? []
           : [
               { label: 'WhatsApp Number', value: lead.whatsappNumber },
+              ...(lead.country?.trim() ? [{ label: 'Country', value: lead.country }] : []),
               ...(lead.neetScore?.trim() ? [{ label: 'NEET Score', value: lead.neetScore }] : []),
-              { label: 'State', value: lead.stateName },
+              { label: 'Division / State', value: lead.stateName },
               ...(lead.preferredCollege?.trim()
                 ? [{ label: 'Preferred College', value: lead.preferredCollege }]
                 : []),
@@ -436,6 +460,7 @@ export const getAdminConsultationLeadById = async (id: string) =>
 export const createConsultationLeadWithDependencies = async (
   input: CreateConsultationLeadInput,
   dependencies: ConsultationLeadServiceDependencies = defaultDependencies,
+  metadata?: CreateConsultationLeadMetadata,
 ) => {
   await assertNoSpamIndicators(input, dependencies.consultationLeadModel);
   const trackingNumber = await dependencies.allocateTrackingNumber();
@@ -443,7 +468,7 @@ export const createConsultationLeadWithDependencies = async (
 
   const lead = await dependencies.consultationLeadModel.create({
     data: {
-      ...buildConsultationLeadData(input),
+      ...buildConsultationLeadData(input, metadata),
       trackingNumber,
       trackingId: formatConsultationLeadTrackingId(trackingNumber),
     },
@@ -457,8 +482,11 @@ export const createConsultationLeadWithDependencies = async (
   return lead;
 };
 
-export const createConsultationLead = async (input: CreateConsultationLeadInput) => {
-  return createConsultationLeadWithDependencies(input);
+export const createConsultationLead = async (
+  input: CreateConsultationLeadInput,
+  metadata?: CreateConsultationLeadMetadata,
+) => {
+  return createConsultationLeadWithDependencies(input, defaultDependencies, metadata);
 };
 
 export const deleteConsultationLead = async (id: string) => {

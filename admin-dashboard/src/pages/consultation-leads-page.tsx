@@ -38,6 +38,12 @@ type ConsultationLead = {
   whatsappNumber: string;
   phoneNumber: string;
   emailAddress: string | null;
+  country: string | null;
+  ipAddress: string | null;
+  ipLocation: string | null;
+  userAgent: string | null;
+  deviceType: string | null;
+  deviceLabel: string | null;
   passingYear: string;
   neetScore: string | null;
   stateName: string;
@@ -844,6 +850,55 @@ export function ConsultationLeadDetailsPage() {
         </CardHeader>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Form Fill-up Details</CardTitle>
+          <CardDescription>The saved field order follows the current Book Free Consultation form structure.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Step 1 - Personal Information</h3>
+            <dl className="grid gap-5 sm:grid-cols-2">
+              <DetailField label="Student/Customer Name" value={lead.fullName} />
+              <DetailField label="Role" value={lead.userRole} />
+              <DetailField label="WhatsApp Number" value={lead.whatsappNumber} />
+              <DetailField label="Phone Number" value={lead.phoneNumber} />
+              {lead.emailAddress ? (
+                <DetailField
+                  label="Email Address"
+                  value={
+                    <a
+                      href={`mailto:${lead.emailAddress}`}
+                      className="text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
+                    >
+                      {lead.emailAddress}
+                    </a>
+                  }
+                />
+              ) : null}
+            </dl>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Step 2 - Academic Information</h3>
+            <dl className="grid gap-5 sm:grid-cols-2">
+              <DetailField label="Passing Year" value={lead.passingYear} />
+              <DetailField label="NEET Score" value={lead.neetScore ?? 'Not provided'} />
+              <DetailField label="Country" value={lead.country ?? 'Not provided'} />
+              <DetailField label="Division / State" value={lead.stateName} />
+              <DetailField label="Preferred College" value={lead.preferredCollege ?? 'Not provided'} />
+            </dl>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Step 3 - Additional Information</h3>
+            <dl className="grid gap-5">
+              <DetailField label="Message" value={lead.message?.trim() ? lead.message : 'No additional message was provided.'} />
+            </dl>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader>
@@ -861,9 +916,10 @@ export function ConsultationLeadDetailsPage() {
               <DetailField label="Phone Number" value={lead.phoneNumber} />
               <DetailField label="WhatsApp Number" value={lead.whatsappNumber} />
               <DetailField label="Role" value={lead.userRole} />
+              <DetailField label="Country" value={lead.country ?? 'Not provided'} />
               <DetailField label="Passing Year" value={lead.passingYear} />
               <DetailField label="NEET Score" value={lead.neetScore ?? 'Not provided'} />
-              <DetailField label="State / Region" value={lead.stateName} />
+              <DetailField label="Division / State" value={lead.stateName} />
               <DetailField label="Preferred College" value={lead.preferredCollege ?? 'Not provided'} />
               <DetailField
                 label="Email Address"
@@ -915,58 +971,14 @@ export function ConsultationLeadDetailsPage() {
               <DetailField label="Form Submission Timestamp" value={formatDateTime(lead.submissionDate ?? lead.createdAt)} />
               <DetailField label="Created At" value={formatDateTime(lead.createdAt)} />
               <DetailField label="Last Updated" value={formatDateTime(lead.updatedAt)} />
+              <DetailField label="IP Address" value={lead.ipAddress ?? 'Not available'} />
+              <DetailField label="Approximate IP Location" value={lead.ipLocation ?? 'Not available'} />
+              <DetailField label="Device" value={lead.deviceLabel ?? lead.deviceType ?? 'Not available'} />
+              <DetailField label="User Agent" value={lead.userAgent ?? 'Not available'} />
             </dl>
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Form Fill-up Details</CardTitle>
-          <CardDescription>The saved field order follows the current Book Free Consultation form structure.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground">Step 1 - Personal Information</h3>
-            <dl className="grid gap-5 sm:grid-cols-2">
-              <DetailField label="Student/Customer Name" value={lead.fullName} />
-              <DetailField label="Role" value={lead.userRole} />
-              <DetailField label="WhatsApp Number" value={lead.whatsappNumber} />
-              <DetailField label="Phone Number" value={lead.phoneNumber} />
-              {lead.emailAddress ? (
-                <DetailField
-                  label="Email Address"
-                  value={
-                    <a
-                      href={`mailto:${lead.emailAddress}`}
-                      className="text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
-                    >
-                      {lead.emailAddress}
-                    </a>
-                  }
-                />
-              ) : null}
-            </dl>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground">Step 2 - Academic Information</h3>
-            <dl className="grid gap-5 sm:grid-cols-2">
-              <DetailField label="Passing Year" value={lead.passingYear} />
-              <DetailField label="NEET Score" value={lead.neetScore ?? 'Not provided'} />
-              <DetailField label="State / Region" value={lead.stateName} />
-              <DetailField label="Preferred College" value={lead.preferredCollege ?? 'Not provided'} />
-            </dl>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground">Step 3 - Additional Information</h3>
-            <dl className="grid gap-5">
-              <DetailField label="Message" value={lead.message?.trim() ? lead.message : 'No additional message was provided.'} />
-            </dl>
-          </div>
-        </CardContent>
-      </Card>
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}

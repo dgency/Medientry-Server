@@ -1,8 +1,9 @@
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 import { asyncHandler } from '../utils/async-handler';
 import { ApiError } from '../utils/api-error';
 import { resolvePaginationInput } from '../utils/pagination';
+import { captureRequestClientInfo } from '../utils/request-client-info';
 import { sendResponse } from '../utils/send-response';
 import { signThankYouToken, verifyThankYouToken } from '../utils/thank-you-token';
 import {
@@ -33,8 +34,8 @@ export const getConsultationLeads = asyncHandler(async (req, res: Response) => {
   });
 });
 
-export const createPublicConsultationLead = asyncHandler(async (req, res: Response) => {
-  const lead = await createConsultationLead(req.body);
+export const createPublicConsultationLead = asyncHandler(async (req: Request, res: Response) => {
+  const lead = await createConsultationLead(req.body, captureRequestClientInfo(req));
   const submissionSource =
     req.body?.submissionSource === 'contact' ? 'contact' : 'consultation';
   const thankYouToken = signThankYouToken({

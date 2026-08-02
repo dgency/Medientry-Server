@@ -878,11 +878,58 @@ export function CollegeFeeInquiryDetailsPage() {
         </CardHeader>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Form Fill-up Details</CardTitle>
+          <CardDescription>The saved field order follows the current college fee inquiry form structure.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Step 1 - Personal Information</h3>
+            <dl className="grid gap-5 sm:grid-cols-2">
+              <DetailField label="Full Name" value={inquiry.fullName} />
+              <DetailField label="Phone Number" value={inquiry.phoneNumber} />
+              <DetailField
+                label="Email Address"
+                value={
+                  inquiry.emailAddress ? (
+                    <a
+                      href={`mailto:${inquiry.emailAddress}`}
+                      className="text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
+                    >
+                      {inquiry.emailAddress}
+                    </a>
+                  ) : (
+                    'Not provided'
+                  )
+                }
+              />
+              <DetailField label="Country" value={inquiry.country ?? 'Not provided'} />
+            </dl>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Step 2 - Inquiry Information</h3>
+            <dl className="grid gap-5 sm:grid-cols-2">
+              <DetailField label="Preferred Study Destination" value={inquiry.preferredStudyDestination ?? 'Not provided'} />
+              <DetailField label="Selected College" value={inquiry.interestedCollegeName} />
+            </dl>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Step 3 - Additional Information</h3>
+            <dl className="grid gap-5">
+              <DetailField label="Message" value={inquiry.message?.trim() ? inquiry.message : 'No additional message was provided.'} />
+            </dl>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Card>
           <CardHeader>
-            <CardTitle>Inquiry Details</CardTitle>
-            <CardDescription>Complete student and contact information for this submission.</CardDescription>
+            <CardTitle>Submission Summary</CardTitle>
+            <CardDescription>Primary contact, inquiry, and tracking details for this college fee inquiry.</CardDescription>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-5 sm:grid-cols-2">
@@ -907,19 +954,19 @@ export function CollegeFeeInquiryDetailsPage() {
               <DetailField label="Study Destination" value={inquiry.preferredStudyDestination ?? inquiry.country ?? 'Not provided'} />
               <DetailField label="Selected College" value={inquiry.interestedCollegeName} />
               <DetailField label="Inquiry Source" value={sourceContext.inquiryType} />
+              <DetailField label="Country" value={inquiry.country ?? 'Not provided'} />
               <DetailField label="Submitted Date" value={formatDateOnly(inquiry.createdAt)} />
               <DetailField label="Submitted Time" value={formatTimeOnly(inquiry.createdAt)} />
               <DetailField label="Read Status" value={inquiry.readAt ? 'Read' : 'Unread'} />
               <DetailField label="Read Date" value={inquiry.readAt ? formatDateOnly(inquiry.readAt) : 'Not read yet'} />
               <DetailField label="Read Time" value={inquiry.readAt ? formatTimeOnly(inquiry.readAt) : 'Not read yet'} />
-              <DetailField label="Country" value={inquiry.country ?? 'Not provided'} />
             </dl>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Form Metadata</CardTitle>
+            <CardTitle>Submission Information</CardTitle>
             <CardDescription>Readable source and page information captured with the inquiry.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -953,18 +1000,6 @@ export function CollegeFeeInquiryDetailsPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Message / Notes</CardTitle>
-          <CardDescription>Any extra details submitted by the student are shown here.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-2xl border border-border/70 bg-muted/20 p-4 text-sm leading-6 text-foreground [overflow-wrap:anywhere]">
-            {inquiry.message?.trim() ? inquiry.message : 'No additional message was provided with this inquiry.'}
-          </div>
-        </CardContent>
-      </Card>
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}

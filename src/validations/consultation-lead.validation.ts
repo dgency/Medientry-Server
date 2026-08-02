@@ -60,13 +60,22 @@ const baseConsultationLeadBodySchema = z.object({
   emailAddress: normalizeOptionalEmail,
   passingYear: z.string().trim().min(4, 'Passing year is required.'),
   neetScore: normalizeOptionalString,
-  stateName: z.string().trim().min(2, 'State name must be at least 2 characters long.'),
+  country: z.enum(['Bangladesh', 'India']).optional(),
+  stateName: z.string().trim().min(2, 'Division or state is required.'),
   preferredCollege: normalizeOptionalString,
   message: normalizeOptionalString,
   sourcePage: normalizeOptionalString,
   submissionDate: z.coerce.date().optional(),
   submissionSource: z.enum(['consultation', 'contact']).optional(),
   formVariant: z.enum(['default', 'mbbs-georgia']).optional(),
+}).superRefine((value, context) => {
+  if ((value.formVariant ?? 'default') !== 'mbbs-georgia' && !value.country) {
+    context.addIssue({
+      code: 'custom',
+      message: 'Country is required.',
+      path: ['country'],
+    });
+  }
 });
 
 export const createConsultationLeadSchema = z.object({

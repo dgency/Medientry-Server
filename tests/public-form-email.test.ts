@@ -15,6 +15,7 @@ const createConsultationLeadInput = () => ({
   whatsappNumber: '+8801711111111',
   phoneNumber: '+8801711111111',
   emailAddress: 'aisha@example.com',
+  country: 'Bangladesh',
   passingYear: '2026',
   neetScore: '650',
   stateName: 'Dhaka',
@@ -52,6 +53,12 @@ test('consultation lead flow sends an admin notification for the public endpoint
         whatsappNumber: '+8801711111111',
         phoneNumber: '+8801711111111',
         emailAddress: 'aisha@example.com',
+        country: 'Bangladesh',
+        ipAddress: null,
+        ipLocation: null,
+        userAgent: null,
+        deviceType: null,
+        deviceLabel: null,
         passingYear: '2026',
         neetScore: '650',
         stateName: 'Dhaka',
@@ -107,6 +114,12 @@ test('consultation lead save still succeeds when email delivery fails', async ()
         whatsappNumber: '+8801711111111',
         phoneNumber: '+8801711111111',
         emailAddress: 'aisha@example.com',
+        country: 'Bangladesh',
+        ipAddress: null,
+        ipLocation: null,
+        userAgent: null,
+        deviceType: null,
+        deviceLabel: null,
         passingYear: '2026',
         neetScore: '650',
         stateName: 'Dhaka',
@@ -151,6 +164,12 @@ test('consultation lead allows repeated submissions from the same user data', as
             whatsappNumber: string;
             phoneNumber: string;
             emailAddress?: string | null;
+            country?: string | null;
+            ipAddress?: string | null;
+            ipLocation?: string | null;
+            userAgent?: string | null;
+            deviceType?: string | null;
+            deviceLabel?: string | null;
             passingYear: string;
             neetScore?: string | null;
             stateName: string;
@@ -171,6 +190,12 @@ test('consultation lead allows repeated submissions from the same user data', as
             whatsappNumber: record.whatsappNumber,
             phoneNumber: record.phoneNumber,
             emailAddress: record.emailAddress ?? null,
+            country: record.country ?? null,
+            ipAddress: record.ipAddress ?? null,
+            ipLocation: record.ipLocation ?? null,
+            userAgent: record.userAgent ?? null,
+            deviceType: record.deviceType ?? null,
+            deviceLabel: record.deviceLabel ?? null,
             passingYear: record.passingYear,
             neetScore: record.neetScore ?? null,
             stateName: record.stateName,
@@ -222,6 +247,12 @@ test('consultation lead flow keeps unique MBD tracking IDs across near-simultane
               whatsappNumber: string;
               userRole: string;
               emailAddress?: string | null;
+              country?: string | null;
+              ipAddress?: string | null;
+              ipLocation?: string | null;
+              userAgent?: string | null;
+              deviceType?: string | null;
+              deviceLabel?: string | null;
               passingYear: string;
               neetScore?: string | null;
               stateName: string;
@@ -241,6 +272,12 @@ test('consultation lead flow keeps unique MBD tracking IDs across near-simultane
               whatsappNumber: record.whatsappNumber,
               phoneNumber: record.phoneNumber,
               emailAddress: record.emailAddress ?? null,
+              country: record.country ?? null,
+              ipAddress: record.ipAddress ?? null,
+              ipLocation: record.ipLocation ?? null,
+              userAgent: record.userAgent ?? null,
+              deviceType: record.deviceType ?? null,
+              deviceLabel: record.deviceLabel ?? null,
               passingYear: record.passingYear,
               neetScore: record.neetScore ?? null,
               stateName: record.stateName,

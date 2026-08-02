@@ -12,6 +12,7 @@ const createConsultationPayload = () => ({
     whatsappNumber: '+91 98765-43210',
     phoneNumber: '(017) 111-11111',
     emailAddress: 'Student@Example.com',
+    country: 'Bangladesh',
     passingYear: '2026',
     neetScore: '650',
     stateName: 'Dhaka',

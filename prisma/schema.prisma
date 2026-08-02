@@ -292,6 +292,12 @@ model ConsultationLead {
   whatsappNumber   String
   phoneNumber      String
   emailAddress     String?
+  country          String?
+  ipAddress        String?
+  ipLocation       String?
+  userAgent        String?
+  deviceType       String?
+  deviceLabel      String?
   passingYear      String
   neetScore        String?
   stateName        String
